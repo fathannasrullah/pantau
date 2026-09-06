@@ -6,6 +6,8 @@ panduan tindakan. Dibangun dari prototipe desain di `project/Pantau Gunung v3.dc
 Bisa dipasang lewat browser (PWA): ada manifest, ikon, dan service worker, sehingga
 layar terakhir tetap terbuka saat sinyal hilang.
 
+**Live demo: <https://fathannasrullah.github.io/pantau/>**
+
 ## Menjalankan
 
 ```bash
@@ -21,18 +23,20 @@ Service worker hanya aktif pada hasil build, jadi uji perilaku offline lewat
 ## Live demo di GitHub Pages
 
 Setiap push ke `main` mem-build dan menerbitkan app lewat
-`.github/workflows/deploy-pages.yml`, ke:
+`.github/workflows/deploy-pages.yml` ke
+<https://fathannasrullah.github.io/pantau/>. Bisa juga dijalankan manual dari
+tab Actions (`workflow_dispatch`).
 
-```
-https://fathannasrullah.github.io/pantau/
-```
-
-Tiga langkah sekali saja di GitHub sebelum deploy pertama berhasil:
+Setelan sekali saja di GitHub:
 
 1. Repositori harus **public** (Pages untuk repo private butuh paket berbayar).
 2. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-3. Pastikan isi branch ini sudah ada di `main` — workflow-nya berjalan dari `main`.
-   Bisa juga dijalankan manual dari tab Actions (`workflow_dispatch`).
+3. **Settings → Environments → `github-pages` → Deployment branches and tags**
+   harus mengizinkan `main`. Aturan ini menyimpan nama branch secara eksplisit
+   saat Pages pertama diaktifkan; kalau waktu itu default branch-nya lain,
+   mengganti default branch belakangan tidak memperbaruinya, dan job `deploy`
+   gagal dengan _"Branch main is not allowed to deploy to github-pages due to
+   environment protection rules"_ meskipun job `build` sukses.
 
 Karena Pages menyajikan project site di sub-path `/pantau/`, base Vite diisi
 lewat `VITE_BASE` di CI (`actions/configure-pages` yang menghitungnya). Build
