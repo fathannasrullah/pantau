@@ -2,7 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages menyajikan project site di /<nama-repo>/, jadi base-nya diisi
+// lewat VITE_BASE saat build di CI. Lokal tetap '/'.
+const base = process.env.VITE_BASE || '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -15,8 +20,8 @@ export default defineConfig({
           'Status gunung berapi, dampak erupsi, dan panduan tindakan secara real time.',
         lang: 'id',
         dir: 'ltr',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#080a0e',
@@ -35,7 +40,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
-        navigateFallback: 'index.html',
+        navigateFallback: `${base}index.html`,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
