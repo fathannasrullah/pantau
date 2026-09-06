@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#080a0e;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#7dd3fc;text-decoration:none}a:hover{color:#bae6fd}
+  @keyframes pulseRing{0%{transform:scale(.9);opacity:.5}70%{transform:scale(1.5);opacity:0}100%{transform:scale(1.5);opacity:0}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  ::-webkit-scrollbar{width:0}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#080a0e;display:flex;justify-content:center">
+<div style="width:100%;max-width:460px;background:#0d1117;color:#e9edf2;position:relative;box-shadow:0 0 0 1px rgba(255,255,255,.06)">
+
+  <!-- HEADER -->
+  <div style="position:sticky;top:0;z-index:30;background:rgba(13,17,23,.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.07)">
+    <div style="display:flex;align-items:center;gap:10px;padding:13px 16px 9px">
+      <div style="width:9px;height:9px;border-radius:50%;background:{{ lv.color }};animation:blink 1.6s infinite;flex:none"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:16px;font-weight:700;letter-spacing:-.01em">Anak Krakatau</div>
+        <div style="font-size:11.5px;color:#9aa5b3;margin-top:1px">Selat Sunda · Lampung Selatan · 2.667 m</div>
+      </div>
+      <div onClick="{{ refresh }}" style="cursor:pointer;text-align:right" style-hover="opacity:.75">
+        <div style="display:inline-flex;align-items:center;gap:6px;border:1px solid {{ ds.line }};background:{{ ds.wash }};border-radius:20px;padding:5px 10px">
+          <div style="width:6px;height:6px;border-radius:50%;background:{{ ds.color }};flex:none"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;color:{{ ds.color }}">{{ ds.label }}</span>
+        </div>
+        <div style="font-size:10.5px;color:#9aa5b3;margin-top:3px">{{ ds.sub }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA-STATE BANNER -->
+  <sc-if value="{{ ds.banner }}" hint-placeholder-val="{{ false }}">
+    <div style="background:{{ ds.wash }};border-bottom:1px solid {{ ds.line }};padding:11px 16px;display:flex;gap:10px;align-items:flex-start">
+      <div style="width:6px;height:6px;border-radius:50%;background:{{ ds.color }};margin-top:6px;flex:none"></div>
+      <div style="flex:1">
+        <div style="font-size:12.5px;font-weight:600;color:{{ ds.color }}">{{ ds.bannerTitle }}</div>
+        <div style="font-size:11.5px;color:#c3cbd5;line-height:1.5;margin-top:2px">{{ ds.bannerNote }}</div>
+      </div>
+      <div onClick="{{ refresh }}" style="font-size:11.5px;font-weight:600;color:{{ ds.color }};border:1px solid {{ ds.line }};border-radius:8px;padding:6px 10px;cursor:pointer;flex:none">Coba lagi</div>
+    </div>
+  </sc-if>
+
+  <!-- ALERT STRIP (tier 1) -->
+  <sc-if value="{{ lv.urgent }}" hint-placeholder-val="{{ true }}">
+    <div style="background:{{ lv.color }};color:#0b0b0b;padding:10px 16px;display:flex;align-items:center;gap:9px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;background:rgba(0,0,0,.22);border-radius:4px;padding:2px 5px;flex:none">PERINGATAN</span>
+      <span style="font-size:12.5px;font-weight:600;line-height:1.35">{{ lv.strip }}</span>
+    </div>
+  </sc-if>
+
+  <div style="padding:0 16px 96px">
+
+  <!-- ===== TAB: STATUS ===== -->
+  <sc-if value="{{ isStatus }}" hint-placeholder-val="{{ true }}">
+  <div style="animation:riseIn .35s ease both">
+
+    <!-- 1. STATUS + TINDAKAN -->
+    <div style="margin:18px 0 0;border:1px solid {{ lv.line }};background:{{ lv.wash }};border-radius:16px;padding:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:{{ lv.color }};opacity:.09"></div>
+      <div style="font-size:13.5px;font-weight:600;color:#aeb8c4">Status gunung saat ini</div>
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-top:8px">
+        <div style="font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:.95;color:{{ lv.color }}">{{ lv.name }}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:{{ lv.color }};padding-bottom:7px">LEVEL {{ lv.roman }}</div>
+      </div>
+      <div style="font-size:13.5px;line-height:1.5;color:#c3cbd5;margin-top:10px">{{ lv.headline }}</div>
+
+      <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.1);padding-top:13px">
+        <div style="font-size:12px;font-weight:600;color:#aeb8c4">Artinya untuk Anda</div>
+        <div style="font-size:13.5px;line-height:1.55;color:#e9edf2;margin-top:5px">{{ lv.plain }}</div>
+      </div>
+
+      <!-- tsunami / gelombang: bahaya khas Krakatau, tier 1 -->
+      <sc-if value="{{ lv.coastal }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:13px;border-radius:11px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.1);padding:12px 13px;display:flex;gap:11px;align-items:flex-start">
+          <div style="width:7px;height:7px;border-radius:50%;background:{{ lv.coastalDot }};margin-top:5px;flex:none"></div>
+          <div style="flex:1">
+            <div style="font-size:12.5px;font-weight:700;color:{{ lv.coastalDot }}">Pesisir Selat Sunda: {{ lv.coastalTag }}</div>
+            <div style="font-size:12px;line-height:1.5;color:#c3cbd5;margin-top:3px">{{ lv.coastalNote }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="display:flex;gap:8px;margin-top:13px;flex-wrap:wrap">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 9px">Radius bahaya {{ lv.radius }} km</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 9px">Sejak {{ lv.since }}</div>
+      </div>
+      <div style="font-size:11px;color:#9aa5b3;margin-top:11px">Sumber: Badan Geologi / PVMBG · {{ ds.sourceTime }}</div>
+    </div>
+
+    <!-- 2. POSISI SAYA -->
+    <sc-if value="{{ locOn }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:10px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:#141a22;padding:15px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <div style="font-size:13.5px;font-weight:600;color:#aeb8c4">Posisi Anda</div>
+          <div onClick="{{ toggleLoc }}" style="font-size:11px;color:#9aa5b3;cursor:pointer">matikan lokasi</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:9px;margin-top:9px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;letter-spacing:-.02em;color:{{ loc.c }}">{{ loc.km }}</div>
+          <div style="font-size:13px;color:#c3cbd5">dari kawah</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:{{ loc.c }};margin-top:7px">{{ loc.verdict }}</div>
+        <div style="font-size:12.5px;color:#c3cbd5;line-height:1.5;margin-top:4px">{{ loc.note }}</div>
+        <div style="display:flex;gap:8px;margin-top:13px">
+          <div onClick="{{ goGuide }}" style="flex:1;text-align:center;font-size:12.5px;font-weight:700;padding:12px;border-radius:10px;background:{{ loc.btnBg }};color:{{ loc.btnFg }};cursor:pointer">{{ loc.btn }}</div>
+          <div onClick="{{ goMap }}" style="flex:none;text-align:center;font-size:12.5px;font-weight:600;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.14);color:#e9edf2;cursor:pointer">Peta</div>
+        </div>
+        <div style="font-size:10.5px;color:#9aa5b3;margin-top:9px">Kalianda, Lampung Selatan · GPS akurasi 12 m · {{ ds.sourceTime }}</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ locOff }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ toggleLoc }}" style="margin-top:10px;border:1px dashed rgba(255,255,255,.16);border-radius:14px;background:#141a22;padding:15px;cursor:pointer">
+        <div style="font-size:13.5px;font-weight:600">Aktifkan lokasi</div>
+        <div style="font-size:12.5px;color:#9aa5b3;line-height:1.5;margin-top:4px">Supaya app bisa memberi tahu apakah Anda berada di dalam radius bahaya dan titik kumpul mana yang terdekat.</div>
+      </div>
+    </sc-if>
+
+    <!-- 3. HUJAN ABU & ANGIN (tier 2) -->
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Hujan abu hari ini</div>
+    <sc-if value="{{ ds.failed }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid rgba(255,255,255,.1);border-radius:14px;background:#141a22;padding:16px">
+        <div style="font-size:12.5px;font-weight:600">Data terbaru gagal dimuat</div>
+        <div style="font-size:12px;color:#9aa5b3;line-height:1.5;margin-top:4px">Yang tampil di bawah adalah catatan terakhir yang tersimpan, {{ ds.age }}. Jangan dijadikan dasar keputusan.</div>
+      </div>
+    </sc-if>
+    <div style="border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#141a22;margin-top:8px;overflow:hidden;opacity:{{ ds.dim }}">
+      <div style="display:flex">
+        <div style="flex:1;padding:14px;border-right:1px solid rgba(255,255,255,.07)">
+          <div style="font-size:11.5px;color:#9aa5b3">Arah abu</div>
+          <div style="font-size:17px;font-weight:700;margin-top:5px">Barat laut</div>
+          <div style="font-size:11.5px;color:#9aa5b3;margin-top:3px">angin 11 km/jam</div>
+        </div>
+        <div style="flex:1;padding:14px">
+          <div style="font-size:11.5px;color:#9aa5b3">Tinggi kolom abu</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;margin-top:5px">1.200 m</div>
+          <div style="font-size:11.5px;color:#fb923c;margin-top:3px">naik 300 m</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.07);padding:12px 14px;font-size:12.5px;color:#c3cbd5;line-height:1.5">Abu tipis terpantau di Kalianda dan Rajabasa. Pakai masker di luar ruangan, tutup tandon air.</div>
+      <div style="padding:0 14px 12px;font-size:10.5px;color:#9aa5b3">Sumber: pos pengamatan + BMKG (angin) · {{ ds.sourceTime }}</div>
+    </div>
+
+    <!-- 4. TINDAKAN CEPAT -->
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Tiga hal yang bisa dilakukan sekarang</div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ quick }}" as="q" hint-placeholder-count="3">
+        <div style="display:flex;gap:12px;padding:12px 2px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9aa5b3;width:16px;flex:none;padding-top:2px">{{ q.n }}</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#d6dce4">{{ q.t }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div onClick="{{ goGuide }}" style="margin-top:12px;font-size:12.5px;font-weight:600;color:{{ lv.color }};cursor:pointer">Panduan lengkap dan titik kumpul →</div>
+
+    <!-- 5. PENGAMATAN (tier 3) -->
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Pengamatan 24 jam terakhir</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;opacity:{{ ds.dim }}">
+      <sc-for list="{{ metrics }}" as="m" hint-placeholder-count="4">
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 13px;background:#141a22">
+          <div style="font-size:11px;color:#9aa5b3;line-height:1.3">{{ m.label }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600;margin-top:6px;letter-spacing:-.02em">{{ m.value }}</div>
+          <div style="font-size:11px;color:{{ m.tone }};margin-top:3px">{{ m.delta }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- 6. DAMPAK -->
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Dampak yang sudah terasa</div>
+    <div style="border:1px solid rgba(255,255,255,.08);border-radius:14px;background:#141a22;overflow:hidden;opacity:{{ ds.dim }}">
+      <sc-for list="{{ impacts }}" as="im" hint-placeholder-count="4">
+        <div style="display:flex;gap:12px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.055);align-items:flex-start">
+          <div style="width:6px;height:6px;border-radius:50%;background:{{ im.dot }};margin-top:6px;flex:none"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600">{{ im.area }}</div>
+            <div style="font-size:12px;color:#a8b3c1;line-height:1.45;margin-top:2px">{{ im.note }}</div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ im.dot }};border:1px solid {{ im.dot }};border-radius:5px;padding:3px 6px;flex:none">{{ im.tag }}</div>
+        </div>
+      </sc-for>
+      <div style="padding:11px 14px;font-size:11px;color:#9aa5b3">Laporan BPBD kabupaten · {{ ds.sourceTime }}</div>
+    </div>
+
+    <!-- 7. TRANSPORTASI -->
+    <sc-if value="{{ showTransport }}" hint-placeholder-val="{{ true }}">
+      <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Perjalanan dan transportasi</div>
+      <div style="display:flex;flex-direction:column;gap:8px;opacity:{{ ds.dim }}">
+        <sc-for list="{{ transport }}" as="t" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;background:#141a22">
+            <div style="flex:1">
+              <div style="font-size:12.5px;font-weight:600">{{ t.name }}</div>
+              <div style="font-size:11.5px;color:#9aa5b3;margin-top:2px">{{ t.note }}</div>
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ t.c }};flex:none">{{ t.state }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- 8. NOTIFIKASI -->
+    <div onClick="{{ openNotif }}" style="margin-top:22px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:13px 14px;cursor:pointer" style-hover="border-color:rgba(255,255,255,.2)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">Notifikasi perubahan status</div>
+        <div style="font-size:11.5px;color:#9aa5b3;margin-top:2px">{{ subNote }}</div>
+      </div>
+      <div style="font-size:11.5px;color:#9aa5b3;flex:none">Atur</div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ===== TAB: PETA ===== -->
+  <sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
+  <div style="animation:riseIn .35s ease both">
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:20px 0 10px">Radius bahaya dan arah abu</div>
+    <div style="position:relative;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:#0a0f16;overflow:hidden;aspect-ratio:1/1;opacity:{{ ds.dim }}">
+      <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:34px 34px"></div>
+      <div style="position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:72%;height:72%;border-radius:50%;border:1px dashed rgba(248,113,113,.4);background:rgba(248,113,113,.06)"></div>
+      <div style="position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:36%;height:36%;border-radius:50%;border:1px solid rgba(248,113,113,.75);background:rgba(248,113,113,.13)"></div>
+      <div style="position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:{{ lv.color }};opacity:.35;animation:pulseRing 2.4s infinite"></div>
+      <div style="position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:{{ lv.color }};box-shadow:0 0 14px {{ lv.color }}"></div>
+      <div style="position:absolute;left:50%;top:52%;width:46%;height:120px;transform-origin:0 6px;transform:rotate(-42deg);background:linear-gradient(90deg,rgba(148,163,184,.42),rgba(148,163,184,0));clip-path:polygon(0 44%,100% 0,100% 100%,0 56%)"></div>
+      <div style="position:absolute;left:14px;top:12px;font-size:11px;color:#9aa5b3;line-height:1.75">
+        <div>Peta skematik, bukan skala sebenarnya</div>
+        <div style="color:#f87171">Radius {{ lv.radius }} km — dilarang</div>
+        <div style="color:#a8b3c1">Sebaran abu ke barat laut</div>
+      </div>
+      <div style="position:absolute;right:14px;bottom:14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8b96a5">6.102°S 105.423°E</div>
+      <div style="position:absolute;left:16px;bottom:14px;font-size:11px;color:#8b96a5">{{ ds.sourceTime }}</div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <sc-for list="{{ mapLayers }}" as="ml" hint-placeholder-count="3">
+        <div onClick="{{ ml.on }}" style="flex:1;text-align:center;font-size:11.5px;font-weight:600;padding:11px 4px;border-radius:10px;cursor:pointer;border:1px solid {{ ml.line }};background:{{ ml.bg }};color:{{ ml.fg }}">{{ ml.label }}</div>
+      </sc-for>
+    </div>
+    <div style="font-size:12.5px;color:#a8b3c1;line-height:1.55;margin-top:12px">{{ layerNote }}</div>
+
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Wilayah terdekat dari kawah</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ villages }}" as="v" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;background:#141a22">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:{{ v.c }};width:52px;flex:none">{{ v.km }}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">{{ v.name }}</div>
+            <div style="font-size:11.5px;color:#9aa5b3;margin-top:2px">{{ v.note }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ===== TAB: SEISMIK ===== -->
+  <sc-if value="{{ isSeis }}" hint-placeholder-val="{{ false }}">
+  <div style="animation:riseIn .35s ease both">
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:20px 0 10px">Kegempaan tiap jam, 24 jam terakhir</div>
+    <div style="border:1px solid rgba(255,255,255,.08);border-radius:14px;background:#141a22;padding:16px 14px 12px;opacity:{{ ds.dim }}">
+      <div style="display:flex;align-items:flex-end;gap:3px;height:130px">
+        <sc-for list="{{ bars }}" as="b" hint-placeholder-count="24">
+          <div onClick="{{ b.on }}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;cursor:pointer">
+            <div style="width:100%;border-radius:3px;background:{{ b.c }};height:{{ b.h }};transition:height .3s,background .2s"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8b96a5;margin-top:7px">
+        <span>−24 jam</span><span>−12 jam</span><span>sekarang</span>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.07);margin-top:11px;padding-top:11px;font-size:12.5px;color:#c3cbd5;line-height:1.5">{{ barNote }}</div>
+      <div style="font-size:10.5px;color:#8b96a5;margin-top:8px">Seismograf pos pengamatan · {{ ds.sourceTime }}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;opacity:{{ ds.dim }}">
+      <sc-for list="{{ quakeTypes }}" as="q" hint-placeholder-count="4">
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 13px;background:#141a22">
+          <div style="font-size:11px;color:#9aa5b3">{{ q.label }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;margin-top:5px">{{ q.n }}</div>
+          <div style="height:4px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:8px;overflow:hidden">
+            <div style="height:100%;width:{{ q.w }};background:{{ q.c }};border-radius:3px"></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size:11.5px;color:#9aa5b3;line-height:1.5;margin-top:12px">Amplitudo tremor dominan 24 mm. Bagian ini untuk yang ingin melihat detail; keputusan tetap mengikuti level status.</div>
+  </div>
+  </sc-if>
+
+  <!-- ===== TAB: LAPORAN ===== -->
+  <sc-if value="{{ isFeed }}" hint-placeholder-val="{{ false }}">
+  <div style="animation:riseIn .35s ease both">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin:20px 0 10px;gap:10px">
+      <div style="font-size:13.5px;font-weight:600;color:#aeb8c4">Informasi resmi</div>
+      <div onClick="{{ openReport }}" style="font-size:11.5px;font-weight:600;color:{{ lv.color }};cursor:pointer;flex:none">Kirim laporan warga</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ feed }}" as="f" hint-placeholder-count="4">
+        <div style="border:1px solid rgba(255,255,255,.08);border-radius:14px;background:#141a22;padding:14px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:{{ f.c }};border:1px solid {{ f.c }};border-radius:4px;padding:2px 5px">{{ f.kind }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8b96a5">{{ f.time }}</span>
+          </div>
+          <div style="font-size:13.5px;font-weight:600;line-height:1.4;margin-top:8px">{{ f.title }}</div>
+          <div style="font-size:12.5px;color:#a8b3c1;line-height:1.55;margin-top:5px">{{ f.body }}</div>
+          <div style="font-size:11px;color:#9aa5b3;margin-top:8px">{{ f.more }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size:11.5px;color:#9aa5b3;line-height:1.55;margin-top:14px">Hanya laporan dari Badan Geologi, BMKG, dan BPBD yang tampil di sini. Laporan warga masuk setelah diverifikasi petugas.</div>
+  </div>
+  </sc-if>
+
+  <!-- ===== TAB: PANDUAN ===== -->
+  <sc-if value="{{ isGuide }}" hint-placeholder-val="{{ false }}">
+  <div style="animation:riseIn .35s ease both">
+    <div style="margin:20px 0 0;border:1px solid {{ lv.line }};background:{{ lv.wash }};border-radius:14px;padding:15px">
+      <div style="font-size:14px;font-weight:700;color:{{ lv.color }}">{{ lv.action }}</div>
+      <div style="font-size:12.5px;color:#c3cbd5;line-height:1.5;margin-top:6px">{{ lv.actionNote }}</div>
+    </div>
+
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Titik kumpul dan nomor penting</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ points }}" as="p" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:13px 14px;background:#141a22">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">{{ p.name }}</div>
+            <div style="font-size:11.5px;color:#9aa5b3;margin-top:2px">{{ p.note }}</div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;color:{{ lv.color }};flex:none">{{ p.tel }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="font-size:13.5px;font-weight:600;color:#aeb8c4;margin:22px 0 10px">Yang perlu dilakukan saat hujan abu</div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+        <div style="display:flex;gap:13px;padding:12px 2px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9aa5b3;width:18px;flex:none;padding-top:2px">{{ s.n }}</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#d6dce4">{{ s.t }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+    <div style="font-size:11px;color:#7f8a99;line-height:1.6;margin-top:26px;text-align:center">Prototipe. Angka dan laporan di layar ini hanya data contoh, bukan pengamatan resmi.<br>Rujuk pengumuman Badan Geologi sebelum bertindak.</div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div style="position:sticky;bottom:0;z-index:30;background:rgba(13,17,23,.95);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.08);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px 12px">
+    <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+      <div onClick="{{ n.on }}" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 2px;cursor:pointer;color:{{ n.c }}">
+        <div style="width:18px;height:18px;border-radius:{{ n.r }};border:1.5px solid {{ n.c }};background:{{ n.fill }};transition:all .2s"></div>
+        <div style="font-size:10.5px;font-weight:600">{{ n.label }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- NOTIF SHEET -->
+  <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,9,.72);display:flex;align-items:flex-end;justify-content:center">
+      <div style="width:100%;max-width:460px;background:#141a22;border-top:1px solid rgba(255,255,255,.12);border-radius:18px 18px 0 0;padding:18px 16px 22px;animation:riseIn .28s ease both">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:15px;font-weight:700">Aturan notifikasi</div>
+          <div onClick="{{ closeNotif }}" style="font-size:12px;color:#9aa5b3;cursor:pointer;padding:4px 6px">Tutup</div>
+        </div>
+        <div style="font-size:12px;color:#9aa5b3;line-height:1.5;margin-top:5px">Dibatasi supaya tidak jenuh: erupsi kecil yang berulang tidak dikirim satu per satu.</div>
+        <div style="display:flex;flex-direction:column;gap:2px;margin-top:14px">
+          <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+            <div onClick="{{ r.on }}" style="display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid rgba(255,255,255,.06);cursor:{{ r.cursor }}">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600;color:{{ r.fg }}">{{ r.label }}</div>
+                <div style="font-size:11.5px;color:#9aa5b3;line-height:1.45;margin-top:2px">{{ r.note }}</div>
+              </div>
+              <div style="width:40px;height:23px;border-radius:14px;background:{{ r.track }};position:relative;flex:none;transition:background .2s">
+                <div style="position:absolute;top:3px;left:{{ r.knob }};width:17px;height:17px;border-radius:50%;background:#fff;transition:left .2s"></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:14px;border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:13px;background:#0f151c">
+          <div style="font-size:12.5px;font-weight:600">Cadangan saat sinyal lemah</div>
+          <div style="font-size:11.5px;color:#9aa5b3;line-height:1.5;margin-top:3px">Perintah evakuasi juga dikirim lewat SMS, tanpa perlu internet. Data lain dimuat dalam mode hemat.</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- REPORT SHEET -->
+  <sc-if value="{{ reportOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:60;background:rgba(4,6,9,.72);display:flex;align-items:flex-end;justify-content:center">
+      <div style="width:100%;max-width:460px;background:#141a22;border-top:1px solid rgba(255,255,255,.12);border-radius:18px 18px 0 0;padding:18px 16px 22px;animation:riseIn .28s ease both">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:15px;font-weight:700">Laporan warga</div>
+          <div onClick="{{ closeReport }}" style="font-size:12px;color:#9aa5b3;cursor:pointer;padding:4px 6px">Tutup</div>
+        </div>
+        <div style="font-size:12px;color:#9aa5b3;line-height:1.5;margin-top:5px">Diperiksa petugas BPBD sebelum tampil di feed publik. Laporan Anda tidak mengubah level status.</div>
+        <div style="font-size:13px;font-weight:600;color:#aeb8c4;margin:16px 0 8px">Apa yang Anda alami?</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px">
+          <sc-for list="{{ tags }}" as="tg" hint-placeholder-count="5">
+            <div onClick="{{ tg.on }}" style="font-size:12.5px;font-weight:600;padding:9px 13px;border-radius:20px;cursor:pointer;border:1px solid {{ tg.line }};background:{{ tg.bg }};color:{{ tg.fg }}">{{ tg.label }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:16px;border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:14px;background:#0f151c">
+          <div style="font-size:11.5px;color:#9aa5b3;line-height:1.5">Lampirkan foto · lokasi otomatis dari GPS<br>Kalianda, Lampung Selatan · akurasi 12 m</div>
+        </div>
+        <div onClick="{{ submitReport }}" style="margin-top:14px;text-align:center;font-size:13.5px;font-weight:700;padding:14px;border-radius:12px;background:{{ submitBg }};color:{{ submitFg }};cursor:pointer">{{ submitLabel }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:880},&quot;level&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;waspada&quot;,&quot;siaga&quot;,&quot;awas&quot;],&quot;default&quot;:&quot;siaga&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Status&quot;},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;fresh&quot;,&quot;stale&quot;,&quot;failed&quot;,&quot;offline&quot;],&quot;default&quot;:&quot;fresh&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Kondisi data&quot;},&quot;showTransport&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tampilan&quot;}}">
+const LEVELS = {
+  normal:{name:'NORMAL',roman:'I',color:'#4ade80',line:'rgba(74,222,128,.3)',wash:'rgba(74,222,128,.06)',radius:'1',since:'12 Mar 2026',urgent:false,strip:'',
+    headline:'Aktivitas pada tingkat dasar. Tidak ada erupsi teramati dalam 24 jam terakhir.',
+    plain:'Aman untuk aktivitas biasa. Anda tidak perlu melakukan apa pun selain mengikuti kabar resmi.',
+    coastal:false,coastalTag:'',coastalNote:'',coastalDot:'#4ade80',
+    action:'Tidak ada pembatasan khusus',actionNote:'Tetap ikuti pengumuman resmi sebelum mendekati kawah.'},
+  waspada:{name:'WASPADA',roman:'II',color:'#facc15',line:'rgba(250,204,21,.3)',wash:'rgba(250,204,21,.06)',radius:'2',since:'28 Ags 2026',urgent:false,strip:'',
+    headline:'Peningkatan kegempaan dan embusan asap tebal. Erupsi kecil mungkin terjadi.',
+    plain:'Belum perlu mengungsi. Siapkan masker di rumah dan jangan mendekati kawah.',
+    coastal:true,coastalTag:'belum ada peringatan',coastalNote:'Tidak ada potensi gelombang tidak wajar. Aktivitas pesisir berjalan normal dengan pemantauan.',coastalDot:'#facc15',
+    action:'Jauhi kawah dalam radius 2 km',actionNote:'Siapkan masker dan pelindung mata bila terjadi hujan abu tipis.'},
+  siaga:{name:'SIAGA',roman:'III',color:'#fb923c',line:'rgba(251,146,60,.32)',wash:'rgba(251,146,60,.07)',radius:'5',since:'3 Sep 2026, 09.20 WIB',urgent:true,
+    strip:'Erupsi berlanjut. Dilarang beraktivitas dalam radius 5 km dari kawah.',
+    headline:'Erupsi menerus dengan kolom abu hingga 1.200 m. Lontaran material teramati di sekitar kawah.',
+    plain:'Jangan mendekat ke gunung. Bila Anda di Kalianda atau Rajabasa, siapkan masker dan tas berisi dokumen serta obat.',
+    coastal:true,coastalTag:'waspada gelombang',coastalNote:'Gelombang 1,5–2,5 m di Anyer–Carita. Wisata pantai ditutup. Belum ada peringatan tsunami dari BMKG.',coastalDot:'#facc15',
+    action:'Kosongkan radius 5 km dari kawah',actionNote:'Nelayan dan wisatawan dilarang mendekat. Warga pesisir siap mengungsi bila status naik.'},
+  awas:{name:'AWAS',roman:'IV',color:'#f87171',line:'rgba(248,113,113,.35)',wash:'rgba(248,113,113,.08)',radius:'7',since:'7 Sep 2026, 04.05 WIB',urgent:true,
+    strip:'Evakuasi segera. Potensi erupsi besar dan gelombang tinggi di pesisir Selat Sunda.',
+    headline:'Erupsi besar berlangsung. Potensi longsoran tubuh gunung dan gelombang tinggi di pesisir.',
+    plain:'Berangkat ke titik kumpul sekarang, jangan menunggu. Bawa dokumen, obat, dan air; jauhi pesisir.',
+    coastal:true,coastalTag:'peringatan tsunami',coastalNote:'BMKG memperingatkan potensi tsunami akibat longsoran tubuh gunung. Menjauh dari pantai, cari tempat tinggi.',coastalDot:'#f87171',
+    action:'Evakuasi ke titik kumpul sekarang',actionNote:'Ikuti arahan petugas. Hindari pesisir dan bawa dokumen penting serta obat.'}
+};
+
+const DSTATE = {
+  fresh:{label:'LIVE',color:'#4ade80',line:'rgba(74,222,128,.35)',wash:'rgba(74,222,128,.08)',sub:'baru saja',sourceTime:'diperbarui 09.42 WIB',dim:1,banner:false,failed:false,age:'baru saja'},
+  stale:{label:'BASI',color:'#facc15',line:'rgba(250,204,21,.35)',wash:'rgba(250,204,21,.08)',sub:'47 menit lalu',sourceTime:'terakhir diketahui 08.55 WIB',dim:.72,banner:true,failed:false,age:'47 menit lalu',
+    bannerTitle:'Data belum diperbarui 47 menit',bannerNote:'Angka di bawah adalah yang terakhir diketahui. Perubahan status tetap dikirim lewat notifikasi.'},
+  failed:{label:'GAGAL',color:'#f87171',line:'rgba(248,113,113,.35)',wash:'rgba(248,113,113,.08)',sub:'tidak tersambung',sourceTime:'gagal dimuat',dim:.55,banner:true,failed:true,age:'1 jam 20 menit lalu',
+    bannerTitle:'Tidak bisa menghubungi server',bannerNote:'Yang tampil adalah data tersimpan 1 jam 20 menit lalu. Untuk keputusan mendesak, hubungi 112.'},
+  offline:{label:'OFFLINE',color:'#94a3b8',line:'rgba(148,163,184,.3)',wash:'rgba(148,163,184,.08)',sub:'mode hemat data',sourceTime:'dari penyimpanan 09.12 WIB',dim:.8,banner:true,failed:false,age:'30 menit lalu',
+    bannerTitle:'Mode offline aktif',bannerNote:'Menampilkan salinan terakhir. Perintah evakuasi tetap masuk lewat SMS tanpa internet.'}
+};
+
+class Component extends DCLogic {
+  state = {
+    tab:'status', locOn:true, notifOpen:false, reportOpen:false,
+    layer:'radius', barSel:17, tag:'Hujan abu', sent:false,
+    rules:{level:true, evac:true, ash:true, quake:false},
+    bars:[2,3,2,4,6,5,7,9,8,12,14,11,16,19,17,22,26,31,28,24,21,19,23,27]
+  };
+  componentDidMount(){
+    this.t = setInterval(()=>this.setState(s=>({
+      bars: s.bars.slice(1).concat([Math.max(8, Math.round(18 + Math.random()*14))])
+    })), 5200);
+  }
+  componentWillUnmount(){ clearInterval(this.t); }
+
+  renderVals(){
+    const s = this.state, p = this.props;
+    const lv = LEVELS[p.level] || LEVELS.siaga;
+    const ds = DSTATE[p.dataState] || DSTATE.fresh;
+    const inZone = false, myKm = 38;
+    const max = Math.max.apply(null, s.bars);
+    const hoursAgo = 23 - s.barSel;
+
+    const mk = (arr, sel, key) => arr.map(o=>({...o,
+      line: sel===o[key] ? lv.color : 'rgba(255,255,255,.11)',
+      bg: sel===o[key] ? lv.wash : 'transparent',
+      fg: sel===o[key] ? lv.color : '#a8b3c1'
+    }));
+
+    const layers = mk([
+      {id:'radius',label:'Radius bahaya',note:'Zona terlarang '+lv.radius+' km dari kawah. Pos pengamatan berada di Pasauran, 42 km ke timur.'},
+      {id:'abu',label:'Sebaran abu',note:'Abu terbawa angin ke barat laut, 11 km/jam. Perkiraan jangkauan abu tipis 38 km.'},
+      {id:'pesisir',label:'Pesisir',note:'Enam desa pesisir Selat Sunda masuk zona pemantauan gelombang. Sirene pantai diuji tiap Jumat 10.00.'}
+    ], s.layer, 'id').map(l=>({...l, on: ()=>this.setState({layer:l.id})}));
+
+    const ruleDefs = [
+      {k:'evac',label:'Perintah evakuasi',note:'Selalu aktif. Dikirim juga lewat SMS.',locked:true},
+      {k:'level',label:'Perubahan level status',note:'Hanya saat level naik atau turun, bukan setiap erupsi.'},
+      {k:'ash',label:'Hujan abu di wilayah saya',note:'Maksimal satu kali per 3 jam.'},
+      {k:'quake',label:'Setiap kejadian erupsi',note:'Bisa puluhan per hari. Untuk pemantau dan relawan.'}
+    ];
+
+    return {
+      lv, ds,
+      refresh: () => this.setState({}),
+      isStatus:s.tab==='status', isMap:s.tab==='peta', isSeis:s.tab==='seismik',
+      isFeed:s.tab==='laporan', isGuide:s.tab==='panduan',
+      goGuide: ()=>this.setState({tab:'panduan'}),
+      goMap: ()=>this.setState({tab:'peta'}),
+      nav: [
+        {id:'status',label:'Status',r:'50%'},
+        {id:'peta',label:'Peta',r:'3px'},
+        {id:'seismik',label:'Seismik',r:'2px 9px 2px 9px'},
+        {id:'laporan',label:'Laporan',r:'9px 2px 9px 2px'},
+        {id:'panduan',label:'Panduan',r:'50% 50% 4px 4px'}
+      ].map(n=>({...n,
+        c: s.tab===n.id ? lv.color : '#9aa5b3',
+        fill: s.tab===n.id ? lv.color : 'transparent',
+        on: ()=>this.setState({tab:n.id})
+      })),
+
+      locOn: s.locOn, locOff: !s.locOn,
+      toggleLoc: ()=>this.setState(v=>({locOn:!v.locOn})),
+      loc: {
+        km: myKm+' km',
+        c: inZone ? '#f87171' : '#4ade80',
+        verdict: inZone ? 'Anda di dalam zona terlarang' : 'Di luar zona terlarang '+lv.radius+' km',
+        note: inZone
+          ? 'Segera menjauh dari kawah dan ikuti arahan petugas.'
+          : 'Titik kumpul terdekat: Lapangan Kalianda, 3,1 km dari posisi Anda. Wilayah Anda terkena abu tipis.',
+        btn: inZone ? 'Rute keluar zona' : 'Lihat titik kumpul terdekat',
+        btnBg: inZone ? '#f87171' : 'rgba(255,255,255,.1)',
+        btnFg: inZone ? '#0b0b0b' : '#e9edf2'
+      },
+
+      quick: [
+        {n:'01', t:'Pakai masker saat di luar ruangan dan tutup tandon air.'},
+        {n:'02', t:'Siapkan satu tas berisi dokumen, obat, air minum, dan senter.'},
+        {n:'03', t:'Simpan nomor BPBD 112 dan sepakati titik temu keluarga.'}
+      ],
+      metrics: [
+        {label:'Gempa erupsi', value:'27', delta:'tertinggi 6 hari terakhir', tone:'#fb923c'},
+        {label:'Amplitudo maksimum', value:'55 mm', delta:'durasi 3 menit 12 detik', tone:'#9aa5b3'},
+        {label:'Deformasi', value:'+2,4 cm', delta:'inflasi melambat', tone:'#4ade80'},
+        {label:'Suhu titik panas', value:'318 °C', delta:'stabil sejak kemarin', tone:'#9aa5b3'}
+      ],
+      impacts: [
+        {area:'Kalianda & Rajabasa', note:'Hujan abu tipis, jarak pandang 4 km. Masker dibagikan di 6 titik.', tag:'ABU', dot:'#fb923c'},
+        {area:'Pulau Sebesi', note:'42 warga dievakuasi sementara ke Kalianda pada 5 Sep.', tag:'EVAKUASI', dot:'#f87171'},
+        {area:'Air bersih', note:'Tandon terbuka berpotensi tercampur abu. Rebus air sebelum diminum.', tag:'SANITASI', dot:'#94a3b8'}
+      ],
+      showTransport: p.showTransport !== false,
+      transport: [
+        {name:'Bandara Radin Inten II', note:'Rute penerbangan dialihkan menjauhi kolom abu', state:'NORMAL', c:'#4ade80'},
+        {name:'Pelabuhan Bakauheni', note:'Penyeberangan lanjut dengan pemantauan gelombang', state:'TERBATAS', c:'#facc15'},
+        {name:'Wisata Anak Krakatau', note:'Semua trip dibatalkan sejak 3 Sep', state:'TUTUP', c:'#f87171'}
+      ],
+
+      mapLayers: layers,
+      layerNote: (layers.find(l=>l.id===s.layer)||layers[0]).note,
+      villages: [
+        {km:'12 km', name:'Pulau Sebesi', note:'Terdekat berpenghuni · 42 jiwa dievakuasi', c:'#f87171'},
+        {km:'38 km', name:'Rajabasa, Lampung Selatan', note:'Hujan abu tipis · 4 posko', c:'#fb923c'},
+        {km:'42 km', name:'Pasauran, Serang', note:'Pos pengamatan · sirene aktif', c:'#facc15'},
+        {km:'51 km', name:'Anyer, Serang', note:'Zona pemantauan gelombang', c:'#94a3b8'}
+      ],
+
+      bars: s.bars.map((n,i)=>({
+        h: Math.max(4, Math.round(n/max*126))+'px',
+        c: i===s.barSel ? lv.color : (n > max*0.66 ? 'rgba(251,146,60,.55)' : 'rgba(148,163,184,.45)'),
+        on: ()=>this.setState({barSel:i})
+      })),
+      barNote: 'Jam −'+hoursAgo+': '+s.bars[s.barSel]+' kejadian gempa. Ketuk batang lain untuk melihat jam yang berbeda.',
+      quakeTypes: [
+        {label:'Letusan', n:'27', w:'86%', c:'#fb923c'},
+        {label:'Embusan', n:'41', w:'64%', c:'#facc15'},
+        {label:'Vulkanik dangkal', n:'12', w:'34%', c:'#94a3b8'},
+        {label:'Tremor menerus', n:'6 jam', w:'52%', c:'#f87171'}
+      ],
+
+      feed: [
+        {kind:'VONA', c:'#fb923c', time:'09.20 WIB', title:'VONA warna ORANGE dikeluarkan',
+          body:'Kolom abu teramati 1.200 m di atas puncak, bergerak ke barat laut. Ketinggian abu FL 120.',
+          more:'Badan Geologi · Pos Pengamatan Anak Krakatau'},
+        {kind:'ERUPSI', c:'#f87171', time:'08.47 WIB', title:'Erupsi dengan amplitudo maksimum 55 mm',
+          body:'Durasi 3 menit 12 detik. Lontaran material teramati sejauh 800 m dari pusat kawah.',
+          more:'Badan Geologi · rekaman seismograf tersedia'},
+        {kind:'HIMBAUAN', c:'#facc15', time:'07.05 WIB', title:'Nelayan diminta menjauhi radius 5 km',
+          body:'Kegiatan penangkapan ikan di sekitar tubuh gunung dihentikan sampai status diturunkan.',
+          more:'BPBD Lampung Selatan'},
+        {kind:'CUACA', c:'#94a3b8', time:'06.30 WIB', title:'Angin permukaan ke barat laut, 11 km/jam',
+          body:'Abu tipis berpotensi mencapai Kalianda dan Rajabasa hingga sore. Tinggi gelombang 1,5–2,5 m.',
+          more:'BMKG · pembaruan tiap 6 jam'}
+      ],
+
+      subNote: s.rules.level ? 'Aktif: perubahan level dan perintah evakuasi' : 'Hanya perintah evakuasi',
+      notifOpen: s.notifOpen,
+      openNotif: ()=>this.setState({notifOpen:true}),
+      closeNotif: ()=>this.setState({notifOpen:false}),
+      rules: ruleDefs.map(r=>{
+        const on = r.locked ? true : s.rules[r.k];
+        return {...r,
+          fg: r.locked ? '#9aa5b3' : '#e9edf2',
+          cursor: r.locked ? 'default' : 'pointer',
+          track: on ? (r.locked ? 'rgba(148,163,184,.45)' : lv.color) : 'rgba(255,255,255,.14)',
+          knob: on ? '20px' : '3px',
+          on: r.locked ? ()=>{} : ()=>this.setState(v=>({rules:{...v.rules,[r.k]:!v.rules[r.k]}}))
+        };
+      }),
+
+      reportOpen: s.reportOpen,
+      openReport: ()=>this.setState({reportOpen:true, sent:false}),
+      closeReport: ()=>this.setState({reportOpen:false}),
+      tags: ['Hujan abu','Suara dentuman','Getaran','Air keruh','Gelombang tinggi'].map(t=>({
+        label:t,
+        line: s.tag===t ? lv.color : 'rgba(255,255,255,.13)',
+        bg: s.tag===t ? lv.wash : 'transparent',
+        fg: s.tag===t ? lv.color : '#c3cbd5',
+        on: ()=>this.setState({tag:t, sent:false})
+      })),
+      submitLabel: s.sent ? 'Terkirim — menunggu verifikasi petugas' : 'Kirim laporan',
+      submitBg: s.sent ? 'rgba(255,255,255,.09)' : lv.color,
+      submitFg: s.sent ? '#9aa5b3' : '#0b0b0b',
+      submitReport: ()=>this.setState({sent:true}),
+
+      steps: [
+        {n:'01', t:'Pakai masker N95 atau kain lembap; abu vulkanik merusak saluran napas.'},
+        {n:'02', t:'Tutup jendela, ventilasi, dan tandon air. Matikan pendingin yang menarik udara luar.'},
+        {n:'03', t:'Gunakan kacamata pelindung. Jangan mengucek mata yang terkena abu.'},
+        {n:'04', t:'Jangan menyapu abu dalam keadaan kering — basahi lebih dulu agar tidak beterbangan.'},
+        {n:'05', t:'Simpan dokumen, obat, dan air minum dalam satu tas siap bawa.'}
+      ],
+      points: [
+        {name:'Lapangan Kalianda', note:'3,1 km dari Anda · kapasitas 1.200 jiwa · dapur umum', tel:'0727 322xxx'},
+        {name:'SDN 2 Rajabasa', note:'7,4 km · kapasitas 400 jiwa · posko kesehatan', tel:'0727 331xxx'},
+        {name:'BPBD Lampung Selatan', note:'Siaga 24 jam', tel:'112'}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
