@@ -32,6 +32,22 @@ const extractSchemaFields = (body) => {
   return names.length ? `field: ${names.slice(0, 30).join(', ')}` : null
 }
 
+/** Metadata gunung dari katalog Smithsonian, untuk mengisi registri app. */
+const extractVolcanoes = (body) => {
+  try {
+    const parsed = JSON.parse(body)
+    return (parsed.features ?? [])
+      .map((f) => {
+        const p = f.properties ?? {}
+        const [lon, lat] = f.geometry?.coordinates ?? []
+        return `${p.Volcano_Number} ${p.Volcano_Name} | ${lat}, ${lon} | ${p.Elevation} m | ${p.Country}`
+      })
+      .join('\n  ')
+  } catch {
+    return null
+  }
+}
+
 const extractArcgis = (body) => {
   try {
     const parsed = JSON.parse(body)
@@ -49,6 +65,20 @@ const extractArcgis = (body) => {
  * layer GVP menunjukkan ada layer emisi yang belum diperiksa.
  */
 const TARGETS = [
+  // Registri tujuh gunung: koordinat dan ketinggian diambil dari katalog resmi
+  // Smithsonian, bukan dari ingatan.
+  [
+    'gvp-volcanoes',
+    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
+      '&request=GetFeature&typeName=GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes' +
+      '&outputFormat=application/json&count=20' +
+      '&CQL_FILTER=' +
+      encodeURIComponent(
+        "Volcano_Name IN ('Krakatau','Semeru','Lewotolo','Ibu','Sinabung','Lewotobi','Dukono')",
+      ),
+    extractVolcanoes,
+  ],
+
   // ArcGIS BNPB ternyata terbuka; ini menelusuri folder yang relevan.
   [
     'bnpb-bencana-harian',
