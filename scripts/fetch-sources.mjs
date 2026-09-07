@@ -190,6 +190,40 @@ const SOURCES = [
 ]
 
 /**
+ * Workflow command hanya menerima satu baris; baris baru dan persen harus
+ * dikodekan supaya pesannya tidak terpotong.
+ */
+function encodeAnnotation(text) {
+  return text
+    .replace(/%/g, '%25')
+    .replace(/\r/g, '%0D')
+    .replace(/\n/g, '%0A')
+}
+
+/**
+ * Annotation per sumber. Berbeda dengan ringkasan job, annotation bisa dibaca
+ * lewat API publik, jadi hasil sungguhannya dapat diperiksa dari luar tanpa
+ * membuka log CI.
+ */
+function emitAnnotations(sources) {
+  if (!process.env.GITHUB_ACTIONS) return
+  for (const [id, s] of Object.entries(sources)) {
+    const detail = s.ok
+      ? `parsed=${JSON.stringify(s.data).slice(0, 500)}`
+      : `error=${s.error}`
+    const sample = rawSamples.get(id)
+    const body = [
+      `${id}: ${s.ok ? 'ok' : 'GAGAL'}`,
+      detail,
+      sample ? `raw=${sample.slice(0, 500)}` : 'raw=(tidak ada respons)',
+    ].join('\n')
+    console.log(
+      `::notice title=sumber-${id}::${encodeAnnotation(body)}`,
+    )
+  }
+}
+
+/**
  * Laporan ke ringkasan job Actions: nilai hasil parsing berdampingan dengan
  * cuplikan respons mentah. Tanpa ini, step yang hijau tidak membuktikan apa pun
  * karena sumber yang gagal pun sengaja tidak menjatuhkan build.
@@ -264,6 +298,7 @@ async function main() {
   await mkdir(dirname(OUT), { recursive: true })
   await writeFile(OUT, `${JSON.stringify(payload, null, 2)}\n`)
   await writeSummary(sources)
+  emitAnnotations(sources)
   console.log(`\n${okCount}/${SOURCES.length} sumber berhasil → ${OUT}`)
 
   // Sengaja selalu exit 0: deploy tetap jalan, dan app menandai sendiri sumber
