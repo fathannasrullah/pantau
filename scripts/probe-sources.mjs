@@ -26,6 +26,12 @@ const extractLayerNames = (body) => {
   return names.length ? `layer: ${names.join(', ')}` : '(tidak ada nama layer)'
 }
 
+/** Nama field sebuah layer WFS, untuk tahu kenapa penyaringan ditolak. */
+const extractSchemaFields = (body) => {
+  const names = [...body.matchAll(/element name="([^"]+)"/g)].map((m) => m[1])
+  return names.length ? `field: ${names.slice(0, 30).join(', ')}` : null
+}
+
 const extractArcgis = (body) => {
   try {
     const parsed = JSON.parse(body)
@@ -43,6 +49,35 @@ const extractArcgis = (body) => {
  * layer GVP menunjukkan ada layer emisi yang belum diperiksa.
  */
 const TARGETS = [
+  // ArcGIS BNPB ternyata terbuka; ini menelusuri folder yang relevan.
+  [
+    'bnpb-bencana-harian',
+    'https://gis.bnpb.go.id/server/rest/services/Bencana_Harian?f=json',
+    extractArcgis,
+  ],
+  [
+    'bnpb-destana',
+    'https://gis.bnpb.go.id/server/rest/services/Destana?f=json',
+    extractArcgis,
+  ],
+  [
+    'bnpb-inarisk',
+    'https://gis.bnpb.go.id/server/rest/services/inarisk?f=json',
+    extractArcgis,
+  ],
+  // Penyaringan Volcano_Number ditolak dua layer ini; cari nama field aslinya.
+  [
+    'gvp-1960-schema',
+    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
+      '&request=DescribeFeatureType&typeName=GVP-VOTW:E3WebApp_Eruptions1960',
+    extractSchemaFields,
+  ],
+  [
+    'gvp-emissions-schema',
+    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
+      '&request=DescribeFeatureType&typeName=GVP-VOTW:E3WebApp_Emissions',
+    extractSchemaFields,
+  ],
   [
     'reliefweb-v2',
     'https://api.reliefweb.int/v2/disasters?appname=pantau-gunung&limit=2' +
