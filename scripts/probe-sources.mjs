@@ -68,30 +68,36 @@ const extractArcgis = (body) => {
  * Putaran keenam: mencari sumber sah untuk dampak wilayah, titik kumpul, dan
  * jalur evakuasi — tiga hal yang sampai sekarang masih data karangan di app.
  */
+/**
+ * Putaran ketujuh: mencari sumber tingkat nasional, supaya layar tidak
+ * bergantung sepenuhnya pada data daerah yang belum ada API-nya.
+ */
 const TARGETS = [
+  // BMKG: peringatan tsunami terakhir — penting untuk gunung pesisir.
+  ['bmkg-lasttsunami', 'https://data.bmkg.go.id/DataMKG/TEWS/lasttsunami.json'],
+  // BMKG: prakiraan cuaca per provinsi, XML resmi.
   [
-    'inarisk-evakuasi',
-    'https://gis.bnpb.go.id/server/rest/services/inarisk/Arah_jalur_evakuasi/MapServer?f=json',
+    'bmkg-cuaca-lampung',
+    'https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-Lampung.xml',
+    (b) => `area pertama: ${(b.match(/description="([^"]+)"/g) || []).slice(0, 6).join(', ')}`,
   ],
   [
-    'inarisk-evakuasi-query',
-    'https://gis.bnpb.go.id/server/rest/services/inarisk/Arah_jalur_evakuasi/MapServer/0/query' +
-      '?where=1%3D1&outFields=*&resultRecordCount=2&f=json',
+    'bmkg-cuaca-jatim',
+    'https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-JawaTimur.xml',
+    (b) => `bytes tercantum, area: ${(b.match(/description="([^"]+)"/g) || []).slice(0, 4).join(', ')}`,
   ],
+  // Portal data terbuka nasional.
   [
-    'bnpb-bencana-mingguan',
-    'https://gis.bnpb.go.id/server/rest/services/Bencana_Mingguan?f=json',
-    extractArcgis,
+    'datago-search',
+    'https://data.go.id/api/3/action/package_search?q=gunung+api&rows=3',
   ],
+  // BNPB: mungkin service, bukan folder.
   [
-    'bnpb-poi',
-    'https://gis.bnpb.go.id/server/rest/services/POI?f=json',
-    extractArcgis,
+    'bnpb-harian-mapserver',
+    'https://gis.bnpb.go.id/server/rest/services/Bencana_Harian/MapServer?f=json',
   ],
-  [
-    'gdacs-list',
-    'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=VO',
-  ],
+  // Perkiraan penduduk terdampak dalam radius, dari lembaga ilmiah.
+  ['worldpop', 'https://api.worldpop.org/v1/services'],
 ]
 
 function encodeAnnotation(text) {
