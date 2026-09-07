@@ -72,32 +72,58 @@ const extractArcgis = (body) => {
  * Putaran ketujuh: mencari sumber tingkat nasional, supaya layar tidak
  * bergantung sepenuhnya pada data daerah yang belum ada API-nya.
  */
+/** Lingkaran kasar di sekitar titik, untuk meminta hitungan penduduk. */
+function circleGeoJson(lat, lon, km, points = 16) {
+  const coords = []
+  for (let i = 0; i <= points; i += 1) {
+    const angle = (i / points) * 2 * Math.PI
+    const dLat = (km / 111.32) * Math.cos(angle)
+    const dLon = ((km / 111.32) * Math.sin(angle)) / Math.cos((lat * Math.PI) / 180)
+    coords.push([lon + dLon, lat + dLat])
+  }
+  return { type: 'Polygon', coordinates: [coords] }
+}
+
+/**
+ * WorldPop menghitung secara asinkron: permintaan pertama mengembalikan taskid,
+ * hasilnya diambil dari endpoint tugas. Alur itu perlu dibuktikan dulu sebelum
+ * dipakai di pengambilan rutin.
+ */
+async function worldpopFlow() {
+  const geo = encodeURIComponent(JSON.stringify(circleGeoJson(-6.1009, 105.4233, 10)))
+  const start = await fetch(
+    `https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&geojson=${geo}&runasync=false`,
+    { signal: AbortSignal.timeout(TIMEOUT_MS) },
+  )
+  const first = await start.json()
+  if (first?.status === 'finished' || first?.data?.total_population !== undefined) {
+    return `langsung selesai: ${JSON.stringify(first).slice(0, 400)}`
+  }
+  const taskid = first?.taskid
+  if (!taskid) return `tanpa taskid: ${JSON.stringify(first).slice(0, 400)}`
+
+  for (let i = 0; i < 8; i += 1) {
+    await new Promise((r) => setTimeout(r, 2000))
+    const res = await fetch(`https://api.worldpop.org/v1/tasks/${taskid}`, {
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+    const body = await res.json()
+    if (body?.status !== 'created' && body?.status !== 'started') {
+      return `taskid=${taskid} status=${body?.status} ${JSON.stringify(body).slice(0, 400)}`
+    }
+  }
+  return `taskid=${taskid} belum selesai setelah 16 detik`
+}
+
 const TARGETS = [
-  // BMKG: peringatan tsunami terakhir — penting untuk gunung pesisir.
-  ['bmkg-lasttsunami', 'https://data.bmkg.go.id/DataMKG/TEWS/lasttsunami.json'],
-  // BMKG: prakiraan cuaca per provinsi, XML resmi.
+  ['worldpop-stats', worldpopFlow],
+  // Endpoint cuaca BMKG yang baru: tanpa parameter, pesan errornya menunjukkan
+  // parameter apa yang sebenarnya diminta.
+  ['bmkg-prakiraan', 'https://api.bmkg.go.id/publik/prakiraan-cuaca'],
   [
-    'bmkg-cuaca-lampung',
-    'https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-Lampung.xml',
-    (b) => `area pertama: ${(b.match(/description="([^"]+)"/g) || []).slice(0, 6).join(', ')}`,
+    'bmkg-prakiraan-adm',
+    'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm2=35.08',
   ],
-  [
-    'bmkg-cuaca-jatim',
-    'https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-JawaTimur.xml',
-    (b) => `bytes tercantum, area: ${(b.match(/description="([^"]+)"/g) || []).slice(0, 4).join(', ')}`,
-  ],
-  // Portal data terbuka nasional.
-  [
-    'datago-search',
-    'https://data.go.id/api/3/action/package_search?q=gunung+api&rows=3',
-  ],
-  // BNPB: mungkin service, bukan folder.
-  [
-    'bnpb-harian-mapserver',
-    'https://gis.bnpb.go.id/server/rest/services/Bencana_Harian/MapServer?f=json',
-  ],
-  // Perkiraan penduduk terdampak dalam radius, dari lembaga ilmiah.
-  ['worldpop', 'https://api.worldpop.org/v1/services'],
 ]
 
 function encodeAnnotation(text) {
@@ -107,6 +133,12 @@ function encodeAnnotation(text) {
 async function probe(url, extract) {
   const started = Date.now()
   try {
+    // Sebagian sumber butuh lebih dari satu permintaan (kirim tugas, lalu
+    // tunggu hasilnya). Target seperti itu ditulis sebagai fungsi.
+    if (typeof url === 'function') {
+      const body = await url()
+      return { status: '200 (alur)', type: '-', cors: '-', ms: Date.now() - started, body, bytes: body.length }
+    }
     const res = await fetch(url, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
       redirect: 'follow',
