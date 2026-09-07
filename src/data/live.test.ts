@@ -269,3 +269,94 @@ test('ketinggian penerbangan dialihkan ke meter', () => {
   assert.equal(feetToMetres(18000), 5486)
   assert.equal(feetToMetres(0), 0)
 })
+
+test('poligon peringatan dibuang seluruhnya bila satu titiknya cacat', () => {
+  // Bentuk yang separuh benar menggambarkan area yang salah di peta, dan peta
+  // terbaca sebagai hasil pengukuran — lebih menyesatkan daripada tidak ada
+  // bentuk sama sekali.
+  const cacat = bundle({
+    sigmet: source({
+      radiusKm: 500,
+      nearby: [
+        {
+          text: 'WVID01 WIIF VA ERUPTION',
+          polygon: [[-6.1, 105.4], [-6.2, 'x'], [-6.3, 105.6]],
+        },
+      ],
+    }),
+  })
+  assert.equal(readSigmet(cacat)?.advisories[0]?.polygon, null)
+
+  const luarBumi = bundle({
+    sigmet: source({
+      radiusKm: 500,
+      nearby: [
+        {
+          text: 'WVID01 WIIF VA ERUPTION',
+          polygon: [[-6.1, 105.4], [-95, 105.5], [-6.3, 105.6]],
+        },
+      ],
+    }),
+  })
+  assert.equal(readSigmet(luarBumi)?.advisories[0]?.polygon, null)
+
+  const utuh = bundle({
+    sigmet: source({
+      radiusKm: 500,
+      nearby: [
+        {
+          text: 'WVID01 WIIF VA ERUPTION',
+          polygon: [[-6.1, 105.4], [-6.2, 105.5], [-6.3, 105.6]],
+        },
+      ],
+    }),
+  })
+  assert.deepEqual(readSigmet(utuh)?.advisories[0]?.polygon, [
+    [-6.1, 105.4],
+    [-6.2, 105.5],
+    [-6.3, 105.6],
+  ])
+})
+
+test('garis tanpa tiga titik bukan poligon', () => {
+  const live = bundle({
+    sigmet: source({
+      radiusKm: 500,
+      nearby: [
+        { text: 'WVID01 WIIF VA', polygon: [[-6.1, 105.4], [-6.2, 105.5]] },
+      ],
+    }),
+  })
+  assert.equal(readSigmet(live)?.advisories[0]?.polygon, null)
+})
+
+test('episentrum BMKG dibaca hanya bila koordinatnya ikut', () => {
+  // Tanpa koordinat laporannya tetap berguna sebagai teks, tapi tidak boleh
+  // muncul sebagai penanda di peta.
+  const live = bundle({
+    bmkg: source({
+      radiusKm: 500,
+      nearby: [
+        {
+          timeISO: '2026-09-06T09:30:00Z',
+          magnitude: '5,1',
+          area: 'Selat Sunda',
+          distanceKm: 40,
+          lat: -6.31,
+          lon: 105.22,
+        },
+        {
+          timeISO: '2026-09-06T08:00:00Z',
+          magnitude: '4,2',
+          area: 'Banten',
+          distanceKm: 88,
+        },
+      ],
+    }),
+  })
+  const nearby = readBmkg(live)?.nearby ?? []
+  assert.equal(nearby.length, 2)
+  assert.equal(nearby[0]?.lat, -6.31)
+  assert.equal(nearby[1]?.lat, null)
+  assert.equal(nearby.filter((r) => r.lat !== null && r.lon !== null).length, 1)
+})

@@ -14,6 +14,7 @@ import {
   readWind,
 } from './live'
 import type {
+  Epicentre,
   FeedItem,
   FeedStatus,
   LevelId,
@@ -161,6 +162,25 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   // yang berhasil — bukan dari jam simulasi.
   const updatedAtISO = newestFetchISO(live) ?? shiftISO(nowISO, ageMinutes)
 
+  // Hanya laporan yang benar-benar membawa koordinat yang boleh jadi penanda
+  // peta; sisanya tetap tampil sebagai teks di tab Laporan.
+  const bmkgEpicentres: Epicentre[] = (bmkg?.nearby ?? []).flatMap((r) =>
+    r.lat === null || r.lon === null
+      ? []
+      : [
+          {
+            lat: r.lat,
+            lon: r.lon,
+            magnitude: r.magnitude,
+            area: r.area,
+            timeISO: r.timeISO,
+            depth: r.depth,
+            potential: r.potential,
+            distanceKm: r.distanceKm,
+          },
+        ],
+  )
+
   const liveFeed: FeedItem[] = (bmkg?.nearby ?? []).map((report) => ({
     kind: 'GEMPA',
     severity: quakeSeverity(report.potential),
@@ -209,14 +229,14 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     mapLayers: [
       {
         id: 'radius',
-        label: 'Radius bahaya',
+        label: 'Radius',
         // Radius resmi adalah ketetapan Badan Geologi; selama belum tersambung
         // lingkarannya hanya pembanding, dan harus disebut begitu.
         note: `Lingkaran ${level.radiusKm} km dari kawah sebagai pembanding jarak. Zona terlarang resmi ditetapkan Badan Geologi dan belum tersambung. ${region.mapNotes.radius}`.trim(),
       },
       {
         id: 'abu',
-        label: 'Sebaran abu',
+        label: 'Abu',
         note: [
           sigmet?.advisories.some((a) => a.polygon)
             ? 'Area berarsir adalah poligon peringatan abu apa adanya dari otoritas penerbangan (SIGMET).'
@@ -228,6 +248,16 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
         ]
           .filter(Boolean)
           .join(' '),
+      },
+      {
+        id: 'gempa',
+        label: 'Gempa',
+        note: [
+          quakes
+            ? `Episentrum gempa di sekitar gunung. Titik biru dari BMKG, titik kuning-oranye dari katalog USGS yang diambil langsung oleh perangkat Anda. Besar titik mengikuti magnitudo.`
+            : 'Katalog gempa belum bisa dimuat.',
+          'Ini gempa tektonik, bukan kegempaan vulkanik — yang terakhir hanya terekam seismograf pos pengamatan PVMBG.',
+        ].join(' '),
       },
       // Lapisan pesisir hanya berarti untuk gunung dengan riwayat bahaya laut.
       ...(volcano.coastalHazard && region.mapNotes.pesisir
@@ -275,6 +305,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       : 'Kegempaan tiap jam, 24 jam terakhir',
     lastEruptionNote: eruption ? describeEruption(eruption) : null,
     population,
+    bmkgEpicentres,
     ashAdvisories:
       sigmet?.advisories.map((a) => ({
         fir: a.fir,

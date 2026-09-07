@@ -902,10 +902,115 @@ button {
   height: 400px;
 }
 
+.lmapwrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .lmap {
   width: 100%;
   height: 100%;
   background: #0a0f16;
+}
+
+/* Pemilih peta dasar mengambang di atas peta, bukan menambah tinggi kartunya. */
+
+.lmapbase {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 500;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: rgba(13, 17, 23, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.lmapbase__btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9aa5b3;
+  padding: 6px 10px;
+  border-radius: 7px;
+  text-align: center;
+}
+
+.lmapbase__btn--on {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e9edf2;
+}
+
+.lmaplegend {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 500;
+  margin: 0;
+  padding: 7px 9px;
+  list-style: none;
+  border-radius: 9px;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 58%;
+}
+
+.lmaplegend__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #c3cbd5;
+  line-height: 1.25;
+}
+
+.lmaplegend__key {
+  flex: none;
+  width: 10px;
+  height: 10px;
+}
+
+.lmaplegend__key--dot {
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.lmaplegend__key--ring {
+  border-radius: 50%;
+  border: 1.5px dashed currentColor;
+}
+
+.lmaplegend__key--area {
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.lmaplegend__key--line {
+  height: 0;
+  border-top: 2px dashed currentColor;
+}
+
+.lmapoff {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 52px;
+  z-index: 500;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: rgba(13, 17, 23, 0.92);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  color: #facc15;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 /* Petak OSM terang di layar gelap; diredupkan sedikit supaya penanda dan
@@ -953,6 +1058,34 @@ button {
   margin: 11px 13px;
 }
 
+.lmap .leaflet-popup-content a {
+  color: #7dd3fc;
+}
+
+.lpop__src {
+  color: #8b96a5;
+  font-size: 10.5px;
+}
+
+.lmap .leaflet-tooltip {
+  background: rgba(13, 17, 23, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e9edf2;
+  font-size: 11px;
+  box-shadow: none;
+}
+
+.lmap .leaflet-tooltip::before {
+  border-top-color: rgba(255, 255, 255, 0.14);
+}
+
+.lmap .leaflet-control-scale-line {
+  background: rgba(13, 17, 23, 0.82);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #c3cbd5;
+  font-size: 10px;
+}
+
 .lmap .leaflet-popup-close-button {
   color: #9aa5b3;
 }
@@ -965,13 +1098,15 @@ button {
 }
 
 .layers {
-  display: flex;
+  /* Empat lapisan tidak muat sebaris di ponsel; grid membiarkannya turun
+     dua-dua tanpa membuat satu tombol pecah dua baris sendirian. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   gap: 8px;
   margin-top: 10px;
 }
 
 .layer {
-  flex: 1;
   text-align: center;
   font-size: 11.5px;
   font-weight: 600;

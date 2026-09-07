@@ -67,8 +67,9 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | **Peringatan abu penerbangan** | NOAA Aviation Weather Center (SIGMET) | hidup |
 | SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
 | Indeks AQI | dihitung dari PM2.5 CAMS dengan rumus US EPA | hidup |
-| Peta dasar | petak raster OpenStreetMap lewat Leaflet | hidup |
+| Peta dasar | petak raster OpenStreetMap dan OpenTopoMap lewat Leaflet | hidup |
 | Bentuk area peringatan abu | poligon SIGMET apa adanya | hidup |
+| Episentrum di peta | BMKG dan USGS, keduanya dengan koordinat aslinya | hidup |
 | Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) | hidup |
 | **Level status, radius bahaya, aviation colour code** | MAGMA Indonesia / PVMBG (VONA) | **butuh token** |
 | Kegempaan vulkanik | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
@@ -299,14 +300,31 @@ Lima tab: **Status**, **Peta** (radius, wilayah, penduduk), **Udara**
 (penerbangan dan penyeberangan), **Laporan** (feed resmi), **Panduan**
 (tindakan, nomor penting, dan daftar sumber).
 
-Peta memakai Leaflet dengan petak raster OpenStreetMap, dan **hanya menggambar
-geometri sungguhan**: kawah dari koordinat katalog Smithsonian, poligon
-peringatan abu apa adanya dari SIGMET, arah angin permukaan terukur, dan posisi
-GPS pengguna sendiri. Poligon abu ilustratif dan penanda desa yang ditulis
-tangan di prototipe tidak dipakai. Lingkaran radius diberi label **pembanding**,
-bukan zona terlarang, karena zona resmi hanya ditetapkan Badan Geologi. Petak
-yang pernah dilihat disimpan service worker supaya peta tetap terbaca saat
-sinyal hilang.
+Peta memakai Leaflet dengan dua petak dasar terbuka — OpenStreetMap (jalan) dan
+OpenTopoMap (relief; bentuk lereng menentukan ke mana aliran turun) — dan
+**hanya menggambar geometri sungguhan**:
+
+| Bentuk | Sumbernya |
+| --- | --- |
+| Kawah | koordinat katalog Smithsonian GVP |
+| Cincin ungu 5/10/30 km | radius perkiraan penduduk WorldPop, jumlahnya di popup |
+| Area berarsir | poligon SIGMET apa adanya dari otoritas penerbangan |
+| Garis putus-putus oranye | arah angin permukaan terukur, panjang = jarak tempuh satu jam |
+| Titik biru / kuning | episentrum BMKG dan USGS, besar titik mengikuti magnitudo |
+| Titik hijau + garis | posisi GPS pengguna dan jaraknya ke kawah |
+
+Poligon abu ilustratif dan enam penanda desa yang ditulis tangan di prototipe
+tidak dipakai — bentuk karangan di peta lebih menyesatkan daripada angka
+karangan, karena peta terbaca sebagai hasil pengukuran. Lingkaran radius diberi
+label **pembanding**, bukan zona terlarang, karena zona resmi hanya ditetapkan
+Badan Geologi.
+
+Setiap bentuk bisa diketuk untuk melihat sumbernya, ada skala metrik dan
+keterangan warna yang hanya memuat lapisan yang sedang tergambar, dan pandangan
+peta menyesuaikan diri agar seluruh bentuk lapisan itu muat. Petak yang pernah
+dilihat disimpan service worker dua minggu supaya peta tetap terbaca saat sinyal
+hilang; kalau petak gagal dimuat, petanya mengatakan itu alih-alih menyisakan
+layar kosong.
 
 Kata besar di kartu utama sengaja **bukan** GREEN/YELLOW/ORANGE/RED. Aviation
 colour code adalah pernyataan resmi observatorium gunung api; menuliskannya dari

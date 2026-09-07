@@ -129,7 +129,7 @@ export interface TransportStatus {
 }
 
 export interface MapLayer {
-  id: 'radius' | 'abu' | 'pesisir'
+  id: 'radius' | 'abu' | 'gempa' | 'pesisir'
   label: string
   note: string
 }
@@ -260,4 +260,18 @@ export interface VolcanoSnapshot {
   population: { year: number; rings: { radiusKm: number; people: number }[] } | null
   /** Peringatan abu penerbangan resmi (SIGMET), bila sumbernya hidup. */
   ashAdvisories: AshAdvisory[] | null
+  /** Episentrum gempa BMKG di sekitar gunung, untuk digambar di peta. */
+  bmkgEpicentres: Epicentre[]
+}
+
+/** Satu episentrum yang punya koordinat, siap digambar. */
+export interface Epicentre {
+  lat: number
+  lon: number
+  magnitude: string
+  area: string
+  timeISO: string
+  depth: string | null
+  potential: string | null
+  distanceKm: number
 }

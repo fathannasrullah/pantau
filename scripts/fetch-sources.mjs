@@ -247,6 +247,10 @@ async function bmkg(V) {
       potential: str(g.Potensi),
       felt: str(g.Dirasakan),
       distanceKm: Math.round(distanceKm(V.lat, V.lon, lat, lon)),
+      // Episentrum disimpan supaya bisa digambar di peta, bukan hanya dihitung
+      // jaraknya lalu dibuang.
+      lat,
+      lon,
     }
   }
 

@@ -111,6 +111,7 @@ export default function App() {
               layer={layer}
               accent={aviation.colors.color}
               geo={geo}
+              liveQuakes={liveQuakes}
               onLayerChange={setLayer}
             />
           )}

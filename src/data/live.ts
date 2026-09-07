@@ -184,6 +184,9 @@ export interface LiveQuakeReport {
   felt: string | null
   /** Jarak dari kawah — dasar penyaringan agar feed tetap tentang gunung ini. */
   distanceKm: number
+  /** Episentrum untuk digambar di peta; null bila BMKG tidak menyertakannya. */
+  lat: number | null
+  lon: number | null
 }
 
 export interface LiveBmkg {
@@ -207,6 +210,8 @@ function parseReport(raw: unknown): LiveQuakeReport | null {
     potential: strOrNull(raw.potential),
     felt: strOrNull(raw.felt),
     distanceKm,
+    lat: numOrNull(raw.lat),
+    lon: numOrNull(raw.lon),
   }
 }
 

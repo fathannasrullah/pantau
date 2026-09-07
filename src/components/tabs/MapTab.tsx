@@ -1,5 +1,6 @@
 import type { DataStateView } from '../../data/dataState'
 import type { GeolocationState } from '../../hooks/useGeolocation'
+import type { LiveQuakesState } from '../../hooks/useLiveQuakes'
 import { formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { MapLayer, VolcanoLevel, VolcanoSnapshot } from '../../types'
@@ -12,6 +13,7 @@ interface Props {
   layer: MapLayer['id']
   accent: string
   geo: GeolocationState
+  liveQuakes: LiveQuakesState
   onLayerChange: (id: MapLayer['id']) => void
 }
 
@@ -22,6 +24,7 @@ export function MapTab({
   layer,
   accent,
   geo,
+  liveQuakes,
   onLayerChange,
 }: Props) {
   const active =
@@ -29,7 +32,7 @@ export function MapTab({
 
   return (
     <div className="tabview">
-      <h2 className="section section--first">Radius bahaya dan arah abu</h2>
+      <h2 className="section section--first">Peta wilayah gunung</h2>
       <div className="mapbox">
         <VolcanoMap
           volcano={snapshot.volcano}
@@ -40,6 +43,9 @@ export function MapTab({
           ashHeadingDeg={snapshot.ashfall.ashHeadingDeg}
           windSpeedKmh={snapshot.ashfall.windSpeedKmh}
           advisories={snapshot.ashAdvisories}
+          population={snapshot.population}
+          bmkgEpicentres={snapshot.bmkgEpicentres}
+          usgsQuakes={liveQuakes.quakes}
         />
       </div>
 
@@ -58,12 +64,13 @@ export function MapTab({
       </div>
       <p className="layernote">{active.note}</p>
       <p className="mapsrc">
-        Peta dasar © kontributor OpenStreetMap. Kawah dari katalog Smithsonian
-        GVP; area peringatan abu digambar apa adanya dari poligon SIGMET;
-        posisi Anda dari GPS perangkat. Radius {level.radiusKm} km hanya
-        pembanding — zona terlarang resmi ditetapkan Badan Geologi dan belum
-        tersambung. Ketuk bentuk mana pun untuk melihat sumbernya ·{' '}
-        {dataState.sourceTime}
+        Peta dasar OpenStreetMap, tampilan relief OpenTopoMap. Setiap bentuk di
+        atasnya punya sumber: kawah dari katalog Smithsonian GVP, cincin
+        penduduk dari WorldPop, area peringatan abu dari poligon SIGMET,
+        episentrum dari BMKG dan USGS, arah angin dari Open-Meteo, posisi Anda
+        dari GPS perangkat. Radius {level.radiusKm} km hanya pembanding — zona
+        terlarang resmi ditetapkan Badan Geologi dan belum tersambung. Ketuk
+        bentuk mana pun untuk melihat sumbernya · {dataState.sourceTime}
       </p>
 
       <h2 className="section">Wilayah terdekat dari kawah</h2>

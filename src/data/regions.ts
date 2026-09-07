@@ -26,8 +26,8 @@ export const EMPTY_REGION: RegionSample = {
   villages: [],
   shelters: [],
   mapNotes: {
-    radius: 'Radius bahaya mengikuti level status resmi, yang belum tersambung.',
-    abu: 'Arah sebaran mengikuti angin permukaan terkini di atas kawah.',
+    radius: 'Cincin ungu adalah radius perkiraan penduduk WorldPop; ketuk untuk melihat jumlahnya.',
+    abu: '',
     pesisir:
       'Gunung pesisir berpotensi memicu gelombang tinggi akibat longsoran tubuh gunung. Peringatan resmi datang dari BMKG.',
   },

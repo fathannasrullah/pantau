@@ -24,6 +24,8 @@ const POLL_MS = 5 * 60_000
 export interface LiveQuake {
   id: string
   mag: number
+  lat: number
+  lon: number
   place: string
   timeISO: string
   depthKm: number | null
@@ -84,6 +86,8 @@ export function selectNearbyQuakes(
     out.push({
       id,
       mag,
+      lat,
+      lon,
       place: typeof props?.place === 'string' ? props.place : 'Lokasi tidak disebut',
       timeISO: new Date(ms).toISOString(),
       depthKm: num(coords[2]),
