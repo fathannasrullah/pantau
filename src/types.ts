@@ -39,16 +39,11 @@ export type FeedStatus = 'ok' | 'failed' | 'offline'
 
 export type DataStateId = 'fresh' | 'stale' | 'failed' | 'offline'
 
-export interface UserPosition {
-  label: string
-  accuracyM: number
-  distanceKm: number
-  nearestShelter: { name: string; distanceKm: number }
-}
-
 export interface AshfallReport {
   /** Ke mana abu terbawa, bukan arah asal angin. */
   windDirection: string
+  /** Arah yang sama dalam derajat, untuk menghitung siapa yang searah abu. */
+  ashHeadingDeg: number | null
   windSpeedKmh: number
   windProvenance: Provenance
   columnHeightM: number
@@ -119,6 +114,12 @@ export interface ShelterPoint {
   name: string
   note: string
   tel: string
+  /**
+   * Titik perkiraan tingkat desa/kecamatan, bukan koordinat bangunan. Cukup
+   * untuk mengurutkan mana yang terdekat, tidak cukup untuk menuntun langkah.
+   */
+  lat: number
+  lon: number
 }
 
 export interface GuideStep {
@@ -179,7 +180,6 @@ export interface VolcanoSnapshot {
   updatedAtISO: string
   /** When this client last managed to read it. */
   fetchedAtISO: string
-  position: UserPosition
   ashfall: AshfallReport
   quickActions: QuickAction[]
   metrics: Metric[]

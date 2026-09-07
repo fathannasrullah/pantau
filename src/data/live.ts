@@ -97,6 +97,7 @@ export interface LiveWind {
   speedKmh: number
   /** Arah abu terbawa, bukan arah asal angin. */
   ashHeading: string
+  ashHeadingDeg: number
   observedAtISO: string | null
 }
 
@@ -106,9 +107,11 @@ export function readWind(bundle: LiveBundle | null): LiveWind | null {
   const speedKmh = numOrNull(data.speedKmh)
   const directionDeg = numOrNull(data.directionDeg)
   if (speedKmh === null || directionDeg === null) return null
+  const heading = ashHeadingDeg(directionDeg)
   return {
     speedKmh: Math.round(speedKmh),
-    ashHeading: compassLabel(ashHeadingDeg(directionDeg)),
+    ashHeading: compassLabel(heading),
+    ashHeadingDeg: heading,
     observedAtISO: sourceOf(bundle, 'wind')?.observedAtISO ?? null,
   }
 }

@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { REPORT_TAGS } from '../../data/notificationRules'
-import type { UserPosition } from '../../types'
+import type { GeoFix } from '../../hooks/useGeolocation'
 import { Sheet } from '../Sheet'
 
 interface Props {
-  position: UserPosition
+  fix: GeoFix | null
   onClose: () => void
 }
 
-export function ReportSheet({ position, onClose }: Props) {
+export function ReportSheet({ fix, onClose }: Props) {
   const [tag, setTag] = useState(REPORT_TAGS[0])
   const [sent, setSent] = useState(false)
 
@@ -39,7 +39,9 @@ export function ReportSheet({ position, onClose }: Props) {
         <span>
           Lampirkan foto · lokasi otomatis dari GPS
           <br />
-          {position.label} · akurasi {position.accuracyM} m
+          {fix
+            ? `Koordinat ${fix.lat.toFixed(4)}, ${fix.lon.toFixed(4)} · akurasi ${Math.round(fix.accuracyM)} m`
+            : 'Lokasi belum aktif — aktifkan di kartu Posisi Anda agar laporan membawa titik kejadian.'}
         </span>
       </div>
       <button

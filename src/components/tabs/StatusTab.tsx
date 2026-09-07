@@ -2,6 +2,7 @@ import type { DataStateView } from '../../data/dataState'
 import { SampleTag } from '../SampleTag'
 import { formatAge, formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
+import type { GeolocationState } from '../../hooks/useGeolocation'
 import type { VolcanoLevel, VolcanoSnapshot } from '../../types'
 import { InstallPrompt } from '../InstallPrompt'
 import { PositionCard } from '../PositionCard'
@@ -11,10 +12,9 @@ interface Props {
   snapshot: VolcanoSnapshot
   level: VolcanoLevel
   dataState: DataStateView
-  locationOn: boolean
+  geo: GeolocationState
   showTransport: boolean
   notifSummary: string
-  onToggleLocation: () => void
   onGoGuide: () => void
   onGoMap: () => void
   onOpenNotifications: () => void
@@ -24,10 +24,9 @@ export function StatusTab({
   snapshot,
   level,
   dataState,
-  locationOn,
+  geo,
   showTransport,
   notifSummary,
-  onToggleLocation,
   onGoGuide,
   onGoMap,
   onOpenNotifications,
@@ -45,11 +44,12 @@ export function StatusTab({
       />
 
       <PositionCard
-        position={snapshot.position}
+        geo={geo}
+        volcano={snapshot.volcano}
         level={level}
-        dataState={dataState}
-        enabled={locationOn}
-        onToggle={onToggleLocation}
+        ashfall={snapshot.ashfall}
+        shelters={snapshot.shelters}
+        provenance={snapshot.provenance}
         onShowShelters={onGoGuide}
         onShowMap={onGoMap}
       />

@@ -151,15 +151,9 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     updatedAtISO,
     fetchedAtISO: nowISO,
 
-    position: {
-      label: 'Kalianda, Lampung Selatan',
-      accuracyM: 12,
-      distanceKm: 38,
-      nearestShelter: { name: 'Lapangan Kalianda', distanceKm: 3.1 },
-    },
-
     ashfall: {
       windDirection: wind?.ashHeading ?? 'Barat laut',
+      ashHeadingDeg: wind?.ashHeadingDeg ?? null,
       windSpeedKmh: wind?.speedKmh ?? 11,
       windProvenance: wind ? 'live' : 'sample',
       columnHeightM: 1200,
@@ -348,15 +342,25 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     shelters: [
       {
         name: 'Lapangan Kalianda',
-        note: '3,1 km dari Anda · kapasitas 1.200 jiwa · dapur umum',
+        note: 'Kapasitas 1.200 jiwa · dapur umum',
         tel: '0727 322xxx',
+        lat: -5.7486,
+        lon: 105.5905,
       },
       {
         name: 'SDN 2 Rajabasa',
-        note: '7,4 km · kapasitas 400 jiwa · posko kesehatan',
+        note: 'Kapasitas 400 jiwa · posko kesehatan',
         tel: '0727 331xxx',
+        lat: -5.7975,
+        lon: 105.6289,
       },
-      { name: 'BPBD Lampung Selatan', note: 'Siaga 24 jam', tel: '112' },
+      {
+        name: 'BPBD Lampung Selatan',
+        note: 'Siaga 24 jam',
+        tel: '112',
+        lat: -5.753,
+        lon: 105.579,
+      },
     ],
 
     ashfallSteps: ASHFALL_STEPS,

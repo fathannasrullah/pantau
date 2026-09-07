@@ -14,6 +14,7 @@ import { SeismicTab } from './components/tabs/SeismicTab'
 import { StatusTab } from './components/tabs/StatusTab'
 import { DEFAULT_RULE_STATE } from './data/notificationRules'
 import { useDemo } from './hooks/useDemo'
+import { useGeolocation } from './hooks/useGeolocation'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM, LEVEL_COLORS } from './theme'
 import type { MapLayer, NotificationRuleId } from './types'
@@ -22,8 +23,9 @@ export default function App() {
   const { demo, updateDemo } = useDemo()
   const { snapshot, level, dataState, refresh } = useVolcanoFeed(demo)
 
+  const geo = useGeolocation()
+
   const [tab, setTab] = useState<TabId>('status')
-  const [locationOn, setLocationOn] = useState(true)
   const [layer, setLayer] = useState<MapLayer['id']>('radius')
   const [selectedHour, setSelectedHour] = useState(17)
   const [notifOpen, setNotifOpen] = useState(false)
@@ -68,14 +70,13 @@ export default function App() {
               snapshot={snapshot}
               level={level}
               dataState={dataState}
-              locationOn={locationOn}
+              geo={geo}
               showTransport={demo.showTransport}
               notifSummary={
                 rules.level
                   ? 'Aktif: perubahan level dan perintah evakuasi'
                   : 'Hanya perintah evakuasi'
               }
-              onToggleLocation={() => setLocationOn((on) => !on)}
               onGoGuide={() => changeTab('panduan')}
               onGoMap={() => changeTab('peta')}
               onOpenNotifications={() => setNotifOpen(true)}
@@ -121,10 +122,7 @@ export default function App() {
         )}
 
         {reportOpen && (
-          <ReportSheet
-            position={snapshot.position}
-            onClose={() => setReportOpen(false)}
-          />
+          <ReportSheet fix={geo.fix} onClose={() => setReportOpen(false)} />
         )}
 
         <DemoPanel demo={demo} onChange={updateDemo} />

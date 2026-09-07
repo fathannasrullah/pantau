@@ -46,6 +46,7 @@ test('angin dibaca sebagai arah tujuan abu, bukan arah asal', () => {
   assert.deepEqual(wind, {
     speedKmh: 11,
     ashHeading: 'Barat laut',
+    ashHeadingDeg: 315,
     observedAtISO: '2026-09-06T09:50:00.000Z',
   })
 })

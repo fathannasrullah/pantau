@@ -51,6 +51,7 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 
 | Bagian | Sumber | Status |
 | --- | --- | --- |
+| Posisi pengguna & jarak ke kawah | Geolocation API perangkat | hidup |
 | Arah abu & kecepatan angin | Open-Meteo | hidup |
 | Tinggi gelombang Selat Sunda | Open-Meteo Marine | hidup |
 | Grafik kegempaan per jam | USGS FDSN, radius 300 km | hidup |
@@ -132,10 +133,12 @@ src/
     notificationRules.ts aturan peredaman notifikasi dan tag laporan warga
   hooks/
     useVolcanoFeed.ts    polling, umur data, deteksi offline, seismograf berjalan
+    useGeolocation.ts    izin lokasi, watchPosition, dan tiap keadaan gagalnya
     useDemo.ts           override level/kondisi data lewat query string
   components/    tampilan; tidak ada angka yang ditulis langsung di sini
   theme.ts       warna per level status dan per kondisi data
   lib/format.ts  format waktu WIB, tanggal, durasi, dan angka Indonesia
+  lib/geo.ts     jarak, arah, vonis zona, dan titik kumpul terdekat
 ```
 
 ## Prioritas informasi
@@ -172,9 +175,10 @@ berasal dari sumber itu.
 
 Yang belum dikerjakan dan perlu diputuskan sebelum dipakai publik:
 
-- **Lokasi masih data contoh.** Kartu "Posisi Anda" belum memakai Geolocation API;
-  jaraknya diambil dari `snapshot.position`. Sengaja belum disambung supaya tidak
-  ada campuran jarak asli dengan angka contoh.
+- **Titik kumpul masih perkiraan.** Jaraknya dihitung sungguhan dari GPS, tapi
+  koordinat titik kumpulnya setingkat desa/kecamatan, bukan koordinat bangunan,
+  dan belum berasal dari BPBD. Cukup untuk mengurutkan mana yang terdekat, tidak
+  cukup untuk menuntun langkah.
 - **Notifikasi belum dikirim.** Aturan peredaman sudah ada di UI dan datanya, tapi
   belum ada Push API maupun jalur SMS.
 - **Laporan warga belum terkirim ke mana pun** dan alur verifikasi petugas belum dirancang.
