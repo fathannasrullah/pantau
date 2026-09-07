@@ -2247,3 +2247,9 @@ a.row__tel:hover {
   font-size: 10.5px;
   line-height: 1.5;
 }
+
+/* Peringatan yang tidak menyebut gunung ini bisa saja milik tetangganya. */
+.sigmet__named--other {
+  border-color: rgba(148, 163, 184, 0.45);
+  color: #9aa5b3;
+}

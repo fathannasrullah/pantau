@@ -106,9 +106,11 @@ export function StatusTab({
         <section className="sigmet" key={a.text.slice(0, 60)}>
           <div className="sigmet__head">
             <span className="sigmet__tag mono">SIGMET · ABU VULKANIK</span>
-            {a.namedHere && (
-              <span className="sigmet__named">menyebut gunung ini</span>
-            )}
+            <span
+              className={`sigmet__named${a.namedHere ? '' : ' sigmet__named--other'}`}
+            >
+              {a.namedHere ? 'menyebut gunung ini' : 'periksa teks — bisa untuk gunung lain'}
+            </span>
           </div>
           <div className="sigmet__rows">
             {a.topM !== null && (

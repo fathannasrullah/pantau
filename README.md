@@ -186,6 +186,12 @@ Dua hal yang menentukan benar-salahnya:
   dua arah: jarak poligon ke kawah dalam 500 km, atau nama gunung tersebut di
   teks resminya.
 
+Karena penyaringan jarak bisa ikut menangkap peringatan milik gunung tetangga di
+FIR yang sama, tiap kartu menyebutkan apakah teks resminya benar-benar menyebut
+gunung yang sedang dipantau. Bila tidak, kartunya bertanda "periksa teks — bisa
+untuk gunung lain", dan teks SIGMET-nya ditampilkan lengkap supaya bisa dinilai
+sendiri.
+
 Tidak ada header CORS, jadi pengambilannya lewat CI seperti sumber lain.
 
 ### Sumber tingkat nasional yang diuji
