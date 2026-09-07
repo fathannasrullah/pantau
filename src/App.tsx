@@ -1,25 +1,25 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AlertStrip } from './components/AlertStrip'
 import { AppHeader } from './components/AppHeader'
 import { BottomNav, type TabId } from './components/BottomNav'
 import { DataStateBanner } from './components/DataStateBanner'
 import { DemoPanel } from './components/DemoPanel'
-import { SourceList } from './components/SourceList'
 import { NotificationSheet } from './components/sheets/NotificationSheet'
 import { VolcanoSheet } from './components/sheets/VolcanoSheet'
 import { ReportSheet } from './components/sheets/ReportSheet'
+import { AviationTab } from './components/tabs/AviationTab'
 import { FeedTab } from './components/tabs/FeedTab'
 import { GuideTab } from './components/tabs/GuideTab'
 import { MapTab } from './components/tabs/MapTab'
-import { SeismicTab } from './components/tabs/SeismicTab'
 import { StatusTab } from './components/tabs/StatusTab'
+import { resolveAviationStatus } from './data/aviation'
 import { DEFAULT_RULE_STATE } from './data/notificationRules'
 import { useDemo } from './hooks/useDemo'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useLiveQuakes } from './hooks/useLiveQuakes'
 import { useVolcanoSelection } from './hooks/useVolcanoSelection'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
-import { DATA_STATE_COLORS, DATA_STATE_DIM, LEVEL_COLORS } from './theme'
+import { DATA_STATE_COLORS, DATA_STATE_DIM } from './theme'
 import type { MapLayer, NotificationRuleId } from './types'
 
 export default function App() {
@@ -38,13 +38,22 @@ export default function App() {
   const [reportOpen, setReportOpen] = useState(false)
   const [rules, setRules] = useState(DEFAULT_RULE_STATE)
 
-  const levelColors = LEVEL_COLORS[level.id]
+  /**
+   * Aksen seluruh layar mengikuti keadaan peringatan abu — satu-satunya
+   * penilaian bahaya di app ini yang benar-benar datang dari sumber resmi.
+   * Sebelumnya warnanya diambil dari level PVMBG yang masih data contoh.
+   */
+  const aviation = useMemo(
+    () => resolveAviationStatus(snapshot.ashAdvisories, volcano.name),
+    [snapshot.ashAdvisories, volcano.name],
+  )
+
   const dataColors = DATA_STATE_COLORS[dataState.id]
 
   const shellStyle = {
-    '--lv': levelColors.color,
-    '--lv-line': levelColors.line,
-    '--lv-wash': levelColors.wash,
+    '--lv': aviation.colors.color,
+    '--lv-line': aviation.colors.line,
+    '--lv-wash': aviation.colors.wash,
     '--ds': dataColors.color,
     '--ds-line': dataColors.line,
     '--ds-wash': dataColors.wash,
@@ -69,7 +78,7 @@ export default function App() {
           onPickVolcano={() => setVolcanoOpen(true)}
         />
         <DataStateBanner dataState={dataState} onRetry={refresh} />
-        <AlertStrip level={level} />
+        <AlertStrip status={aviation} />
 
         <main className="content">
           {tab === 'status' && (
@@ -77,15 +86,19 @@ export default function App() {
               snapshot={snapshot}
               level={level}
               dataState={dataState}
+              aviation={aviation}
               geo={geo}
-              showTransport={demo.showTransport}
+              liveQuakes={liveQuakes}
+              selectedHour={selectedHour}
               notifSummary={
                 rules.level
-                  ? 'Aktif: perubahan level dan perintah evakuasi'
+                  ? 'Aktif: peringatan abu dan perintah evakuasi'
                   : 'Hanya perintah evakuasi'
               }
+              onSelectHour={setSelectedHour}
               onGoGuide={() => changeTab('panduan')}
               onGoMap={() => changeTab('peta')}
+              onGoAviation={() => changeTab('udara')}
               onOpenNotifications={() => setNotifOpen(true)}
             />
           )}
@@ -100,26 +113,25 @@ export default function App() {
             />
           )}
 
-          {tab === 'seismik' && (
-            <SeismicTab
+          {tab === 'udara' && (
+            <AviationTab
               snapshot={snapshot}
+              status={aviation}
               dataState={dataState}
-              selectedHour={selectedHour}
-              onSelectHour={setSelectedHour}
+              showTransport={demo.showTransport}
             />
           )}
 
           {tab === 'laporan' && (
             <FeedTab
               snapshot={snapshot}
-              live={liveQuakes}
               onOpenReport={() => setReportOpen(true)}
             />
           )}
 
-          {tab === 'panduan' && <GuideTab snapshot={snapshot} level={level} />}
-
-          <SourceList snapshot={snapshot} />
+          {tab === 'panduan' && (
+            <GuideTab snapshot={snapshot} aviation={aviation} />
+          )}
         </main>
 
         <BottomNav tab={tab} onChange={changeTab} />

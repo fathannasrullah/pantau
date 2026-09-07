@@ -1,3 +1,4 @@
+import { aqiFromPm25 } from './aqi'
 import { LEVELS } from './levels'
 import {
   airSeverity,
@@ -283,6 +284,8 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
           so2Severity: airSeverity(air.so2, 40),
           pm10: air.pm10,
           pm10Severity: airSeverity(air.pm10, 45),
+          pm25: air.pm25,
+          aqi: air.pm25 === null ? null : aqiFromPm25(air.pm25),
           aod: air.aod,
           note:
             'Keluaran model CAMS (Copernicus), bukan pembacaan stasiun di darat. Ambang mengikuti pedoman WHO 2021.',

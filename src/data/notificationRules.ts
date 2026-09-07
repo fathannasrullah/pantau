@@ -1,9 +1,9 @@
 import type { NotificationRule, NotificationRuleId } from '../types'
 
 /**
- * Damping rules: repeated small eruptions must not turn into a stream of alerts,
- * or people stop reading them. Only level changes and evacuation orders are
- * allowed to interrupt by default.
+ * Damping rules: repeated advisories must not turn into a stream of alerts, or
+ * people stop reading them. Only evacuation orders and a change in the ash
+ * warning are allowed to interrupt by default.
  */
 export const NOTIFICATION_RULES: NotificationRule[] = [
   {
@@ -14,20 +14,20 @@ export const NOTIFICATION_RULES: NotificationRule[] = [
   },
   {
     id: 'level',
-    label: 'Perubahan level status',
-    note: 'Hanya saat level naik atau turun, bukan setiap erupsi.',
+    label: 'Perubahan peringatan abu penerbangan',
+    note: 'Hanya saat peringatan mulai atau berakhir, bukan setiap advisory.',
     locked: false,
   },
   {
     id: 'ash',
-    label: 'Hujan abu di wilayah saya',
-    note: 'Maksimal satu kali per 3 jam.',
+    label: 'Kualitas udara memburuk di wilayah saya',
+    note: 'Maksimal satu kali per 3 jam, dari model CAMS.',
     locked: false,
   },
   {
     id: 'quake',
-    label: 'Setiap kejadian erupsi',
-    note: 'Bisa puluhan per hari. Untuk pemantau dan relawan.',
+    label: 'Setiap gempa baru di sekitar gunung',
+    note: 'Bisa beberapa kali sehari. Untuk pemantau dan relawan.',
     locked: false,
   },
 ]

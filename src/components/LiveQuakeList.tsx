@@ -29,7 +29,7 @@ export function LiveQuakeList({ live, volcano, nowISO }: Props) {
   return (
     <section className="livequakes">
       <div className="livequakes__head">
-        <h2 className="section section--first">Gempa terkini di sekitar</h2>
+        <h2 className="section">Gempa terkini di sekitar</h2>
         <span
           className={`livedot${status === 'ok' ? ' livedot--on' : ''}`}
           title={

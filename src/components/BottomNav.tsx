@@ -1,4 +1,4 @@
-export type TabId = 'status' | 'peta' | 'seismik' | 'laporan' | 'panduan'
+export type TabId = 'status' | 'peta' | 'udara' | 'laporan' | 'panduan'
 
 interface NavItem {
   id: TabId
@@ -10,7 +10,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { id: 'status', label: 'Status', radius: '50%' },
   { id: 'peta', label: 'Peta', radius: '3px' },
-  { id: 'seismik', label: 'Seismik', radius: '2px 9px 2px 9px' },
+  { id: 'udara', label: 'Udara', radius: '2px 9px 2px 9px' },
   { id: 'laporan', label: 'Laporan', radius: '9px 2px 9px 2px' },
   { id: 'panduan', label: 'Panduan', radius: '50% 50% 4px 4px' },
 ]

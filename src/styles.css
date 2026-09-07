@@ -341,9 +341,9 @@ button {
   text-align: center;
 }
 
-/* ---------- status card ---------- */
+/* ---------- kartu peringatan penerbangan (v4) ---------- */
 
-.statuscard {
+.avcard {
   margin: 18px 0 0;
   border: 1px solid var(--lv-line);
   background: var(--lv-wash);
@@ -353,7 +353,7 @@ button {
   overflow: hidden;
 }
 
-.statuscard__glow {
+.avcard__glow {
   position: absolute;
   right: -40px;
   top: -40px;
@@ -364,20 +364,20 @@ button {
   opacity: 0.09;
 }
 
-.statuscard__label {
+.avcard__label {
   font-size: 13.5px;
   font-weight: 600;
   color: #aeb8c4;
 }
 
-.statuscard__row {
+.avcard__row {
   display: flex;
   align-items: flex-end;
   gap: 12px;
   margin-top: 8px;
 }
 
-.statuscard__name {
+.avcard__name {
   font-size: 44px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -385,73 +385,39 @@ button {
   color: var(--lv);
 }
 
-.statuscard__roman {
-  font-size: 13px;
+.avcard__short {
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--lv);
-  padding-bottom: 7px;
+  padding-bottom: 8px;
+  max-width: 14ch;
+  line-height: 1.3;
 }
 
-.statuscard__headline {
+.avcard__headline {
   font-size: 13.5px;
   line-height: 1.5;
   color: #c3cbd5;
   margin-top: 10px;
 }
 
-.statuscard__plainbox {
+.avcard__plainbox {
   margin-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 13px;
 }
 
-.statuscard__plainlabel {
+.avcard__plainlabel {
   font-size: 12px;
   font-weight: 600;
   color: #aeb8c4;
 }
 
-.statuscard__plain {
+.avcard__plain {
   font-size: 13.5px;
   line-height: 1.55;
   color: #e9edf2;
   margin-top: 5px;
-}
-
-.coastal {
-  margin-top: 13px;
-  border-radius: 11px;
-  background: rgba(0, 0, 0, 0.32);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 13px;
-  display: flex;
-  gap: 11px;
-  align-items: flex-start;
-}
-
-.coastal__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  margin-top: 5px;
-  flex: none;
-  background: currentColor;
-}
-
-.coastal__body {
-  flex: 1;
-}
-
-.coastal__title {
-  font-size: 12.5px;
-  font-weight: 700;
-}
-
-.coastal__note {
-  font-size: 12px;
-  line-height: 1.5;
-  color: #c3cbd5;
-  margin-top: 3px;
 }
 
 .pills {
@@ -1654,63 +1620,51 @@ a.row__tel:hover {
   line-height: 1.5;
 }
 
-.coastal__live {
-  margin-top: 5px;
-  color: #c3cbd5;
-  font-size: 11.5px;
-  line-height: 1.45;
-}
-
 .srclist {
-  margin-top: 26px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.srclist__title {
-  margin: 0 0 10px;
-  color: #aeb8c4;
-  font-size: 12.5px;
-  font-weight: 600;
+  margin-top: 4px;
 }
 
 .srclist__items {
   display: flex;
   flex-direction: column;
-  gap: 9px;
   margin: 0;
   padding: 0;
   list-style: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: #141a22;
+  overflow: hidden;
 }
 
 .srcitem {
   display: flex;
-  gap: 9px;
+  gap: 12px;
   align-items: flex-start;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
 }
 
-.srcitem__dot {
-  flex: none;
-  width: 6px;
-  height: 6px;
-  margin-top: 5px;
-  border-radius: 50%;
-  background: #4ade80;
-}
-
-.srcitem__dot--bad {
-  background: #f87171;
+.srcitem:last-child {
+  border-bottom: 0;
 }
 
 .srcitem__body {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
+  flex: 1;
 }
 
 .srcitem__label {
-  color: #c3cbd5;
+  color: #e9edf2;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.srcitem__what {
+  color: #9aa5b3;
   font-size: 11.5px;
   line-height: 1.45;
 }
@@ -1720,7 +1674,19 @@ a.row__tel:hover {
   font-size: 10px;
 }
 
-.srclist__empty,
+.srcitem__rate {
+  font-size: 10px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  padding: 3px 6px;
+  flex: none;
+  color: #94a3b8;
+}
+
+.srcitem__rate--bad {
+  color: #f87171;
+}
+
 .srclist__note {
   margin: 12px 0 0;
   color: #8b96a5;
@@ -1755,58 +1721,7 @@ a.row__tel:hover {
 
 /* --- Kualitas udara ------------------------------------------------------ */
 
-.airq {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
-  background: #141a22;
-  overflow: hidden;
-}
 
-.airq__row {
-  display: flex;
-}
-
-.airq__cell {
-  flex: 1;
-  padding: 14px;
-}
-
-.airq__cell + .airq__cell {
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.airq__k {
-  color: #9aa5b3;
-  font-size: 11.5px;
-}
-
-.airq__v {
-  margin-top: 5px;
-  font-size: 21px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.airq__u {
-  margin-top: 3px;
-  color: #8b96a5;
-  font-size: 10.5px;
-}
-
-.airq__note {
-  margin: 0;
-  padding: 12px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  color: #c3cbd5;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.airq__src {
-  padding: 0 14px 12px;
-  color: #9aa5b3;
-  font-size: 10.5px;
-}
 
 /* --- Pemilih gunung dan keadaan kosong ----------------------------------- */
 
@@ -2071,7 +1986,7 @@ a.row__tel:hover {
 
 @media (min-width: 700px) {
   .shell {
-    max-width: 680px;
+    max-width: 760px;
   }
 
   .content {
@@ -2095,16 +2010,16 @@ a.row__tel:hover {
 
 /* --- Laptop: navigasi pindah ke sisi kiri, isi tetap satu kolom terbaca --- */
 
-@media (min-width: 1080px) {
+@media (min-width: 1000px) {
   .page {
     align-items: flex-start;
   }
 
   .shell {
-    max-width: 1040px;
+    max-width: 1180px;
     display: grid;
     /* Kolom navigasi tetap, sisanya untuk isi. */
-    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-columns: 216px minmax(0, 1fr);
     grid-template-rows: auto auto auto 1fr;
   }
 
@@ -2116,8 +2031,8 @@ a.row__tel:hover {
 
   .content {
     grid-column: 2;
-    padding: 0 32px 48px;
-    max-width: 760px;
+    padding: 0 28px 64px;
+    max-width: 740px;
   }
 
   .bottomnav {
@@ -2155,7 +2070,7 @@ a.row__tel:hover {
 
   .demo,
   .demo__collapsed {
-    left: 264px;
+    left: 248px;
   }
 }
 
@@ -2252,4 +2167,169 @@ a.row__tel:hover {
 .sigmet__named--other {
   border-color: rgba(148, 163, 184, 0.45);
   color: #9aa5b3;
+}
+
+
+/* ---------- kartu v4 baru ---------- */
+
+.avcard__caveat {
+  margin: 12px 0 0;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #9aa5b3;
+}
+
+/* Kartu kewenangan level resmi: nadanya netral, bukan aksen bahaya, supaya
+   tidak terbaca sebagai status gunung. */
+
+.offlevel {
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: #141a22;
+  padding: 15px;
+}
+
+.offlevel__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.offlevel__note {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  color: #c3cbd5;
+  line-height: 1.55;
+}
+
+.offlevel__radius {
+  margin: 12px 0 0;
+  font-size: 11.5px;
+  color: #9aa5b3;
+  line-height: 1.55;
+}
+
+.pill--muted {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #9aa5b3;
+  font-size: 10.5px;
+  padding: 5px 8px;
+}
+
+/* Kartu kualitas udara: satu angka besar, kategorinya, lalu angka mentahnya. */
+
+.aqcard {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 14px;
+  background: #141a22;
+  padding: 15px;
+}
+
+.aqcard__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.aqcard__aqi {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 0.9;
+}
+
+.aqcard__id {
+  padding-bottom: 3px;
+}
+
+.aqcard__band {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.aqcard__unit {
+  font-size: 11.5px;
+  color: #c3cbd5;
+  margin-top: 2px;
+}
+
+.aqcard__advice {
+  margin: 11px 0 0;
+  font-size: 12.5px;
+  color: #e9edf2;
+  line-height: 1.55;
+}
+
+.aqcard__track {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.09);
+  margin-top: 13px;
+  overflow: hidden;
+}
+
+.aqcard__fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.aqcard__raw {
+  display: flex;
+  margin-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.aqcard__cell {
+  flex: 1;
+  padding-top: 12px;
+}
+
+.aqcard__cell + .aqcard__cell {
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  padding-left: 14px;
+}
+
+.aqcard__k {
+  font-size: 11.5px;
+  color: #9aa5b3;
+}
+
+.aqcard__v {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.aqcard__u {
+  font-size: 10.5px;
+  color: #9aa5b3;
+  margin-top: 2px;
+}
+
+.aqcard__caveat {
+  margin: 13px 0 0;
+  font-size: 11px;
+  color: #8b96a5;
+  line-height: 1.6;
+}
+
+.aqcard__src {
+  font-size: 10.5px;
+  color: #9aa5b3;
+  margin-top: 9px;
+}
+
+.tabfoot {
+  margin: 22px 0 0;
+  font-size: 11px;
+  color: #7f8a99;
+  line-height: 1.6;
+}
+
+.feedhead--first {
+  margin-top: 20px;
 }

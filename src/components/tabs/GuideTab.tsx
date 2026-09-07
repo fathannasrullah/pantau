@@ -1,16 +1,21 @@
-import type { VolcanoLevel, VolcanoSnapshot } from '../../types'
+import type { AviationStatus } from '../../data/aviation'
+import type { VolcanoSnapshot } from '../../types'
+import { SourceList } from '../SourceList'
 
 interface Props {
   snapshot: VolcanoSnapshot
-  level: VolcanoLevel
+  aviation: AviationStatus
 }
 
-export function GuideTab({ snapshot, level }: Props) {
+export function GuideTab({ snapshot, aviation }: Props) {
   return (
     <div className="tabview">
       <section className="actioncard">
-        <h2 className="actioncard__title">{level.action}</h2>
-        <p className="actioncard__note">{level.actionNote}</p>
+        <h2 className="actioncard__title">{aviation.action}</h2>
+        <p className="actioncard__note">
+          {aviation.plain} Perintah evakuasi hanya sah dari BPBD atau Badan
+          Geologi. Hubungi 112 bila belum ada arahan.
+        </p>
       </section>
 
       <h2 className="section">Titik kumpul dan nomor penting</h2>
@@ -56,6 +61,8 @@ export function GuideTab({ snapshot, level }: Props) {
           </li>
         ))}
       </ol>
+
+      <SourceList snapshot={snapshot} />
     </div>
   )
 }

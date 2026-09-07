@@ -1,26 +1,17 @@
 import { formatFeedTime } from '../../lib/format'
-import type { LiveQuakesState } from '../../hooks/useLiveQuakes'
-import { LiveQuakeList } from '../LiveQuakeList'
 import { SampleTag } from '../SampleTag'
 import { SEVERITY_COLOR } from '../../theme'
 import type { VolcanoSnapshot } from '../../types'
 
 interface Props {
   snapshot: VolcanoSnapshot
-  live: LiveQuakesState
   onOpenReport: () => void
 }
 
-export function FeedTab({ snapshot, live, onOpenReport }: Props) {
+export function FeedTab({ snapshot, onOpenReport }: Props) {
   return (
     <div className="tabview">
-      <LiveQuakeList
-        live={live}
-        volcano={snapshot.volcano}
-        nowISO={snapshot.fetchedAtISO}
-      />
-
-      <div className="feedhead">
+      <div className="feedhead feedhead--first">
         <h2 className="feedhead__title">Laporan resmi BMKG</h2>
         <button type="button" className="feedhead__action" onClick={onOpenReport}>
           Kirim laporan warga

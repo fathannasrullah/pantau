@@ -66,10 +66,13 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Erupsi terakhir tercatat | Smithsonian GVP (katalog, mingguan) | hidup |
 | **Peringatan abu penerbangan** | NOAA Aviation Weather Center (SIGMET) | hidup |
 | SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
+| Indeks AQI | dihitung dari PM2.5 CAMS dengan rumus US EPA | hidup |
 | Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) | hidup |
-| **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **butuh token** |
+| **Level status, radius bahaya, aviation colour code** | MAGMA Indonesia / PVMBG (VONA) | **butuh token** |
 | Kegempaan vulkanik | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
 | Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | **belum ada sumber** |
+| Lalu lintas pesawat | OpenSky Network | CORS terkunci ke domainnya sendiri |
+| NOTAM dan status bandara | FAA / ICAO | perlu kredensial, tidak boleh diambil ulang |
 
 Dua hal yang dijaga ketat:
 
@@ -268,22 +271,37 @@ src/
     useVolcanoSelection.ts  gunung terpilih, tertulis ke URL dan diingat perangkat
     useDemo.ts           override level/kondisi data lewat query string
   components/    tampilan; tidak ada angka yang ditulis langsung di sini
-  theme.ts       warna per level status dan per kondisi data
+  theme.ts       warna per tingkat bahaya dan per kondisi data
+  data/aviation.ts  keadaan peringatan abu; warna aksen seluruh layar
+  data/aqi.ts       AQI dari PM2.5 dengan tabel breakpoint US EPA
   lib/format.ts  format waktu WIB, tanggal, durasi, dan angka Indonesia
   lib/geo.ts     jarak, arah, vonis zona, dan titik kumpul terdekat
 ```
 
 ## Prioritas informasi
 
-Urutan layar Status mengikuti hasil analisis di `chats/chat1.md`:
+Urutan layar Status mengikuti prototipe v4:
 
-1. Level status + apa artinya untuk pengguna, termasuk bahaya pesisir Selat Sunda
-   (tsunami/gelombang) yang khas Anak Krakatau
-2. Posisi pengguna terhadap radius bahaya + jalan ke titik kumpul terdekat
-3. Hujan abu dan arah angin hari ini
-4. Tiga tindakan praktis
-5. Pengamatan, dampak per wilayah, transportasi
-6. Detail kegempaan ada di tab terpisah, bukan di layar utama
+1. Peringatan abu untuk penerbangan — satu-satunya penilaian bahaya di app ini
+   yang benar-benar datang dari otoritas resmi (SIGMET), sekaligus warna aksen
+   seluruh layar
+2. Kartu kewenangan: level resmi Indonesia belum tersambung, dan siapa yang
+   berhak menetapkannya
+3. Posisi pengguna terhadap kawah + jalan ke titik kumpul terdekat
+4. Kualitas udara (AQI) di sekitar kawah
+5. Abu vulkanik dan arah angin
+6. Gempa terkini dan grafik kegempaan per jam
+7. Tiga tindakan praktis
+
+Lima tab: **Status**, **Peta** (radius, wilayah, penduduk), **Udara**
+(penerbangan dan penyeberangan), **Laporan** (feed resmi), **Panduan**
+(tindakan, nomor penting, dan daftar sumber).
+
+Kata besar di kartu utama sengaja **bukan** GREEN/YELLOW/ORANGE/RED. Aviation
+colour code adalah pernyataan resmi observatorium gunung api; menuliskannya dari
+hasil turunan sendiri akan membuat tebakan terlihat resmi. Yang ditampilkan
+adalah ada tidaknya peringatan abu di jalur terbang, dan itu dikunci lewat uji
+di `src/data/aviation.test.ts`.
 
 Setiap angka membawa stempel waktu dan sumber. Saat data basi, gagal dimuat, atau
 perangkat offline, bagian yang lama diredupkan dan diberi banner — angka lama tidak

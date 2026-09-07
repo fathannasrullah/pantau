@@ -2,6 +2,13 @@ export type LevelId = 'normal' | 'waspada' | 'siaga' | 'awas'
 
 export type Severity = 'safe' | 'watch' | 'alert' | 'danger' | 'neutral'
 
+/** Satu aksen warna: garis, latar tipis, dan warna teksnya. */
+export interface ColorSet {
+  color: string
+  line: string
+  wash: string
+}
+
 export interface CoastalHazard {
   tag: string
   note: string
@@ -70,6 +77,12 @@ export interface AirQuality {
   so2Severity: Severity
   pm10: number
   pm10Severity: Severity
+  pm25: number | null
+  /**
+   * Indeks AQI yang dihitung dari pm25 dengan rumus US EPA. Null bila PM2.5
+   * tidak ikut terbaca — indeks tanpa dasar konsentrasi tidak boleh muncul.
+   */
+  aqi: number | null
   aod: number | null
   note: string
 }

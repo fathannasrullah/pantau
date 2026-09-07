@@ -1,10 +1,6 @@
-import type { DataStateId, LevelId, Severity } from './types'
+import type { ColorSet, DataStateId, LevelId, Severity } from './types'
 
-export interface ColorSet {
-  color: string
-  line: string
-  wash: string
-}
+export type { ColorSet }
 
 export const SEVERITY_COLOR: Record<Severity, string> = {
   safe: '#4ade80',
