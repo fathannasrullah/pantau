@@ -26,13 +26,24 @@ const STRAIT = { lat: -6.0, lon: 105.55 }
 const QUAKE_RADIUS_KM = 300
 const TIMEOUT_MS = 20_000
 
-async function fetchJson(url) {
+/** Cuplikan respons mentah terakhir per sumber, untuk laporan diagnostik. */
+const rawSamples = new Map()
+
+async function fetchJson(url, sampleKey) {
   const res = await fetch(url, {
     signal: AbortSignal.timeout(TIMEOUT_MS),
     headers: { accept: 'application/json' },
   })
+  const text = await res.text()
+  if (sampleKey && !rawSamples.has(sampleKey)) {
+    rawSamples.set(sampleKey, text.slice(0, 600))
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
-  return res.json()
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new Error(`respons bukan JSON: ${text.slice(0, 80)}`)
+  }
 }
 
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
@@ -45,7 +56,7 @@ async function wind() {
     `?latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
     '&current=wind_speed_10m,wind_direction_10m' +
     '&wind_speed_unit=kmh&timezone=UTC'
-  const raw = await fetchJson(url)
+  const raw = await fetchJson(url, 'wind')
   const c = raw?.current
   const speed = num(c?.wind_speed_10m)
   const direction = num(c?.wind_direction_10m)
@@ -63,7 +74,7 @@ async function waves() {
     'https://marine-api.open-meteo.com/v1/marine' +
     `?latitude=${STRAIT.lat}&longitude=${STRAIT.lon}` +
     '&current=wave_height&timezone=UTC'
-  const raw = await fetchJson(url)
+  const raw = await fetchJson(url, 'waves')
   const height = num(raw?.current?.wave_height)
   if (height === null) throw new Error('tinggi gelombang kosong')
   return {
@@ -87,7 +98,7 @@ async function quakes() {
     `&latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
     `&maxradiuskm=${QUAKE_RADIUS_KM}` +
     `&starttime=${since.toISOString()}&orderby=time`
-  const raw = await fetchJson(url)
+  const raw = await fetchJson(url, 'quakes')
   const features = Array.isArray(raw?.features) ? raw.features : []
 
   // 24 ember satu jam, ember terakhir adalah jam berjalan.
@@ -129,7 +140,7 @@ async function bmkg() {
   const recentUrl = `${base}gempaterkini.json`
 
   const [latestRaw, recentRaw] = await Promise.all([
-    fetchJson(latestUrl),
+    fetchJson(latestUrl, 'bmkg'),
     fetchJson(recentUrl).catch(() => null),
   ])
 
@@ -178,6 +189,48 @@ const SOURCES = [
   { id: 'bmkg', label: 'BMKG — gempa terkini dan potensi tsunami', run: bmkg },
 ]
 
+/**
+ * Laporan ke ringkasan job Actions: nilai hasil parsing berdampingan dengan
+ * cuplikan respons mentah. Tanpa ini, step yang hijau tidak membuktikan apa pun
+ * karena sumber yang gagal pun sengaja tidak menjatuhkan build.
+ */
+async function writeSummary(sources) {
+  const path = process.env.GITHUB_STEP_SUMMARY
+  if (!path) return
+
+  const rows = Object.entries(sources).map(([id, s]) =>
+    `| \`${id}\` | ${s.ok ? 'ok' : 'GAGAL'} | ${
+      s.ok ? JSON.stringify(s.data).slice(0, 220) : s.error
+    } |`,
+  )
+
+  const details = Object.keys(sources).map((id) => {
+    const sample = rawSamples.get(id)
+    if (!sample) return `**${id}** — tidak ada respons yang terbaca.`
+    return [
+      `<details><summary>${id} — respons mentah (600 karakter pertama)</summary>`,
+      '',
+      '```json',
+      sample.replace(/```/g, '`​``'),
+      '```',
+      '</details>',
+    ].join('\n')
+  })
+
+  const body = [
+    '## Hasil pengambilan sumber resmi',
+    '',
+    '| Sumber | Status | Nilai hasil parsing / error |',
+    '| --- | --- | --- |',
+    ...rows,
+    '',
+    ...details,
+    '',
+  ].join('\n')
+
+  await writeFile(path, body, { flag: 'a' })
+}
+
 async function main() {
   const sources = {}
   let okCount = 0
@@ -210,6 +263,7 @@ async function main() {
 
   await mkdir(dirname(OUT), { recursive: true })
   await writeFile(OUT, `${JSON.stringify(payload, null, 2)}\n`)
+  await writeSummary(sources)
   console.log(`\n${okCount}/${SOURCES.length} sumber berhasil → ${OUT}`)
 
   // Sengaja selalu exit 0: deploy tetap jalan, dan app menandai sendiri sumber
