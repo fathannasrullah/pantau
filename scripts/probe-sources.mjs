@@ -64,79 +64,33 @@ const extractArcgis = (body) => {
  * menyebut v1 sudah dipensiunkan, IRIS tampaknya berpindah domain, dan daftar
  * layer GVP menunjukkan ada layer emisi yang belum diperiksa.
  */
+/**
+ * Putaran keenam: mencari sumber sah untuk dampak wilayah, titik kumpul, dan
+ * jalur evakuasi — tiga hal yang sampai sekarang masih data karangan di app.
+ */
 const TARGETS = [
-  // Registri tujuh gunung: koordinat dan ketinggian diambil dari katalog resmi
-  // Smithsonian, bukan dari ingatan.
   [
-    'gvp-volcanoes',
-    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
-      '&request=GetFeature&typeName=GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes' +
-      '&outputFormat=application/json&count=20' +
-      '&CQL_FILTER=' +
-      encodeURIComponent(
-        // Ili Lewotolok tidak tertangkap pencarian nama; katalog memakai ejaan
-        // lain, jadi yang dicari nomor gunungnya sekalian tetangga sejeda.
-        "Volcano_Number IN (264230,264231,264220) OR Volcano_Name LIKE 'Lewoto%'",
-      ),
-    extractVolcanoes,
+    'inarisk-evakuasi',
+    'https://gis.bnpb.go.id/server/rest/services/inarisk/Arah_jalur_evakuasi/MapServer?f=json',
   ],
-
-  // ArcGIS BNPB ternyata terbuka; ini menelusuri folder yang relevan.
   [
-    'bnpb-bencana-harian',
-    'https://gis.bnpb.go.id/server/rest/services/Bencana_Harian?f=json',
+    'inarisk-evakuasi-query',
+    'https://gis.bnpb.go.id/server/rest/services/inarisk/Arah_jalur_evakuasi/MapServer/0/query' +
+      '?where=1%3D1&outFields=*&resultRecordCount=2&f=json',
+  ],
+  [
+    'bnpb-bencana-mingguan',
+    'https://gis.bnpb.go.id/server/rest/services/Bencana_Mingguan?f=json',
     extractArcgis,
   ],
   [
-    'bnpb-destana',
-    'https://gis.bnpb.go.id/server/rest/services/Destana?f=json',
+    'bnpb-poi',
+    'https://gis.bnpb.go.id/server/rest/services/POI?f=json',
     extractArcgis,
   ],
   [
-    'bnpb-inarisk',
-    'https://gis.bnpb.go.id/server/rest/services/inarisk?f=json',
-    extractArcgis,
-  ],
-  // Penyaringan Volcano_Number ditolak dua layer ini; cari nama field aslinya.
-  [
-    'gvp-1960-schema',
-    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
-      '&request=DescribeFeatureType&typeName=GVP-VOTW:E3WebApp_Eruptions1960',
-    extractSchemaFields,
-  ],
-  [
-    'gvp-emissions-schema',
-    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
-      '&request=DescribeFeatureType&typeName=GVP-VOTW:E3WebApp_Emissions',
-    extractSchemaFields,
-  ],
-  [
-    'reliefweb-v2',
-    'https://api.reliefweb.int/v2/disasters?appname=pantau-gunung&limit=2' +
-      '&filter[field]=primary_country.name&filter[value]=Indonesia',
-  ],
-  [
-    'earthscope-stations',
-    'https://service.earthscope.org/fdsnws/station/1/query?format=text&level=station' +
-      `&latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}&maxradius=2`,
-  ],
-  [
-    'gvp-emissions',
-    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
-      '&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Emissions' +
-      '&outputFormat=application/json&count=2&CQL_FILTER=Volcano_Number=262000',
-  ],
-  [
-    'gvp-eruptions1960',
-    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
-      '&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960' +
-      '&outputFormat=application/json&count=1&CQL_FILTER=Volcano_Number=262000',
-  ],
-  ['inarisk-root', 'https://inarisk.bnpb.go.id/arcgis/rest?f=json', extractArcgis],
-  ['bnpb-server', 'https://gis.bnpb.go.id/server/rest/services?f=json', extractArcgis],
-  [
-    'nasa-firms',
-    'https://firms.modaps.eosdis.nasa.gov/api/area/csv/YOUR_KEY/VIIRS_SNPP_NRT/105,-7,106,-5/1',
+    'gdacs-list',
+    'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=VO',
   ],
 ]
 
