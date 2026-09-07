@@ -77,6 +77,9 @@ async function fetchJson(url, sampleKey, extraHeaders) {
     rawSamples.set(sampleKey, text.slice(0, 600))
   }
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
+  // EMSC menjawab dengan badan kosong ketika tidak ada gempa sama sekali dalam
+  // jendela yang diminta. Itu jawaban "nol kejadian", bukan kegagalan sumber.
+  if (!text.trim()) return null
   try {
     return JSON.parse(text)
   } catch {
