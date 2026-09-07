@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { EMPTY_REGION, REGION_SAMPLES } from './regions.ts'
+import { LEVELS } from './levels.ts'
+import { EMERGENCY_CONTACTS, EMPTY_REGION, REGION_SAMPLES } from './regions.ts'
 import { DEFAULT_VOLCANO_ID, findVolcano, VOLCANOES } from './volcanoes.ts'
 
 test('registri lengkap dan tanpa id ganda', () => {
@@ -23,18 +24,37 @@ test('gunung tak dikenal jatuh ke default, bukan undefined', () => {
   assert.equal(findVolcano('semeru').id, 'semeru')
 })
 
-test('isi wilayah tidak bocor antar gunung', () => {
-  // Menampilkan posko Kalianda saat memantau Semeru bisa mengarahkan orang ke
-  // tempat yang salah, jadi gunung tanpa data wilayah harus benar-benar kosong.
+test('tidak ada isi wilayah karangan untuk gunung mana pun', () => {
+  // Dampak, titik kumpul, transportasi, dan daftar desa hanya boleh datang dari
+  // BPBD. Selama belum tersambung, layar harus kosong dengan keterangan — bukan
+  // diisi contoh yang terbaca seperti laporan sungguhan.
   for (const v of VOLCANOES) {
     const region = REGION_SAMPLES[v.id] ?? EMPTY_REGION
-    if (v.id === 'krakatau') {
-      assert.ok(region.shelters.length > 0)
-      continue
+    assert.equal(region.shelters.length, 0, `${v.id} punya titik kumpul karangan`)
+    assert.equal(region.impacts.length, 0, `${v.id} punya dampak karangan`)
+    assert.equal(region.villages.length, 0, `${v.id} punya daftar desa karangan`)
+    assert.equal(region.transport.length, 0, `${v.id} punya transportasi karangan`)
+  }
+})
+
+test('kontak darurat hanya nomor yang berlaku nasional', () => {
+  // Nomor posko per kabupaten yang salah saat keadaan darurat lebih buruk
+  // daripada tidak ada nomor sama sekali.
+  assert.equal(EMERGENCY_CONTACTS.length, 1)
+  assert.equal(EMERGENCY_CONTACTS[0]?.tel, '112')
+})
+
+test('teks level menjelaskan arti, bukan mengklaim pengamatan', () => {
+  for (const level of Object.values(LEVELS)) {
+    // Tanggal penetapan level hanya PVMBG yang tahu.
+    assert.equal(level.sinceISO, null, `${level.id} memuat tanggal karangan`)
+    const copy = `${level.headline} ${level.plain} ${level.strip}`
+    for (const forbidden of ['Kalianda', 'Rajabasa', 'Sebesi', 'Anyer', '1.200']) {
+      assert.ok(
+        !copy.includes(forbidden),
+        `${level.id} menyebut "${forbidden}" seolah pengamatan sungguhan`,
+      )
     }
-    assert.equal(region.shelters.length, 0, `${v.id} punya titik kumpul contoh`)
-    assert.equal(region.impacts.length, 0, `${v.id} punya dampak contoh`)
-    assert.equal(region.villages.length, 0, `${v.id} punya daftar desa contoh`)
   }
 })
 

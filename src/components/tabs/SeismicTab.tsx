@@ -1,5 +1,4 @@
 import type { DataStateView } from '../../data/dataState'
-import { SampleTag } from '../SampleTag'
 import { SEVERITY_COLOR } from '../../theme'
 import type { VolcanoSnapshot } from '../../types'
 
@@ -73,10 +72,14 @@ export function SeismicTab({
         </div>
       </section>
 
-      <h2 className="section">
-        Jenis kegempaan vulkanik
-        <SampleTag title="Hanya PVMBG yang merekam jenis kegempaan vulkanik" />
-      </h2>
+      <h2 className="section">Jenis kegempaan vulkanik</h2>
+      {snapshot.quakeTypes.length === 0 && (
+        <p className="emptynote">
+          Letusan, embusan, vulkanik dangkal, dan tremor hanya terekam
+          seismograf pos pengamatan PVMBG. Belum tersambung, jadi tidak ada
+          angka yang bisa ditampilkan di sini.
+        </p>
+      )}
       <div className="grid2 dim">
         {snapshot.quakeTypes.map((type) => (
           <div className="quake" key={type.label}>
@@ -98,8 +101,10 @@ export function SeismicTab({
         <p className="seis__foot">{snapshot.lastEruptionNote}</p>
       )}
       <p className="seis__foot">
-        Amplitudo tremor dominan {snapshot.tremorAmplitudeMm} mm. Bagian ini
-        untuk yang ingin melihat detail; keputusan tetap mengikuti level status.
+        {snapshot.tremorAmplitudeMm !== null &&
+          `Amplitudo tremor dominan ${snapshot.tremorAmplitudeMm} mm. `}
+        Bagian ini untuk yang ingin melihat detail; keputusan tetap mengikuti
+        level status resmi.
       </p>
     </div>
   )

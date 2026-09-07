@@ -1,6 +1,6 @@
 import type { DataStateView } from '../../data/dataState'
 import { SampleTag } from '../SampleTag'
-import { formatAge, formatDecimal, formatNumber } from '../../lib/format'
+import { formatAge, formatDecimal } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { GeolocationState } from '../../hooks/useGeolocation'
 import type { VolcanoLevel, VolcanoSnapshot } from '../../types'
@@ -32,7 +32,7 @@ export function StatusTab({
   onOpenNotifications,
 }: Props) {
   const { ashfall } = snapshot
-  const rising = ashfall.columnDeltaM >= 0
+
 
   return (
     <div className="tabview">
@@ -75,17 +75,9 @@ export function StatusTab({
             <div className="ash__d">angin {ashfall.windSpeedKmh} km/jam</div>
           </div>
           <div className="ash__cell">
-            <div className="ash__k">
-              Tinggi kolom abu
-              {ashfall.columnProvenance === 'sample' && <SampleTag />}
-            </div>
-            <div className="ash__v ash__v--mono mono">
-              {formatNumber(ashfall.columnHeightM)} m
-            </div>
-            <div className={`ash__d${rising ? ' ash__d--up' : ''}`}>
-              {rising ? 'naik' : 'turun'}{' '}
-              {formatNumber(Math.abs(ashfall.columnDeltaM))} m
-            </div>
+            <div className="ash__k">Tinggi kolom abu</div>
+            <div className="ash__v ash__v--none">belum tersambung</div>
+            <div className="ash__d">hanya dari pos pengamatan PVMBG</div>
           </div>
         </div>
         <p className="ash__advice">{ashfall.advice}</p>
@@ -142,6 +134,13 @@ export function StatusTab({
       </button>
 
       <h2 className="section">Pengamatan 24 jam terakhir</h2>
+      {snapshot.metrics.length === 0 && (
+        <p className="emptynote">
+          Kegempaan erupsi, amplitudo, deformasi, dan suhu titik panas hanya
+          terekam alat pos pengamatan PVMBG, dan belum tersambung. Angka
+          kegempaan tektonik di sekitar gunung ada di tab Seismik.
+        </p>
+      )}
       <div className="grid2 dim">
         {snapshot.metrics.map((metric) => (
           <div className="metric" key={metric.label}>

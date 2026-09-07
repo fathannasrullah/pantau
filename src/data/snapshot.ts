@@ -18,10 +18,7 @@ import type {
   VolcanoRef,
   VolcanoSnapshot,
 } from '../types'
-import { REGION_SAMPLES, EMPTY_REGION } from './regions'
-
-/** Minutes before the snapshot timestamp that each official report was issued. */
-const FEED_OFFSETS_MIN = [22, 55, 157, 192]
+import { EMERGENCY_CONTACTS, EMPTY_REGION, REGION_SAMPLES } from './regions'
 
 const QUICK_ACTIONS = [
   { n: '01', text: 'Pakai masker saat di luar ruangan dan tutup tandon air.' },
@@ -187,45 +184,17 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       ashHeadingDeg: wind?.ashHeadingDeg ?? null,
       windSpeedKmh: wind?.speedKmh ?? 11,
       windProvenance: wind ? 'live' : 'sample',
-      columnHeightM: 1200,
-      columnDeltaM: 300,
-      columnProvenance: 'sample',
+      columnHeightM: null,
+      columnDeltaM: null,
       advice: wind
-        ? `Angin membawa abu ke arah ${wind.ashHeading.toLowerCase()}. Pakai masker di luar ruangan dan tutup tandon air.`
-        : 'Abu tipis terpantau di Kalianda dan Rajabasa. Pakai masker di luar ruangan, tutup tandon air.',
-      source: wind
-        ? 'Open-Meteo (angin) · tinggi kolom abu masih data contoh'
-        : 'data contoh',
+        ? `Angin membawa abu ke arah ${wind.ashHeading.toLowerCase()}. Bila hujan abu terjadi, pakai masker di luar ruangan dan tutup tandon air.`
+        : 'Arah sebaran abu belum bisa dihitung karena data angin tidak tersedia.',
+      source: wind ? 'Open-Meteo (angin permukaan)' : 'belum tersambung',
     },
 
     quickActions: QUICK_ACTIONS,
 
-    metrics: [
-      {
-        label: 'Gempa erupsi',
-        value: '27',
-        delta: 'tertinggi 6 hari terakhir',
-        severity: 'alert',
-      },
-      {
-        label: 'Amplitudo maksimum',
-        value: '55 mm',
-        delta: 'durasi 3 menit 12 detik',
-        severity: 'neutral',
-      },
-      {
-        label: 'Deformasi',
-        value: '+2,4 cm',
-        delta: 'inflasi melambat',
-        severity: 'safe',
-      },
-      {
-        label: 'Suhu titik panas',
-        value: '318 °C',
-        delta: 'stabil sejak kemarin',
-        severity: 'neutral',
-      },
-    ],
+    metrics: [],
 
     impacts: region.impacts,
 
@@ -260,61 +229,14 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
 
     seismicHourly: quakes?.hourly ?? req.seismicHourly ?? SEISMIC_SEED,
 
-    quakeTypes: [
-      { label: 'Letusan', value: '27', ratio: 0.86, severity: 'alert' },
-      { label: 'Embusan', value: '41', ratio: 0.64, severity: 'watch' },
-      {
-        label: 'Vulkanik dangkal',
-        value: '12',
-        ratio: 0.34,
-        severity: 'neutral',
-      },
-      { label: 'Tremor menerus', value: '6 jam', ratio: 0.52, severity: 'danger' },
-    ],
+    quakeTypes: [],
 
-    tremorAmplitudeMm: 24,
+    tremorAmplitudeMm: null,
 
-    feed: [
-      ...liveFeed,
-      {
-        kind: 'VONA',
-        severity: 'alert',
-        timeISO: shiftISO(updatedAtISO, FEED_OFFSETS_MIN[0]),
-        title: 'VONA warna ORANGE dikeluarkan',
-        body: 'Kolom abu teramati 1.200 m di atas puncak, bergerak ke barat laut. Ketinggian abu FL 120.',
-        source: 'Badan Geologi · Pos Pengamatan Anak Krakatau',
-        provenance: 'sample',
-      },
-      {
-        kind: 'ERUPSI',
-        severity: 'danger',
-        timeISO: shiftISO(updatedAtISO, FEED_OFFSETS_MIN[1]),
-        title: 'Erupsi dengan amplitudo maksimum 55 mm',
-        body: 'Durasi 3 menit 12 detik. Lontaran material teramati sejauh 800 m dari pusat kawah.',
-        source: 'Badan Geologi · rekaman seismograf tersedia',
-        provenance: 'sample',
-      },
-      {
-        kind: 'HIMBAUAN',
-        severity: 'watch',
-        timeISO: shiftISO(updatedAtISO, FEED_OFFSETS_MIN[2]),
-        title: 'Nelayan diminta menjauhi radius 5 km',
-        body: 'Kegiatan penangkapan ikan di sekitar tubuh gunung dihentikan sampai status diturunkan.',
-        source: 'BPBD Lampung Selatan',
-        provenance: 'sample',
-      },
-      {
-        kind: 'CUACA',
-        severity: 'neutral',
-        timeISO: shiftISO(updatedAtISO, FEED_OFFSETS_MIN[3]),
-        title: 'Angin permukaan ke barat laut, 11 km/jam',
-        body: 'Abu tipis berpotensi mencapai Kalianda dan Rajabasa hingga sore. Tinggi gelombang 1,5–2,5 m.',
-        source: 'BMKG · pembaruan tiap 6 jam',
-        provenance: 'sample',
-      },
-    ],
+    feed: liveFeed,
 
     shelters: region.shelters,
+    emergencyContacts: EMERGENCY_CONTACTS,
 
     ashfallSteps: ASHFALL_STEPS,
 

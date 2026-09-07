@@ -18,6 +18,14 @@ export function FeedTab({ snapshot, onOpenReport }: Props) {
         </button>
       </div>
       <div className="rows">
+        {snapshot.feed.length === 0 && (
+          <p className="emptynote">
+            Belum ada laporan resmi yang bisa ditampilkan untuk{' '}
+            {snapshot.volcano.name}. Yang masuk ke sini hanya gempa BMKG dalam
+            radius 500 km dan tujuh hari terakhir. VONA dan laporan pos
+            pengamatan menunggu sambungan ke MAGMA Indonesia.
+          </p>
+        )}
         {snapshot.feed.map((item) => (
           <article className="feeditem" key={`${item.kind}-${item.timeISO}`}>
             <div className="feeditem__head">
@@ -39,8 +47,8 @@ export function FeedTab({ snapshot, onOpenReport }: Props) {
         ))}
       </div>
       <p className="feednote">
-        Hanya laporan dari Badan Geologi, BMKG, dan BPBD yang tampil di sini.
-        Laporan warga masuk setelah diverifikasi petugas.
+        Hanya laporan dari lembaga resmi yang tampil di sini. Laporan warga
+        masuk setelah diverifikasi petugas.
       </p>
     </div>
   )

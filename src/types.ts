@@ -21,7 +21,11 @@ export interface VolcanoLevel {
   coastal: CoastalHazard | null
   action: string
   actionNote: string
-  sinceISO: string
+  /**
+   * Kapan level ini ditetapkan — hanya PVMBG yang tahu, jadi null selama belum
+   * tersambung. Jangan diisi tanggal karangan hanya agar kartunya terlihat penuh.
+   */
+  sinceISO: string | null
   sincePrecision: 'day' | 'minute'
 }
 
@@ -54,10 +58,9 @@ export interface AshfallReport {
   ashHeadingDeg: number | null
   windSpeedKmh: number
   windProvenance: Provenance
-  columnHeightM: number
-  columnDeltaM: number
-  /** Tinggi kolom hanya dimiliki pos pengamatan PVMBG. */
-  columnProvenance: Provenance
+  /** Tinggi kolom hanya dimiliki pos pengamatan PVMBG; null selama belum ada. */
+  columnHeightM: number | null
+  columnDeltaM: number | null
   advice: string
   source: string
 }
@@ -206,9 +209,10 @@ export interface VolcanoSnapshot {
   villages: Village[]
   seismicHourly: number[]
   quakeTypes: QuakeType[]
-  tremorAmplitudeMm: number
+  tremorAmplitudeMm: number | null
   feed: FeedItem[]
   shelters: ShelterPoint[]
+  emergencyContacts: { name: string; note: string; tel: string }[]
   ashfallSteps: GuideStep[]
   provenance: SnapshotProvenance
   /** Daftar sumber untuk ditampilkan apa adanya, termasuk yang gagal diambil. */

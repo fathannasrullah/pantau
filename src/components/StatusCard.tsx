@@ -17,10 +17,11 @@ export function StatusCard({
   provenance,
   observedWaveHeightM,
 }: Props) {
-  const since =
-    level.sincePrecision === 'minute'
+  const since = level.sinceISO
+    ? level.sincePrecision === 'minute'
       ? formatDateTime(level.sinceISO)
       : formatDate(level.sinceISO)
+    : null
 
   return (
     <section className="statuscard">
@@ -63,7 +64,7 @@ export function StatusCard({
 
       <div className="pills">
         <span className="pill mono">Radius bahaya {level.radiusKm} km</span>
-        <span className="pill mono">Sejak {since}</span>
+        {since && <span className="pill mono">Sejak {since}</span>}
       </div>
       {provenance.level === 'live' ? (
         <div className="source">

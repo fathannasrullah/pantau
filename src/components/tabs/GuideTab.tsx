@@ -17,10 +17,23 @@ export function GuideTab({ snapshot, level }: Props) {
       <div className="rows">
         {snapshot.shelters.length === 0 && (
           <p className="emptynote">
-            Titik kumpul untuk {snapshot.volcano.name} belum tersambung ke data
-            BPBD. Hubungi 112 atau BPBD setempat untuk lokasi resmi terdekat.
+            Daftar titik kumpul untuk {snapshot.volcano.name} belum tersambung
+            ke data BPBD kabupaten, jadi tidak ada lokasi yang bisa disebut di
+            sini. Nomor di bawah berlaku nasional; untuk lokasi resmi terdekat,
+            tanyakan ke BPBD kabupaten setempat.
           </p>
         )}
+        {snapshot.emergencyContacts.map((point) => (
+          <div className="row row--tall" key={point.tel}>
+            <div className="row__body">
+              <div className="row__title">{point.name}</div>
+              <div className="row__note">{point.note}</div>
+            </div>
+            <a className="row__tel mono" href={`tel:${point.tel}`}>
+              {point.tel}
+            </a>
+          </div>
+        ))}
         {snapshot.shelters.map((point) => (
           <div className="row row--tall" key={point.name}>
             <div className="row__body">

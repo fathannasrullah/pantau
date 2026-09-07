@@ -1895,3 +1895,9 @@ a.row__tel:hover {
   font-size: 12px;
   line-height: 1.55;
 }
+
+.ash__v--none {
+  color: #8b96a5;
+  font-size: 13px;
+  font-weight: 600;
+}

@@ -64,14 +64,16 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
 | **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **butuh token** |
 | Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
-| Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | belum |
+| Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | **belum ada sumber** |
 
 Dua hal yang dijaga ketat:
 
-- **Isi khas wilayah tidak bocor antar gunung.** Dampak, desa terdekat, titik
-  kumpul, dan transportasi hanya ada untuk Anak Krakatau. Gunung lain
-  menampilkan keadaan kosong yang menyebutkan sebabnya — menampilkan posko
-  Kalianda saat memantau Semeru bisa mengarahkan orang ke tempat yang salah.
+- **Tidak ada angka atau laporan karangan di layar mana pun.** Versi awal memuat
+  contoh yang terbaca seperti pengamatan sungguhan — "42 warga dievakuasi dari
+  Pulau Sebesi", "Pelabuhan Bakauheni terbatas", kolom abu 1.200 m, nomor posko
+  `0727 322xxx`. Semuanya dihapus. Bagian yang belum bersumber kini kosong
+  dengan keterangan yang menyebut siapa pemilik datanya. Sifat ini dikunci lewat
+  tes, termasuk larangan menyebut nama tempat tertentu di teks level status.
 - **Level status tidak pernah diturunkan dari sumber lain.** Hanya PVMBG yang
   berhak menetapkannya, jadi selama belum tersambung kartu status memuat
   peringatan eksplisit bahwa levelnya belum resmi.
@@ -142,6 +144,23 @@ situ. Sampai saat itu, jangan mengisi level status dari sumber mana pun.
 
 Tidak ada header CORS di MAGMA, jadi meski token sudah ada, pemanggilannya tetap
 harus lewat CI seperti sumber lain.
+
+### Dampak wilayah dan titik kumpul: belum ada sumber sah
+
+Diuji dan tidak menghasilkan data yang bisa dipertanggungjawabkan:
+
+| Calon | Hasil |
+| --- | --- |
+| InaRISK `Arah_jalur_evakuasi` | `200`, tapi layernya bernama `arahJ`, `arahI`, `arahH` — simbol panah arah pada satu peta, bukan daftar titik kumpul bernama |
+| BNPB `Bencana_Harian`, `Bencana_Mingguan`, `POI` | `200` tapi kosong, tanpa service |
+| GDACS | melewati batas 25 detik pada dua percobaan terpisah |
+| ReliefWeb v2 | `403`, butuh appname yang disetujui |
+
+Karena itu dampak wilayah, transportasi, daftar desa terdekat, dan titik kumpul
+dibiarkan kosong dengan keterangan. Satu-satunya nomor yang ditampilkan adalah
+**112**, panggilan darurat nasional — nomor posko per kabupaten tidak dicantumkan
+selama belum ada sumber resminya, karena nomor yang salah saat keadaan darurat
+lebih buruk daripada tidak ada nomor.
 
 ### Yang sengaja tidak dipakai
 
