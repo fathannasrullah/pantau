@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import {
   angleDelta,
   bearingDeg,
+  destinationPoint,
   distanceKm,
   fixQuality,
   isDownwind,
@@ -73,4 +74,28 @@ test('titik kumpul terdekat dipilih dari jarak sebenarnya', () => {
   const nearest = nearestTo(KALIANDA, shelters)
   assert.equal(nearest?.place.name, 'dekat')
   assert.equal(nearestTo(KALIANDA, []), null)
+})
+
+test('titik tujuan konsisten dengan jarak dan arahnya', () => {
+  // Kalau rumusnya salah, garis arah abu di peta akan menunjuk ke tempat yang
+  // keliru — dan itu tidak akan terlihat sebagai galat, hanya sebagai peta
+  // yang tampak masuk akal.
+  const kawah = { lat: -6.102, lon: 105.423 }
+  const tujuan = destinationPoint(kawah, 315, 40)
+  assert.ok(Math.abs(distanceKm(kawah, tujuan) - 40) < 0.1)
+  assert.ok(Math.abs(bearingDeg(kawah, tujuan) - 315) < 0.1)
+})
+
+test('bergerak ke utara menaikkan lintang, ke timur menaikkan bujur', () => {
+  const asal = { lat: 0, lon: 0 }
+  assert.ok(destinationPoint(asal, 0, 111).lat > 0.99)
+  assert.ok(destinationPoint(asal, 90, 111).lon > 0.99)
+  assert.ok(destinationPoint(asal, 180, 111).lat < -0.99)
+})
+
+test('bujur tetap dalam rentang −180..180 saat melewati antimeridian', () => {
+  const dekatBatas = { lat: 0, lon: 179.5 }
+  const lewat = destinationPoint(dekatBatas, 90, 200)
+  assert.ok(lewat.lon >= -180 && lewat.lon <= 180)
+  assert.ok(lewat.lon < 0, 'harus melompat ke bujur negatif, bukan 181')
 })

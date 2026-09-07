@@ -67,6 +67,8 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | **Peringatan abu penerbangan** | NOAA Aviation Weather Center (SIGMET) | hidup |
 | SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
 | Indeks AQI | dihitung dari PM2.5 CAMS dengan rumus US EPA | hidup |
+| Peta dasar | petak raster OpenStreetMap lewat Leaflet | hidup |
+| Bentuk area peringatan abu | poligon SIGMET apa adanya | hidup |
 | Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) | hidup |
 | **Level status, radius bahaya, aviation colour code** | MAGMA Indonesia / PVMBG (VONA) | **butuh token** |
 | Kegempaan vulkanik | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
@@ -296,6 +298,15 @@ Urutan layar Status mengikuti prototipe v4:
 Lima tab: **Status**, **Peta** (radius, wilayah, penduduk), **Udara**
 (penerbangan dan penyeberangan), **Laporan** (feed resmi), **Panduan**
 (tindakan, nomor penting, dan daftar sumber).
+
+Peta memakai Leaflet dengan petak raster OpenStreetMap, dan **hanya menggambar
+geometri sungguhan**: kawah dari koordinat katalog Smithsonian, poligon
+peringatan abu apa adanya dari SIGMET, arah angin permukaan terukur, dan posisi
+GPS pengguna sendiri. Poligon abu ilustratif dan penanda desa yang ditulis
+tangan di prototipe tidak dipakai. Lingkaran radius diberi label **pembanding**,
+bukan zona terlarang, karena zona resmi hanya ditetapkan Badan Geologi. Petak
+yang pernah dilihat disimpan service worker supaya peta tetap terbaca saat
+sinyal hilang.
 
 Kata besar di kartu utama sengaja **bukan** GREEN/YELLOW/ORANGE/RED. Aviation
 colour code adalah pernyataan resmi observatorium gunung api; menuliskannya dari

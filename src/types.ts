@@ -96,6 +96,8 @@ export interface AshAdvisory {
   moveDir: string | null
   moveSpeedKt: number | null
   distanceKm: number | null
+  /** Bentuk asli area advisory sebagai [lintang, bujur], bila utuh. */
+  polygon: [number, number][] | null
   namedHere: boolean
   text: string
 }

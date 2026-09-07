@@ -56,6 +56,18 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
+          {
+            // Petak peta yang pernah dilihat disimpan supaya peta tetap
+            // terbaca saat sinyal hilang — justru saat paling dibutuhkan.
+            // Batas entri menjaga penyimpanan perangkat murah tidak penuh.
+            urlPattern: /^https:\/\/tile\.openstreetmap\.org\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'osm-tiles',
+              expiration: { maxEntries: 320, maxAgeSeconds: 60 * 60 * 24 * 14 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),

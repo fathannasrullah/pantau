@@ -98,3 +98,30 @@ export function zoneVerdict(
   if (distanceKm - margin > radiusKm) return 'di luar'
   return 'di batas'
 }
+
+/**
+ * Titik tujuan sejauh `distanceKm` dari titik awal pada arah `bearing`.
+ * Dipakai peta untuk menggambar arah sebaran abu dari kawah.
+ */
+export function destinationPoint(
+  from: LatLon,
+  bearing: number,
+  distanceKm: number,
+): LatLon {
+  const angular = distanceKm / EARTH_RADIUS_KM
+  const brg = toRad(bearing)
+  const lat1 = toRad(from.lat)
+  const lon1 = toRad(from.lon)
+  const lat2 = Math.asin(
+    Math.sin(lat1) * Math.cos(angular) +
+      Math.cos(lat1) * Math.sin(angular) * Math.cos(brg),
+  )
+  const lon2 =
+    lon1 +
+    Math.atan2(
+      Math.sin(brg) * Math.sin(angular) * Math.cos(lat1),
+      Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2),
+    )
+  // Bujur dinormalkan supaya tidak melompat ke sisi lain peta.
+  return { lat: toDeg(lat2), lon: ((toDeg(lon2) + 540) % 360) - 180 }
+}

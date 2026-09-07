@@ -1,20 +1,18 @@
 import type { DataStateView } from '../../data/dataState'
+import type { GeolocationState } from '../../hooks/useGeolocation'
 import { formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { MapLayer, VolcanoLevel, VolcanoSnapshot } from '../../types'
+import { VolcanoMap } from '../VolcanoMap'
 
 interface Props {
   snapshot: VolcanoSnapshot
   level: VolcanoLevel
   dataState: DataStateView
   layer: MapLayer['id']
+  accent: string
+  geo: GeolocationState
   onLayerChange: (id: MapLayer['id']) => void
-}
-
-function formatCoords(lat: number, lon: number) {
-  const ns = lat < 0 ? 'S' : 'N'
-  const ew = lon < 0 ? 'W' : 'E'
-  return `${Math.abs(lat).toFixed(3)}°${ns} ${Math.abs(lon).toFixed(3)}°${ew}`
 }
 
 export function MapTab({
@@ -22,6 +20,8 @@ export function MapTab({
   level,
   dataState,
   layer,
+  accent,
+  geo,
   onLayerChange,
 }: Props) {
   const active =
@@ -30,28 +30,17 @@ export function MapTab({
   return (
     <div className="tabview">
       <h2 className="section section--first">Radius bahaya dan arah abu</h2>
-      <div className="map dim">
-        <div className="map__grid" aria-hidden="true" />
-        <div className="map__ring map__ring--outer" aria-hidden="true" />
-        <div className="map__ring map__ring--inner" aria-hidden="true" />
-        <div className="map__pulse" aria-hidden="true" />
-        <div className="map__core" aria-hidden="true" />
-        <div className="map__plume" aria-hidden="true" />
-        <div className="map__legend">
-          <div>Peta skematik, bukan skala sebenarnya</div>
-          {/* Radius resmi hanya ditetapkan Badan Geologi; jangan ditulis
-              sebagai larangan yang seolah sudah berlaku. */}
-          <div className="map__legend-danger">
-            Radius pembanding {level.radiusKm} km
-          </div>
-          <div className="map__legend-ash">
-            Sebaran abu ke {snapshot.ashfall.windDirection.toLowerCase()}
-          </div>
-        </div>
-        <div className="map__coords mono">
-          {formatCoords(snapshot.volcano.lat, snapshot.volcano.lon)}
-        </div>
-        <div className="map__time">{dataState.sourceTime}</div>
+      <div className="mapbox">
+        <VolcanoMap
+          volcano={snapshot.volcano}
+          radiusKm={level.radiusKm}
+          layer={layer}
+          accent={accent}
+          geo={geo}
+          ashHeadingDeg={snapshot.ashfall.ashHeadingDeg}
+          windSpeedKmh={snapshot.ashfall.windSpeedKmh}
+          advisories={snapshot.ashAdvisories}
+        />
       </div>
 
       <div className="layers">
@@ -68,6 +57,14 @@ export function MapTab({
         ))}
       </div>
       <p className="layernote">{active.note}</p>
+      <p className="mapsrc">
+        Peta dasar © kontributor OpenStreetMap. Kawah dari katalog Smithsonian
+        GVP; area peringatan abu digambar apa adanya dari poligon SIGMET;
+        posisi Anda dari GPS perangkat. Radius {level.radiusKm} km hanya
+        pembanding — zona terlarang resmi ditetapkan Badan Geologi dan belum
+        tersambung. Ketuk bentuk mana pun untuk melihat sumbernya ·{' '}
+        {dataState.sourceTime}
+      </p>
 
       <h2 className="section">Wilayah terdekat dari kawah</h2>
       <div className="rows">

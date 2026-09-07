@@ -339,6 +339,8 @@ export interface LiveAshAdvisory {
   moveDir: string | null
   moveSpeedKt: number | null
   distanceKm: number | null
+  /** Bentuk asli area advisory sebagai [lintang, bujur], bila utuh. */
+  polygon: [number, number][] | null
   /** Nama gunung ini benar-benar disebut di teks resminya. */
   namedHere: boolean
   text: string
@@ -355,6 +357,24 @@ export interface LiveSigmet {
  * ada peringatan abu aktif" adalah informasi yang berguna — berbeda dari
  * "sumbernya gagal", yang ditandai lewat status sumber.
  */
+/**
+ * Titik-titik poligon advisory. Satu titik yang cacat membuat bentuknya salah
+ * di peta, jadi seluruh poligon dibuang — bukan ditambal.
+ */
+function readPolygon(value: unknown): [number, number][] | null {
+  if (!Array.isArray(value) || value.length < 3) return null
+  const points: [number, number][] = []
+  for (const point of value) {
+    if (!Array.isArray(point) || point.length < 2) return null
+    const [lat, lon] = point
+    if (typeof lat !== 'number' || typeof lon !== 'number') return null
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null
+    points.push([lat, lon])
+  }
+  return points
+}
+
 export function readSigmet(bundle: LiveBundle | null): LiveSigmet | null {
   const data = payload(bundle, 'sigmet')
   if (!isRecord(data)) return null
@@ -374,6 +394,7 @@ export function readSigmet(bundle: LiveBundle | null): LiveSigmet | null {
       moveDir: strOrNull(item.moveDir),
       moveSpeedKt: numOrNull(item.moveSpeedKt),
       distanceKm: numOrNull(item.distanceKm),
+      polygon: readPolygon(item.polygon),
       namedHere: item.namedHere === true,
       text,
     })

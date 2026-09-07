@@ -109,6 +109,8 @@ export default function App() {
               level={level}
               dataState={dataState}
               layer={layer}
+              accent={aviation.colors.color}
+              geo={geo}
               onLayerChange={setLayer}
             />
           )}

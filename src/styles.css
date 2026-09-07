@@ -892,121 +892,76 @@ button {
 
 /* ---------- map ---------- */
 
-.map {
+/* ---------- peta sungguhan (Leaflet + OpenStreetMap) ---------- */
+
+.mapbox {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  background: #0a0f16;
   overflow: hidden;
-  aspect-ratio: 1 / 1;
+  height: 400px;
 }
 
-.map__grid {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(
-      rgba(255, 255, 255, 0.045) 1px,
-      transparent 1px
-    ),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: 34px 34px;
+.lmap {
+  width: 100%;
+  height: 100%;
+  background: #0a0f16;
 }
 
-.map__ring {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
+/* Petak OSM terang di layar gelap; diredupkan sedikit supaya penanda dan
+   poligon tetap yang paling menonjol, tanpa mengubah isi petanya. */
+.lmap .leaflet-tile-pane {
+  filter: brightness(0.72) saturate(0.72) contrast(1.05);
 }
 
-.map__ring--outer {
-  width: 72%;
-  height: 72%;
-  border: 1px dashed rgba(248, 113, 113, 0.4);
-  background: rgba(248, 113, 113, 0.06);
+.lmap .leaflet-container {
+  background: #0a0f16;
+  font-family: inherit;
 }
 
-.map__ring--inner {
-  width: 36%;
-  height: 36%;
-  border: 1px solid rgba(248, 113, 113, 0.75);
-  background: rgba(248, 113, 113, 0.13);
-}
-
-.map__pulse {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--lv);
-  opacity: 0.35;
-  transform: translate(-50%, -50%);
-  animation: pulseRing 2.4s infinite;
-}
-
-.map__core {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--lv);
-  box-shadow: 0 0 14px var(--lv);
-}
-
-.map__plume {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  width: 46%;
-  height: 120px;
-  transform-origin: 0 6px;
-  /* Wind is to the north-west, so the plume points up-left with north up. */
-  transform: rotate(-138deg);
-  background: linear-gradient(
-    90deg,
-    rgba(148, 163, 184, 0.42),
-    rgba(148, 163, 184, 0)
-  );
-  clip-path: polygon(0 44%, 100% 0, 100% 100%, 0 56%);
-}
-
-.map__legend {
-  position: absolute;
-  left: 14px;
-  top: 12px;
-  font-size: 11px;
+.lmap .leaflet-control-attribution {
+  background: rgba(13, 17, 23, 0.82);
   color: #9aa5b3;
-  line-height: 1.75;
+  font-size: 10px;
 }
 
-.map__legend-danger {
-  color: #f87171;
+.lmap .leaflet-control-attribution a {
+  color: #7dd3fc;
 }
 
-.map__legend-ash {
-  color: #a8b3c1;
+.lmap .leaflet-control-zoom a {
+  background: rgba(13, 17, 23, 0.9);
+  color: #e9edf2;
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
-.map__coords {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
+.lmap .leaflet-control-zoom a:hover {
+  background: rgba(30, 41, 55, 0.95);
+  color: #fff;
+}
+
+.lmap .leaflet-popup-content-wrapper,
+.lmap .leaflet-popup-tip {
+  background: #141a22;
+  color: #e9edf2;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
+}
+
+.lmap .leaflet-popup-content {
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 11px 13px;
+}
+
+.lmap .leaflet-popup-close-button {
+  color: #9aa5b3;
+}
+
+.mapsrc {
+  margin: 8px 0 0;
   font-size: 10.5px;
-  color: #8b96a5;
-}
-
-.map__time {
-  position: absolute;
-  left: 16px;
-  bottom: 14px;
-  font-size: 11px;
-  color: #8b96a5;
+  color: #9aa5b3;
+  line-height: 1.6;
 }
 
 .layers {
@@ -1989,6 +1944,10 @@ a.row__tel:hover {
     max-width: 760px;
   }
 
+  .mapbox {
+    height: 480px;
+  }
+
   .content {
     padding: 0 24px 104px;
   }
@@ -2066,6 +2025,10 @@ a.row__tel:hover {
 
   .navbtn__label {
     font-size: 13px;
+  }
+
+  .mapbox {
+    height: 560px;
   }
 
   .demo,

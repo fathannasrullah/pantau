@@ -210,14 +210,24 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       {
         id: 'radius',
         label: 'Radius bahaya',
-        note: `Zona terlarang ${level.radiusKm} km dari kawah. ${region.mapNotes.radius}`,
+        // Radius resmi adalah ketetapan Badan Geologi; selama belum tersambung
+        // lingkarannya hanya pembanding, dan harus disebut begitu.
+        note: `Lingkaran ${level.radiusKm} km dari kawah sebagai pembanding jarak. Zona terlarang resmi ditetapkan Badan Geologi dan belum tersambung. ${region.mapNotes.radius}`.trim(),
       },
       {
         id: 'abu',
         label: 'Sebaran abu',
-        note: wind
-          ? `Abu terbawa angin ke ${wind.ashHeading.toLowerCase()}, ${wind.speedKmh} km/jam. ${region.mapNotes.abu}`
-          : region.mapNotes.abu,
+        note: [
+          sigmet?.advisories.some((a) => a.polygon)
+            ? 'Area berarsir adalah poligon peringatan abu apa adanya dari otoritas penerbangan (SIGMET).'
+            : 'Belum ada poligon peringatan abu yang bisa digambar untuk gunung ini.',
+          wind
+            ? `Garis putus-putus adalah arah angin permukaan terkini, ${wind.ashHeading.toLowerCase()} ${wind.speedKmh} km/jam — panjangnya jarak tempuh satu jam, bukan batas jatuhnya abu.`
+            : 'Arah angin belum bisa dibaca.',
+          region.mapNotes.abu,
+        ]
+          .filter(Boolean)
+          .join(' '),
       },
       // Lapisan pesisir hanya berarti untuk gunung dengan riwayat bahaya laut.
       ...(volcano.coastalHazard && region.mapNotes.pesisir
@@ -275,6 +285,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
         moveDir: a.moveDir,
         moveSpeedKt: a.moveSpeedKt,
         distanceKm: a.distanceKm,
+        polygon: a.polygon,
         namedHere: a.namedHere,
         text: a.text,
       })) ?? null,

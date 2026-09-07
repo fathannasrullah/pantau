@@ -428,6 +428,9 @@ async function sigmet(V) {
       moveDir: str(p.dir),
       moveSpeedKt: num(Number.parseFloat(str(p.spd) ?? '')),
       distanceKm: Number.isFinite(closestKm) ? Math.round(closestKm) : null,
+      // Bentuk asli poligon advisory, dibalik ke [lintang, bujur] supaya peta
+      // bisa menggambar area sebenarnya, bukan bentuk ilustrasi.
+      polygon: points.length >= 3 ? points.map(([lon, lat]) => [lat, lon]) : null,
       namedHere,
       text,
     })

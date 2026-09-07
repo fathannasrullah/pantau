@@ -12,6 +12,7 @@ const advisory = (namedHere: boolean): AshAdvisory => ({
   moveDir: 'W',
   moveSpeedKt: 20,
   distanceKm: 42,
+  polygon: null,
   namedHere,
   text: 'WVID01 WIIF 070640 VA ERUPTION',
 })
