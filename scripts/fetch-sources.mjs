@@ -819,19 +819,45 @@ function encodeAnnotation(text) {
  */
 function emitAnnotations(V, sources) {
   if (!process.env.GITHUB_ACTIONS) return
-  const withRaw = V.id === VOLCANOES[0].id
-  const lines = Object.entries(sources).map(([id, s]) => {
+  const entries = Object.entries(sources)
+
+  // Daftar status ringkas lebih dulu dan sendirian. GitHub memotong pesan
+  // annotation yang panjang, dan sebelumnya potongan itu memakan sumber
+  // terakhir gunung pertama — sehingga hasilnya tidak bisa diperiksa justru
+  // untuk sumber yang baru ditambahkan.
+  const ringkas = entries
+    .map(([id, s]) => `${id}=${s.ok ? 'ok' : 'GAGAL'}`)
+    .join(' ')
+  console.log(
+    `::notice title=ringkas-${V.id}::${encodeAnnotation(
+      `${V.name} — ${entries.filter(([, s]) => s.ok).length}/${entries.length}\n${ringkas}`,
+    )}`,
+  )
+
+  const lines = entries.map(([id, s]) => {
     const detail = s.ok
-      ? `parsed=${JSON.stringify(s.data).slice(0, 260)}`
+      ? `parsed=${JSON.stringify(s.data).slice(0, 220)}`
       : `error=${s.error}`
-    const sample = withRaw ? rawSamples.get(id) : null
-    return [`${id}: ${s.ok ? 'ok' : 'GAGAL'}`, `  ${detail}`]
-      .concat(sample ? [`  raw=${sample.slice(0, 300)}`] : [])
-      .join('\n')
+    return [`${id}: ${s.ok ? 'ok' : 'GAGAL'}`, `  ${detail}`].join('\n')
   })
   console.log(
     `::notice title=sumber-${V.id}::${encodeAnnotation(`${V.name}\n${lines.join('\n')}`)}`,
   )
+
+  // Cuplikan mentah dipisah ke annotation sendiri supaya tidak pernah
+  // menggeser daftar status keluar dari batas panjang pesan.
+  if (V.id !== VOLCANOES[0].id) return
+  const raw = entries
+    .map(([id]) => {
+      const sample = rawSamples.get(id)
+      return sample ? `${id}: ${sample.slice(0, 240)}` : null
+    })
+    .filter(Boolean)
+  if (raw.length) {
+    console.log(
+      `::notice title=mentah-${V.id}::${encodeAnnotation(raw.join('\n'))}`,
+    )
+  }
 }
 
 /** Ringkasan lintas gunung untuk dibaca manusia di tab Actions. */
