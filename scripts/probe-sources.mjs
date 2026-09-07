@@ -219,7 +219,46 @@ const findIndonesia = (body) => {
  * Putaran kesembilan: menguji tiga klaim yang dikirim pengguna dari asisten lain
  * — daftar gunung USGS, SIGMET abu penerbangan, dan akses anonim OpenSky.
  */
+/** Angin per lapisan tekanan — menentukan ke mana abu di ketinggian terbawa. */
+const summariseWindAloft = (body) => {
+  try {
+    const p = JSON.parse(body)
+    const h = p.hourly ?? {}
+    const keys = Object.keys(h).filter((k) => k !== 'time')
+    const i = 0
+    const rows = keys
+      .slice(0, 12)
+      .map((k) => `${k}=${Array.isArray(h[k]) ? h[k][i] : '?'}`)
+    return `jam[0]=${h.time?.[0]} | ${rows.join(' ')} | total field: ${keys.length}`
+  } catch {
+    return null
+  }
+}
+
+/** Katalog bandara terbuka; yang dicari: apakah kolom ICAO dan koordinat ada. */
+const summariseAirports = (body) => {
+  const lines = body.split('\n')
+  const header = lines[0] ?? ''
+  const id = lines.filter((l) => l.includes(',"ID",') || /,"W[AI][A-Z]{2}",/.test(l))
+  return `baris: ${lines.length} | header: ${header.slice(0, 220)} | contoh WI/WA: ${id.slice(0, 2).map((l) => l.slice(0, 160)).join(' || ') || '-'}`
+}
+
 const TARGETS = [
+  [
+    'open-meteo-wind-aloft',
+    'https://api.open-meteo.com/v1/forecast' +
+      `?latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
+      '&hourly=wind_speed_850hPa,wind_direction_850hPa,geopotential_height_850hPa' +
+      ',wind_speed_500hPa,wind_direction_500hPa,geopotential_height_500hPa' +
+      ',wind_speed_250hPa,wind_direction_250hPa,geopotential_height_250hPa' +
+      '&forecast_days=1&wind_speed_unit=kmh&timezone=UTC',
+    summariseWindAloft,
+  ],
+  [
+    'ourairports-id',
+    'https://davidmegginson.github.io/ourairports-data/airports.csv',
+    summariseAirports,
+  ],
   [
     'usgs-volcanoes-gvp',
     'https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP',
