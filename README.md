@@ -154,18 +154,21 @@ Setiap angka membawa stempel waktu dan sumber. Saat data basi, gagal dimuat, ata
 perangkat offline, bagian yang lama diredupkan dan diberi banner — angka lama tidak
 pernah ditampilkan seolah baru.
 
-## Menyambung data resmi
+## Sumber yang belum tersambung
 
-`src/data/snapshot.ts` adalah satu-satunya batas ke dunia luar. Ganti isi
-`getSnapshot()` (dan jadikan async) tanpa menyentuh komponen. Sumber yang relevan:
+Apa yang sudah hidup ada di bagian [Sumber data](#sumber-data). Sisanya:
 
-| Data | Sumber |
-| --- | --- |
-| Level status, laporan pos pengamatan, VONA | Badan Geologi / PVMBG (MAGMA Indonesia) — satu-satunya sumber sah untuk level |
-| Gempa, peringatan tsunami, cuaca dan angin | BMKG / InaTEWS |
-| Advisory abu penerbangan | VAAC Darwin |
-| Kualitas udara | OpenAQ / sensor lokal |
-| Titik kumpul, kapasitas posko, nomor darurat | BPBD kabupaten (umumnya manual, belum ada API) |
+| Data | Sumber | Kendala |
+| --- | --- | --- |
+| Level status, laporan pos pengamatan, VONA | Badan Geologi / PVMBG (MAGMA Indonesia) | endpoint tidak terbuka bebas, perlu izin |
+| Advisory abu penerbangan | VAAC Darwin | terbit sebagai teks/HTML, bukan API |
+| Kualitas udara | OpenAQ / sensor lokal | OpenAQ v3 menuntut API key |
+| Titik kumpul, kapasitas posko, nomor darurat | BPBD kabupaten | umumnya manual, belum ada API |
+
+Menambah sumber baru: tulis satu fungsi di `scripts/fetch-sources.mjs`, daftarkan
+di `SOURCES`, lalu buat pembacanya di `src/data/live.ts` dan pakai di
+`getSnapshot()`. Beri provenance `'live'` hanya untuk bagian yang benar-benar
+berasal dari sumber itu.
 
 Yang belum dikerjakan dan perlu diputuskan sebelum dipakai publik:
 
