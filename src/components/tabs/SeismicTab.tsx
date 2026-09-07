@@ -69,10 +69,7 @@ export function SeismicTab({
         </p>
         <p className="seis__note">{snapshot.seismicNote}</p>
         <div className="seis__src">
-          {snapshot.provenance.seismic === 'live'
-            ? 'Katalog USGS'
-            : 'Seismograf pos pengamatan (data contoh)'}{' '}
-          · {dataState.sourceTime}
+          {snapshot.seismicSource} · {dataState.sourceTime}
         </div>
       </section>
 

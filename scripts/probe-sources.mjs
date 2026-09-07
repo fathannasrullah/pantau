@@ -37,55 +37,39 @@ const extractArcgis = (body) => {
   }
 }
 
+/**
+ * Putaran keempat: memperbaiki kegagalan yang jelas bisa diperbaiki. ReliefWeb
+ * menyebut v1 sudah dipensiunkan, IRIS tampaknya berpindah domain, dan daftar
+ * layer GVP menunjukkan ada layer emisi yang belum diperiksa.
+ */
 const TARGETS = [
-  // --- Kualitas udara: SO2 penanda degassing, PM10 penanda abu ---
   [
-    'openmeteo-air',
-    'https://air-quality-api.open-meteo.com/v1/air-quality' +
-      `?latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
-      '&current=sulphur_dioxide,pm10,pm2_5,dust,aerosol_optical_depth',
+    'reliefweb-v2',
+    'https://api.reliefweb.int/v2/disasters?appname=pantau-gunung&limit=2' +
+      '&filter[field]=primary_country.name&filter[value]=Indonesia',
   ],
-
-  // --- Daftar layer GVP: mencari layar laporan mingguan, bukan katalog erupsi ---
   [
-    'gvp-capabilities',
-    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0&request=GetCapabilities',
-    extractLayerNames,
-  ],
-
-  // --- Gempa versi Eropa, pembanding independen untuk USGS ---
-  [
-    'emsc',
-    'https://www.seismicportal.eu/fdsnws/event/1/query?format=json&limit=2' +
-      `&lat=${VOLCANO.lat}&lon=${VOLCANO.lon}&maxradius=3`,
-  ],
-
-  // --- Stasiun seismik terbuka di sekitar gunung ---
-  [
-    'iris-stations',
-    'https://service.iris.edu/fdsnws/station/1/query?format=text&level=station' +
+    'earthscope-stations',
+    'https://service.earthscope.org/fdsnws/station/1/query?format=text&level=station' +
       `&latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}&maxradius=2`,
   ],
-
-  // --- Laporan bencana resmi terkurasi PBB ---
   [
-    'reliefweb',
-    'https://api.reliefweb.int/v1/disasters?appname=pantau-gunung&limit=2' +
-      '&filter[field]=country&filter[value]=Indonesia&profile=list',
+    'gvp-emissions',
+    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
+      '&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Emissions' +
+      '&outputFormat=application/json&count=2&CQL_FILTER=Volcano_Number=262000',
   ],
-
-  // --- Titik panas termal: butuh kunci gratis atau tidak? ---
+  [
+    'gvp-eruptions1960',
+    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0' +
+      '&request=GetFeature&typeName=GVP-VOTW:E3WebApp_Eruptions1960' +
+      '&outputFormat=application/json&count=1&CQL_FILTER=Volcano_Number=262000',
+  ],
+  ['inarisk-root', 'https://inarisk.bnpb.go.id/arcgis/rest?f=json', extractArcgis],
+  ['bnpb-server', 'https://gis.bnpb.go.id/server/rest/services?f=json', extractArcgis],
   [
     'nasa-firms',
     'https://firms.modaps.eosdis.nasa.gov/api/area/csv/YOUR_KEY/VIIRS_SNPP_NRT/105,-7,106,-5/1',
-  ],
-
-  // --- Jalur pemerintah Indonesia yang belum dicoba: ArcGIS biasanya terbuka ---
-  ['bnpb-arcgis', 'https://gis.bnpb.go.id/arcgis/rest/services?f=json', extractArcgis],
-  [
-    'inarisk-arcgis',
-    'https://inarisk.bnpb.go.id/arcgis/rest/services?f=json',
-    extractArcgis,
   ],
 ]
 

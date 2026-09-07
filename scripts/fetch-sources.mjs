@@ -228,6 +228,92 @@ async function bmkg() {
 }
 
 /**
+ * Kualitas udara di atas gunung — SO2 penanda degassing, PM10 dan AOD penanda abu.
+ *
+ * Ini keluaran model CAMS (Copernicus), bukan pembacaan stasiun di darat. Cukup
+ * untuk menunjukkan kecenderungan, tidak cukup untuk diklaim sebagai pengukuran.
+ */
+async function air() {
+  const url =
+    'https://air-quality-api.open-meteo.com/v1/air-quality' +
+    `?latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
+    '&current=sulphur_dioxide,pm10,pm2_5,aerosol_optical_depth&timezone=UTC'
+  const raw = await fetchJson(url, 'air')
+  const c = raw?.current
+  const so2 = num(c?.sulphur_dioxide)
+  const pm10 = num(c?.pm10)
+  if (so2 === null || pm10 === null) throw new Error('field kualitas udara kosong')
+  return {
+    url,
+    observedAt: str(c?.time) ? `${c.time}Z` : null,
+    data: {
+      so2,
+      pm10,
+      pm25: num(c?.pm2_5),
+      aod: num(c?.aerosol_optical_depth),
+    },
+  }
+}
+
+/**
+ * Katalog gempa EMSC.
+ *
+ * Dipakai berdampingan dengan USGS karena ambang magnitudonya untuk kawasan ini
+ * lebih rendah: pada pengujian, USGS mencatat nol kejadian dalam radius 300 km
+ * sementara EMSC memuat beberapa, sebagian di antaranya justru bersumber BMKG.
+ */
+async function emsc() {
+  const bucket = (features) => {
+    const hourly = new Array(24).fill(0)
+    let largest = null
+    for (const f of features) {
+      const p = f?.properties
+      const t = str(p?.time)
+      if (!t) continue
+      const ms = new Date(t).getTime()
+      if (Number.isNaN(ms)) continue
+      const hoursAgo = Math.floor((Date.now() - ms) / 3600_000)
+      if (hoursAgo >= 0 && hoursAgo < 24) hourly[23 - hoursAgo] += 1
+      const mag = num(p?.mag)
+      if (mag !== null && (!largest || mag > largest.mag)) {
+        largest = {
+          mag,
+          place: str(p?.flynn_region),
+          timeISO: new Date(ms).toISOString(),
+        }
+      }
+    }
+    return { hourly, largest }
+  }
+
+  const base =
+    'https://www.seismicportal.eu/fdsnws/event/1/query?format=json&limit=500' +
+    `&lat=${VOLCANO.lat}&lon=${VOLCANO.lon}&maxradius=3`
+  const dayUrl = `${base}&starttime=${new Date(Date.now() - 24 * 3600_000).toISOString()}`
+  const weekUrl = `${base}&starttime=${new Date(Date.now() - 7 * 24 * 3600_000).toISOString()}`
+
+  const [dayRaw, weekRaw] = await Promise.all([
+    fetchJson(dayUrl, 'emsc'),
+    fetchJson(weekUrl).catch(() => null),
+  ])
+  const features = Array.isArray(dayRaw?.features) ? dayRaw.features : []
+  const { hourly, largest } = bucket(features)
+
+  return {
+    url: dayUrl,
+    observedAt: new Date().toISOString(),
+    data: {
+      // 3 derajat busur di lintang ini kira-kira 333 km.
+      radiusKm: 333,
+      total: features.length,
+      total7d: Array.isArray(weekRaw?.features) ? weekRaw.features.length : null,
+      hourly,
+      largest,
+    },
+  }
+}
+
+/**
  * Level status resmi dari MAGMA Indonesia.
  *
  * Endpoint-nya ada dan terbuka untuk siapa pun yang punya token: tanpa header
@@ -314,6 +400,12 @@ const SOURCES = [
     run: magma,
   },
   { id: 'gvp', label: 'Smithsonian GVP — katalog erupsi', run: gvp },
+  {
+    id: 'air',
+    label: 'Copernicus CAMS via Open-Meteo — SO2 dan partikel (model)',
+    run: air,
+  },
+  { id: 'emsc', label: 'EMSC — gempa sekitar, ambang lebih rendah', run: emsc },
 ]
 
 /**

@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  airSeverity,
   ashHeadingDeg,
   compassLabel,
   newestFetchISO,
   parseLiveBundle,
+  readAir,
   readBmkg,
   readEruption,
   readQuakes,
+  readQuakesFrom,
   readWind,
 } from './live.ts'
 
@@ -175,4 +178,25 @@ test('catatan erupsi GVP ditolak bila tahun mulainya kosong', () => {
   assert.equal(e?.startYear, 2026)
   assert.equal(e?.vei, 2)
   assert.equal(e?.ongoing, true)
+})
+
+test('kualitas udara ditolak bila SO2 atau PM10 hilang', () => {
+  assert.equal(readAir(bundle({ air: source({ so2: 27.6 }) })), null)
+  const live = bundle({ air: source({ so2: 27.6, pm10: 35.5, pm25: 29.3, aod: 0.85 }) })
+  assert.equal(readAir(live)?.so2, 27.6)
+})
+
+test('tingkat bahaya udara mengikuti pedoman WHO', () => {
+  // SO2: pedoman 24 jam 40 ug/m3.
+  assert.equal(airSeverity(27.6, 40), 'safe')
+  assert.equal(airSeverity(80, 40), 'watch')
+  assert.equal(airSeverity(200, 40), 'alert')
+})
+
+test('grafik kegempaan bisa dibaca dari katalog mana pun', () => {
+  const live = bundle({
+    emsc: source({ hourly: new Array(24).fill(1), total: 24, total7d: 90, radiusKm: 333 }),
+  })
+  assert.equal(readQuakesFrom(live, 'emsc')?.total, 24)
+  assert.equal(readQuakesFrom(live, 'quakes'), null)
 })

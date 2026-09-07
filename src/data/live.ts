@@ -142,7 +142,15 @@ export interface LiveQuakes {
 }
 
 export function readQuakes(bundle: LiveBundle | null): LiveQuakes | null {
-  const data = payload(bundle, 'quakes')
+  return readQuakesFrom(bundle, 'quakes')
+}
+
+/** Bentuk data USGS dan EMSC disamakan di script pengambil, jadi satu pembaca cukup. */
+export function readQuakesFrom(
+  bundle: LiveBundle | null,
+  id: string,
+): LiveQuakes | null {
+  const data = payload(bundle, id)
   if (!isRecord(data)) return null
   const hourlyRaw = data.hourly
   if (!Array.isArray(hourlyRaw) || hourlyRaw.length !== 24) return null
@@ -253,4 +261,37 @@ export function readEruption(bundle: LiveBundle | null): LiveEruption | null {
     startDay: numOrNull(data.startDay),
     ongoing: data.ongoing === true,
   }
+}
+
+export interface LiveAir {
+  so2: number
+  pm10: number
+  pm25: number | null
+  aod: number | null
+  observedAtISO: string | null
+}
+
+export function readAir(bundle: LiveBundle | null): LiveAir | null {
+  const data = payload(bundle, 'air')
+  if (!isRecord(data)) return null
+  const so2 = numOrNull(data.so2)
+  const pm10 = numOrNull(data.pm10)
+  if (so2 === null || pm10 === null) return null
+  return {
+    so2,
+    pm10,
+    pm25: numOrNull(data.pm25),
+    aod: numOrNull(data.aod),
+    observedAtISO: sourceOf(bundle, 'air')?.observedAtISO ?? null,
+  }
+}
+
+/**
+ * Ambang mengikuti pedoman kualitas udara WHO 2021 (rata-rata 24 jam): SO2 40
+ * ug/m3 dan PM10 45 ug/m3. Batas atas memakai nilai antara WHO yang lebih longgar.
+ */
+export function airSeverity(value: number, guideline: number): 'safe' | 'watch' | 'alert' {
+  if (value <= guideline) return 'safe'
+  if (value <= guideline * 3) return 'watch'
+  return 'alert'
 }

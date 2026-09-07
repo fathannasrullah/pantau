@@ -54,9 +54,10 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Posisi pengguna & jarak ke kawah | Geolocation API perangkat | hidup |
 | Arah abu & kecepatan angin | Open-Meteo | hidup |
 | Tinggi gelombang Selat Sunda | Open-Meteo Marine | hidup |
-| Grafik kegempaan per jam | USGS FDSN, radius 300 km | hidup |
+| Grafik kegempaan per jam | EMSC (utama) dengan USGS FDSN sebagai cadangan | hidup |
 | Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`), disaring 500 km | hidup |
 | Erupsi terakhir tercatat | Smithsonian GVP (katalog, mingguan) | hidup |
+| SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
 | **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **butuh token** |
 | Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
 | Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | belum |
@@ -70,7 +71,11 @@ Dua hal yang dijaga ketat:
   se-Indonesia; pada pengambilan pertama yang masuk adalah gempa Banggai,
   Sulawesi, 2.065 km dari Anak Krakatau. Hanya gempa dalam radius 500 km dan
   tujuh hari terakhir yang ditampilkan, lengkap dengan jaraknya di judul.
-- **Gempa USGS bukan kegempaan vulkanik.** Itu gempa tektonik regional; label di
+- **Kualitas udara adalah keluaran model, bukan pengukuran.** Angka SO2 dan PM10
+  berasal dari model CAMS Copernicus, bukan stasiun di darat, dan kartunya
+  menyebutkan itu. Ambang warnanya mengikuti pedoman WHO 2021 (SO2 40 µg/m³,
+  PM10 45 µg/m³ rata-rata 24 jam).
+- **Gempa EMSC dan USGS bukan kegempaan vulkanik.** Itu gempa tektonik regional; label di
   layar menyebutkannya, karena letusan/embusan/tremor hanya terekam seismograf
   pos pengamatan.
 

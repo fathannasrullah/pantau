@@ -1,6 +1,6 @@
 import type { DataStateView } from '../../data/dataState'
 import { SampleTag } from '../SampleTag'
-import { formatAge, formatNumber } from '../../lib/format'
+import { formatAge, formatDecimal, formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { GeolocationState } from '../../hooks/useGeolocation'
 import type { VolcanoLevel, VolcanoSnapshot } from '../../types'
@@ -93,6 +93,40 @@ export function StatusTab({
           Sumber: {ashfall.source} · {dataState.sourceTime}
         </div>
       </section>
+
+      {snapshot.air && (
+        <>
+          <h2 className="section">Udara di atas kawah</h2>
+          <section className="airq dim">
+            <div className="airq__row">
+              <div className="airq__cell">
+                <div className="airq__k">Belerang dioksida</div>
+                <div
+                  className="airq__v mono"
+                  style={{ color: SEVERITY_COLOR[snapshot.air.so2Severity] }}
+                >
+                  {formatDecimal(snapshot.air.so2)}
+                </div>
+                <div className="airq__u">µg/m³ · pedoman WHO 40</div>
+              </div>
+              <div className="airq__cell">
+                <div className="airq__k">Partikel PM10</div>
+                <div
+                  className="airq__v mono"
+                  style={{ color: SEVERITY_COLOR[snapshot.air.pm10Severity] }}
+                >
+                  {formatDecimal(snapshot.air.pm10)}
+                </div>
+                <div className="airq__u">µg/m³ · pedoman WHO 45</div>
+              </div>
+            </div>
+            <p className="airq__note">{snapshot.air.note}</p>
+            <div className="airq__src">
+              Sumber: Copernicus CAMS via Open-Meteo · {dataState.sourceTime}
+            </div>
+          </section>
+        </>
+      )}
 
       <h2 className="section">Tiga hal yang bisa dilakukan sekarang</h2>
       <ol className="steps">

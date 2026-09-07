@@ -1,9 +1,11 @@
 import { LEVELS } from './levels'
 import {
+  airSeverity,
   newestFetchISO,
+  readAir,
   readBmkg,
   readEruption,
-  readQuakes,
+  readQuakesFrom,
   readWaves,
   readWind,
 } from './live'
@@ -88,6 +90,7 @@ function describeQuakes(
   total: number,
   total7d: number | null,
   radiusKm: number,
+  catalog: string,
 ): string {
   const week =
     total7d === null
@@ -97,7 +100,7 @@ function describeQuakes(
     total === 0
       ? `Tidak ada gempa tercatat dalam 24 jam terakhir pada radius ${radiusKm} km.`
       : `${total} gempa tercatat dalam radius ${radiusKm} km, 24 jam terakhir.`
-  return `${head}${week} Ini gempa tektonik regional dari katalog USGS, bukan kegempaan vulkanik yang hanya terekam seismograf pos pengamatan.`
+  return `${head}${week} Ini gempa tektonik regional dari katalog ${catalog}, bukan kegempaan vulkanik yang hanya terekam seismograf pos pengamatan.`
 }
 
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
@@ -144,7 +147,12 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
 
   const wind = readWind(live)
   const waves = readWaves(live)
-  const quakes = readQuakes(live)
+  // EMSC lebih rapat untuk kawasan ini; USGS jadi cadangan bila EMSC gagal.
+  const emsc = readQuakesFrom(live, 'emsc')
+  const usgs = readQuakesFrom(live, 'quakes')
+  const quakes = emsc ?? usgs
+  const quakeCatalog = emsc ? 'EMSC' : 'USGS'
+  const air = readAir(live)
   const bmkg = readBmkg(live)
   const eruption = readEruption(live)
 
@@ -401,12 +409,26 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     },
     sources: live?.sources ?? [],
     observedWaveHeightM: waves?.waveHeightM ?? null,
+    seismicSource: quakes
+      ? `Katalog ${quakeCatalog}`
+      : 'Seismograf pos pengamatan (data contoh)',
     seismicLabel: quakes
       ? 'Gempa tektonik tiap jam, 24 jam terakhir'
       : 'Kegempaan tiap jam, 24 jam terakhir',
     lastEruptionNote: eruption ? describeEruption(eruption) : null,
+    air: air
+      ? {
+          so2: air.so2,
+          so2Severity: airSeverity(air.so2, 40),
+          pm10: air.pm10,
+          pm10Severity: airSeverity(air.pm10, 45),
+          aod: air.aod,
+          note:
+            'Keluaran model CAMS (Copernicus), bukan pembacaan stasiun di darat. Ambang mengikuti pedoman WHO 2021.',
+        }
+      : null,
     seismicNote: quakes
-      ? describeQuakes(quakes.total, quakes.total7d, quakes.radiusKm)
+      ? describeQuakes(quakes.total, quakes.total7d, quakes.radiusKm, quakeCatalog)
       : 'Angka contoh. Kegempaan vulkanik hanya tersedia dari seismograf pos pengamatan PVMBG.',
   }
 }

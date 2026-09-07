@@ -54,6 +54,15 @@ export interface AshfallReport {
   source: string
 }
 
+export interface AirQuality {
+  so2: number
+  so2Severity: Severity
+  pm10: number
+  pm10Severity: Severity
+  aod: number | null
+  note: string
+}
+
 export interface QuickAction {
   n: string
   text: string
@@ -201,6 +210,10 @@ export interface VolcanoSnapshot {
   /** Keterangan seismik: kegempaan vulkanik PVMBG atau gempa tektonik USGS. */
   seismicLabel: string
   seismicNote: string
+  /** Katalog mana yang benar-benar dipakai grafik kegempaan. */
+  seismicSource: string
   /** Erupsi terakhir menurut katalog Smithsonian GVP, bila sumbernya hidup. */
   lastEruptionNote: string | null
+  /** Kualitas udara model CAMS di atas kawah, bila sumbernya hidup. */
+  air: AirQuality | null
 }
