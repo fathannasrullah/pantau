@@ -74,7 +74,9 @@ const TARGETS = [
       '&outputFormat=application/json&count=20' +
       '&CQL_FILTER=' +
       encodeURIComponent(
-        "Volcano_Name IN ('Krakatau','Semeru','Lewotolo','Ibu','Sinabung','Lewotobi','Dukono')",
+        // Ili Lewotolok tidak tertangkap pencarian nama; katalog memakai ejaan
+        // lain, jadi yang dicari nomor gunungnya sekalian tetangga sejeda.
+        "Volcano_Number IN (264230,264231,264220) OR Volcano_Name LIKE 'Lewoto%'",
       ),
     extractVolcanoes,
   ],
