@@ -13,31 +13,32 @@
 
 const TIMEOUT_MS = 25_000
 
+/**
+ * Putaran kedua. Putaran pertama menunjukkan /api/v1/gunung-api menjawab 404
+ * ber-JSON, bukan 502 dari nginx — artinya jalur /api/v1 memang dilayani sebuah
+ * API, hanya nama jalurnya yang belum tepat. Bagian ini mencari nama itu.
+ */
 const TARGETS = [
-  // --- MAGMA Indonesia / PVMBG: satu-satunya sumber sah untuk level status ---
-  ['magma-root', 'https://magma.esdm.go.id/'],
-  ['magma-api-evaluasi', 'https://magma.esdm.go.id/api/v1/magma-var/evaluasi'],
-  ['magma-api-vona', 'https://magma.esdm.go.id/api/v1/home/vona'],
+  ['magma-api-root', 'https://magma.esdm.go.id/api/v1'],
+  ['magma-api-magmavar', 'https://magma.esdm.go.id/api/v1/magma-var'],
+  ['magma-api-vona-list', 'https://magma.esdm.go.id/api/v1/vona'],
   [
-    'magma-tingkat-aktivitas',
-    'https://magma.esdm.go.id/v1/gunung-api/tingkat-aktivitas',
+    'magma-api-tingkat',
+    'https://magma.esdm.go.id/api/v1/gunung-api/tingkat-aktivitas',
   ],
-  ['magma-api-gunungapi', 'https://magma.esdm.go.id/api/v1/gunung-api'],
+  ['magma-api-laporan', 'https://magma.esdm.go.id/api/v1/laporan'],
+  ['magma-api-home', 'https://magma.esdm.go.id/api/v1/home'],
 
-  // --- Smithsonian GVP: status erupsi global, bukan level resmi Indonesia ---
+  // Rincian kejadian Krakatau di GDACS — putaran pertama menemukan eventid ini.
   [
-    'gvp-wfs',
-    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes&outputFormat=application/json&count=1',
+    'gdacs-krakatau',
+    'https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=VO&eventid=1000148',
   ],
-  ['gvp-weekly-rss', 'https://volcano.si.edu/news/WeeklyVolcanoRSS.xml'],
 
-  // --- Tinggi kolom abu untuk penerbangan ---
-  ['vaac-darwin', 'http://www.bom.gov.au/aviation/volcanic-ash/'],
-
-  // --- Kejadian bencana global, kadang memuat erupsi ---
+  // Riwayat erupsi GVP, untuk konteks tinggi kolom abu.
   [
-    'gdacs-volcano',
-    'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=VO',
+    'gvp-eruptions',
+    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=GVP-VOTW:Smithsonian_VOTW_Holocene_Eruptions&outputFormat=application/json&count=2&CQL_FILTER=Volcano_Number=262000',
   ],
 ]
 
@@ -64,7 +65,7 @@ async function probe(url) {
       type: res.headers.get('content-type') ?? '(tanpa content-type)',
       cors: res.headers.get('access-control-allow-origin') ?? 'tidak ada',
       ms: Date.now() - started,
-      body: body.slice(0, 260),
+      body: body.slice(0, 700),
       bytes: body.length,
     }
   } catch (err) {
@@ -84,7 +85,7 @@ for (const [id, url] of TARGETS) {
 }
 
 // Annotation dibatasi jumlahnya oleh GitHub, jadi hasilnya dikelompokkan.
-const CHUNK = 3
+const CHUNK = 2
 for (let i = 0; i < results.length; i += CHUNK) {
   const lines = results.slice(i, i + CHUNK).map(([id, url, r]) => {
     const head = `${id} -> ${r.status} (${r.ms} ms)`
