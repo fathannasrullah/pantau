@@ -30,6 +30,8 @@ const QUAKE_RADIUS_KM = 300
  * sejangkauan Selat Sunda yang ditampilkan.
  */
 const BMKG_RADIUS_KM = 500
+/** Lebih tua dari ini bukan lagi "informasi terkini", hanya arsip. */
+const BMKG_MAX_AGE_DAYS = 7
 const TIMEOUT_MS = 20_000
 
 function distanceKm(lat1, lon1, lat2, lon2) {
@@ -210,8 +212,10 @@ async function bmkg() {
   if (!candidates.length) throw new Error('bentuk autogempa.json tidak dikenali')
 
   const seen = new Set()
+  const oldest = Date.now() - BMKG_MAX_AGE_DAYS * 24 * 3600_000
   const nearby = candidates
     .filter((q) => q.distanceKm <= BMKG_RADIUS_KM)
+    .filter((q) => new Date(q.timeISO).getTime() >= oldest)
     .filter((q) => !seen.has(q.timeISO) && seen.add(q.timeISO))
     .sort((a, b) => b.timeISO.localeCompare(a.timeISO))
     .slice(0, 4)

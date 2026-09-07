@@ -54,7 +54,7 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Arah abu & kecepatan angin | Open-Meteo | hidup |
 | Tinggi gelombang Selat Sunda | Open-Meteo Marine | hidup |
 | Grafik kegempaan per jam | USGS FDSN, radius 300 km | hidup |
-| Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`) | hidup |
+| Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`), disaring 500 km | hidup |
 | **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **belum** |
 | Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG | belum |
 | Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | belum |
@@ -64,6 +64,10 @@ Dua hal yang dijaga ketat:
 - **Level status tidak pernah diturunkan dari sumber lain.** Hanya PVMBG yang
   berhak menetapkannya, jadi selama belum tersambung kartu status memuat
   peringatan eksplisit bahwa levelnya belum resmi.
+- **Feed BMKG disaring per jarak.** `autogempa.json` melaporkan gempa terbaru
+  se-Indonesia; pada pengambilan pertama yang masuk adalah gempa Banggai,
+  Sulawesi, 2.065 km dari Anak Krakatau. Hanya gempa dalam radius 500 km dan
+  tujuh hari terakhir yang ditampilkan, lengkap dengan jaraknya di judul.
 - **Gempa USGS bukan kegempaan vulkanik.** Itu gempa tektonik regional; label di
   layar menyebutkannya, karena letusan/embusan/tremor hanya terekam seismograf
   pos pengamatan.
@@ -84,6 +88,12 @@ simulasi.
 npm run fetch:data   # ambil sekali secara lokal (butuh akses internet)
 npm test             # uji parser: satuan, bentuk data rusak, arah angin
 ```
+
+Tiap kali berjalan di CI, script menuliskan hasilnya sebagai annotation pada run
+Actions: status tiap sumber, nilai hasil parsing, dan 600 karakter pertama
+respons mentah. Step yang hijau tidak membuktikan datanya masuk — sumber yang
+gagal sengaja tidak menjatuhkan build — jadi annotation itulah tempat memeriksa
+apakah sumbernya benar-benar menjawab.
 
 Satu sumber gagal tidak menjatuhkan yang lain, dan tidak menjatuhkan build —
 situs yang hilang lebih berbahaya daripada satu kartu yang kosong.

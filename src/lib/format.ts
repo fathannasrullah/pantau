@@ -68,6 +68,21 @@ export function formatDateTime(iso: string): string {
   return `${formatDate(iso)}, ${formatTime(iso)}`
 }
 
+/**
+ * Jam saja untuk kejadian hari ini, jam berikut tanggalnya untuk yang lebih
+ * lama. Laporan resmi bisa berumur berhari-hari; tanpa tanggal, gempa dua pekan
+ * lalu terbaca seolah baru saja terjadi.
+ */
+export function formatFeedTime(iso: string, nowISO: string): string {
+  const item = wibParts(iso)
+  const now = wibParts(nowISO)
+  if (item.day === now.day && item.month === now.month && item.year === now.year) {
+    return formatTime(iso)
+  }
+  const year = item.year === now.year ? '' : ` ${item.year}`
+  return `${item.day} ${MONTHS_SHORT[item.month - 1]}${year}, ${formatTime(iso)}`
+}
+
 /** "47 menit", "1 jam 20 menit" — the wording the copy is written around. */
 export function formatDuration(minutes: number): string {
   const m = Math.max(0, Math.round(minutes))
