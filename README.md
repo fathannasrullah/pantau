@@ -56,8 +56,9 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Tinggi gelombang Selat Sunda | Open-Meteo Marine | hidup |
 | Grafik kegempaan per jam | USGS FDSN, radius 300 km | hidup |
 | Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`), disaring 500 km | hidup |
-| **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **belum** |
-| Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG | belum |
+| Erupsi terakhir tercatat | Smithsonian GVP (katalog, mingguan) | hidup |
+| **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **butuh token** |
+| Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
 | Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | belum |
 
 Dua hal yang dijaga ketat:
@@ -101,11 +102,39 @@ situs yang hilang lebih berbahaya daripada satu kartu yang kosong.
 
 ### Menyambungkan MAGMA Indonesia
 
-Ini langkah berikutnya yang paling berdampak, dan butuh kredensial: endpoint
-level status MAGMA tidak terbuka bebas. Perlu izin/kerja sama dengan Badan
-Geologi, lalu tokennya disimpan sebagai repository secret dan dibaca
-`scripts/fetch-sources.mjs` sebagai sumber tambahan. Sampai itu ada, jangan
-mengisi level status dari sumber mana pun.
+Yang menghalangi bukan ketiadaan API, melainkan kredensial. Ini hasil pengujian
+`scripts/probe-sources.mjs`, bukan dugaan:
+
+| Endpoint | Jawaban |
+| --- | --- |
+| `/api/v1/magma-var` | `401 {"message":"Token not provided"}` |
+| `/api/v1/vona` | `401 {"message":"Token not provided"}` |
+| `/api/v1/home`, `/api/v1/laporan`, `/api/v1/gunung-api` | `404 { "message": "" }` — jalur tidak ada |
+| `/v1/gunung-api/tingkat-aktivitas` | `200`, tapi HTML halaman web, bukan API |
+
+Jadi endpoint level status dan VONA memang ada dan menunggu `Authorization`.
+Setelah token dari Badan Geologi didapat, simpan sebagai repository secret
+bernama `MAGMA_TOKEN`; sumber `magma` di `scripts/fetch-sources.mjs` sudah
+membacanya. Tanpa token, sumber itu tercatat gagal dengan alasannya sehingga
+tampil di daftar "Sumber data", bukan menghilang diam-diam.
+
+Satu hal yang belum selesai: bentuk responsnya belum pernah terlihat, jadi
+pemetaan field-nya sengaja belum ditulis. Pengambilan pertama dengan token akan
+menerbitkan cuplikan responsnya sebagai annotation; pemetaan dikerjakan dari
+situ. Sampai saat itu, jangan mengisi level status dari sumber mana pun.
+
+Tidak ada header CORS di MAGMA, jadi meski token sudah ada, pemanggilannya tetap
+harus lewat CI seperti sumber lain.
+
+### Yang sengaja tidak dipakai
+
+- **VAAC Darwin (BOM Australia)** menjawab `403` dengan pesan tegas bahwa situs
+  mereka tidak mendukung web scraping. Tinggi kolom abu untuk penerbangan
+  karenanya tidak diambil dari sana.
+- **RSS mingguan GVP** juga `403` karena proteksi bot; yang dipakai adalah
+  layanan WFS mereka yang memang disediakan untuk diakses program.
+- **GDACS** terbuka dan memuat Krakatau, tapi lambat (17 detik untuk daftar,
+  dan endpoint rinciannya melewati batas 25 detik), jadi belum dipakai.
 
 ## Mode demo
 

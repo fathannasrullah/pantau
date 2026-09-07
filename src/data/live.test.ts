@@ -6,6 +6,7 @@ import {
   newestFetchISO,
   parseLiveBundle,
   readBmkg,
+  readEruption,
   readQuakes,
   readWind,
 } from './live.ts'
@@ -153,4 +154,25 @@ test('umur data diambil dari pengambilan tersukses terbaru', () => {
     },
   })
   assert.equal(newestFetchISO(live), '2026-09-06T10:00:00.000Z')
+})
+
+test('catatan erupsi GVP ditolak bila tahun mulainya kosong', () => {
+  const noYear = bundle({ gvp: source({ activityType: 'Confirmed Eruption', vei: 1 }) })
+  assert.equal(readEruption(noYear), null)
+
+  const live = bundle({
+    gvp: source({
+      activityType: 'Confirmed Eruption',
+      area: 'Summit crater',
+      vei: 2,
+      startYear: 2026,
+      startMonth: 9,
+      startDay: 3,
+      ongoing: true,
+    }),
+  })
+  const e = readEruption(live)
+  assert.equal(e?.startYear, 2026)
+  assert.equal(e?.vei, 2)
+  assert.equal(e?.ongoing, true)
 })

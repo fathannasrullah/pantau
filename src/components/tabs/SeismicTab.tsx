@@ -97,6 +97,9 @@ export function SeismicTab({
           </div>
         ))}
       </div>
+      {snapshot.lastEruptionNote && (
+        <p className="seis__foot">{snapshot.lastEruptionNote}</p>
+      )}
       <p className="seis__foot">
         Amplitudo tremor dominan {snapshot.tremorAmplitudeMm} mm. Bagian ini
         untuk yang ingin melihat detail; keputusan tetap mengikuti level status.

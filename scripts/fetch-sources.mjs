@@ -48,10 +48,10 @@ function distanceKm(lat1, lon1, lat2, lon2) {
 /** Cuplikan respons mentah terakhir per sumber, untuk laporan diagnostik. */
 const rawSamples = new Map()
 
-async function fetchJson(url, sampleKey) {
+async function fetchJson(url, sampleKey, extraHeaders) {
   const res = await fetch(url, {
     signal: AbortSignal.timeout(TIMEOUT_MS),
-    headers: { accept: 'application/json' },
+    headers: { accept: 'application/json', ...extraHeaders },
   })
   const text = await res.text()
   if (sampleKey && !rawSamples.has(sampleKey)) {
@@ -227,6 +227,78 @@ async function bmkg() {
   }
 }
 
+/**
+ * Level status resmi dari MAGMA Indonesia.
+ *
+ * Endpoint-nya ada dan terbuka untuk siapa pun yang punya token: tanpa header
+ * Authorization ia menjawab 401 {"message":"Token not provided"}. Jadi yang
+ * menghalangi bukan ketiadaan API, melainkan kredensial.
+ *
+ * Tanpa token, sumber ini sengaja dicatat gagal dengan alasannya, supaya app
+ * menampilkan sebabnya alih-alih diam — dan level status tetap data contoh.
+ */
+async function magma() {
+  const token = process.env.MAGMA_TOKEN
+  if (!token) {
+    throw new Error(
+      'MAGMA_TOKEN belum disetel — level status resmi butuh token Badan Geologi',
+    )
+  }
+  const url = 'https://magma.esdm.go.id/api/v1/magma-var'
+  const raw = await fetchJson(url, 'magma', {
+    authorization: `Bearer ${token}`,
+  })
+
+  // Bentuk responsnya belum pernah terlihat dari sini. Cuplikan mentahnya ikut
+  // terbit sebagai annotation, jadi putaran berikutnya bisa memetakannya dengan
+  // tepat. Sampai itu terjadi, jangan mengarang level dari tebakan bentuk.
+  throw new Error(
+    `token diterima, bentuk respons perlu dipetakan dulu: ${JSON.stringify(raw).slice(0, 200)}`,
+  )
+}
+
+/**
+ * Katalog erupsi Smithsonian GVP — terbuka, tanpa kunci.
+ *
+ * Ini catatan ilmiah global, bukan level status Indonesia, dan pembaruannya
+ * mingguan. Berguna sebagai konteks "erupsi terakhir yang tercatat", bukan
+ * sebagai dasar tindakan.
+ */
+async function gvp() {
+  const url =
+    'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows' +
+    '?service=WFS&version=2.0.0&request=GetFeature' +
+    '&typeName=GVP-VOTW:Smithsonian_VOTW_Holocene_Eruptions' +
+    '&outputFormat=application/json&count=1' +
+    '&CQL_FILTER=Volcano_Number=262000' +
+    '&sortBy=StartDateYear+D'
+  const raw = await fetchJson(url, 'gvp')
+  const props = raw?.features?.[0]?.properties
+  if (!props || typeof props !== 'object') {
+    throw new Error('katalog erupsi kosong untuk Krakatau')
+  }
+
+  const year = num(props.StartDateYear)
+  const month = num(props.StartDateMonth)
+  const day = num(props.StartDateDay)
+  if (year === null) throw new Error('tahun mulai erupsi kosong')
+
+  return {
+    url,
+    observedAt: null,
+    data: {
+      activityType: str(props.Activity_Type),
+      area: str(props.ActivityArea),
+      vei: num(props.ExplosivityIndexMax),
+      startYear: year,
+      startMonth: month,
+      startDay: day,
+      // Catatan tanpa tanggal akhir berarti erupsinya belum dinyatakan selesai.
+      ongoing: num(props.EndDateYear) === null,
+    },
+  }
+}
+
 const SOURCES = [
   { id: 'wind', label: 'Open-Meteo — angin permukaan di atas kawah', run: wind },
   { id: 'waves', label: 'Open-Meteo Marine — gelombang Selat Sunda', run: waves },
@@ -236,6 +308,12 @@ const SOURCES = [
     run: quakes,
   },
   { id: 'bmkg', label: 'BMKG — gempa terkini dan potensi tsunami', run: bmkg },
+  {
+    id: 'magma',
+    label: 'MAGMA Indonesia / PVMBG — level status resmi',
+    run: magma,
+  },
+  { id: 'gvp', label: 'Smithsonian GVP — katalog erupsi', run: gvp },
 ]
 
 /**

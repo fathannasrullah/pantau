@@ -201,4 +201,6 @@ export interface VolcanoSnapshot {
   /** Keterangan seismik: kegempaan vulkanik PVMBG atau gempa tektonik USGS. */
   seismicLabel: string
   seismicNote: string
+  /** Erupsi terakhir menurut katalog Smithsonian GVP, bila sumbernya hidup. */
+  lastEruptionNote: string | null
 }

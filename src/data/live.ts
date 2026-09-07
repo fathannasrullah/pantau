@@ -227,3 +227,30 @@ export function newestFetchISO(bundle: LiveBundle | null): string | null {
   if (!times.length) return null
   return times.reduce((a, b) => (a > b ? a : b))
 }
+
+export interface LiveEruption {
+  activityType: string | null
+  area: string | null
+  vei: number | null
+  startYear: number
+  startMonth: number | null
+  startDay: number | null
+  ongoing: boolean
+}
+
+/** Catatan erupsi terakhir dari katalog Smithsonian GVP. */
+export function readEruption(bundle: LiveBundle | null): LiveEruption | null {
+  const data = payload(bundle, 'gvp')
+  if (!isRecord(data)) return null
+  const startYear = numOrNull(data.startYear)
+  if (startYear === null) return null
+  return {
+    activityType: strOrNull(data.activityType),
+    area: strOrNull(data.area),
+    vei: numOrNull(data.vei),
+    startYear,
+    startMonth: numOrNull(data.startMonth),
+    startDay: numOrNull(data.startDay),
+    ongoing: data.ongoing === true,
+  }
+}

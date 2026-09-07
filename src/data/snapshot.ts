@@ -1,5 +1,12 @@
 import { LEVELS } from './levels'
-import { newestFetchISO, readBmkg, readQuakes, readWaves, readWind } from './live'
+import {
+  newestFetchISO,
+  readBmkg,
+  readEruption,
+  readQuakes,
+  readWaves,
+  readWind,
+} from './live'
 import type {
   FeedItem,
   FeedStatus,
@@ -93,6 +100,23 @@ function describeQuakes(
   return `${head}${week} Ini gempa tektonik regional dari katalog USGS, bukan kegempaan vulkanik yang hanya terekam seismograf pos pengamatan.`
 }
 
+const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
+
+/** Katalog GVP menyimpan tanggal sebagai angka terpisah, sebagiannya bisa kosong. */
+function describeEruption(e: ReturnType<typeof readEruption> & object): string {
+  const date = [
+    e.startDay ? `${e.startDay}` : null,
+    e.startMonth ? MONTHS[e.startMonth - 1] : null,
+    `${e.startYear}`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+  const vei = e.vei === null ? '' : `, VEI ${e.vei}`
+  const where = e.area ? ` di ${e.area.toLowerCase()}` : ''
+  const state = e.ongoing ? 'belum dinyatakan selesai' : 'sudah berakhir'
+  return `Erupsi terakhir yang tercatat katalog Smithsonian GVP mulai ${date}${vei}${where} — ${state}. Katalog ilmiah global, pembaruannya mingguan, bukan dasar tindakan.`
+}
+
 /** BMKG menulis potensi tsunami sebagai kalimat, bukan kode. */
 function quakeSeverity(potential: string | null): Severity {
   if (!potential) return 'watch'
@@ -122,6 +146,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   const waves = readWaves(live)
   const quakes = readQuakes(live)
   const bmkg = readBmkg(live)
+  const eruption = readEruption(live)
 
   // Selama ada sumber yang hidup, umur data dihitung dari pengambilan terakhir
   // yang berhasil — bukan dari jam simulasi.
@@ -379,6 +404,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     seismicLabel: quakes
       ? 'Gempa tektonik tiap jam, 24 jam terakhir'
       : 'Kegempaan tiap jam, 24 jam terakhir',
+    lastEruptionNote: eruption ? describeEruption(eruption) : null,
     seismicNote: quakes
       ? describeQuakes(quakes.total, quakes.total7d, quakes.radiusKm)
       : 'Angka contoh. Kegempaan vulkanik hanya tersedia dari seismograf pos pengamatan PVMBG.',
