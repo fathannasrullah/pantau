@@ -1,6 +1,6 @@
 import type { DataStateView } from '../../data/dataState'
 import { SampleTag } from '../SampleTag'
-import { formatAge, formatDecimal, formatNumber } from '../../lib/format'
+import { formatAge, formatDecimal, formatNumber, formatTime } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { GeolocationState } from '../../hooks/useGeolocation'
 import type { VolcanoLevel, VolcanoSnapshot } from '../../types'
@@ -88,7 +88,63 @@ export function StatusTab({
 
       {snapshot.air && (
         <>
-          <h2 className="section">Udara di atas kawah</h2>
+          <h2 className="section">Peringatan abu untuk penerbangan</h2>
+      {snapshot.ashAdvisories === null && (
+        <p className="emptynote">
+          Peringatan SIGMET belum bisa dimuat.
+        </p>
+      )}
+      {snapshot.ashAdvisories?.length === 0 && (
+        <p className="emptynote">
+          Tidak ada peringatan abu vulkanik aktif untuk wilayah{' '}
+          {snapshot.volcano.name} saat ini. Peringatan ini dikeluarkan otoritas
+          penerbangan saat abu mencapai jalur terbang — ketiadaannya bukan
+          berarti tidak ada erupsi.
+        </p>
+      )}
+      {snapshot.ashAdvisories?.map((a) => (
+        <section className="sigmet" key={a.text.slice(0, 60)}>
+          <div className="sigmet__head">
+            <span className="sigmet__tag mono">SIGMET · ABU VULKANIK</span>
+            {a.namedHere && (
+              <span className="sigmet__named">menyebut gunung ini</span>
+            )}
+          </div>
+          <div className="sigmet__rows">
+            {a.topM !== null && (
+              <div className="sigmet__cell">
+                <div className="sigmet__k">Puncak awan abu</div>
+                <div className="sigmet__v mono">
+                  {formatNumber(a.topM)} m
+                </div>
+                <div className="sigmet__u">
+                  di atas permukaan laut · FL{Math.round((a.topFt ?? 0) / 100)}
+                </div>
+              </div>
+            )}
+            {a.moveDir && (
+              <div className="sigmet__cell">
+                <div className="sigmet__k">Bergerak ke</div>
+                <div className="sigmet__v">{a.moveDir}</div>
+                <div className="sigmet__u">
+                  {a.moveSpeedKt !== null
+                    ? `${a.moveSpeedKt} knot`
+                    : 'kecepatan tidak disebut'}
+                </div>
+              </div>
+            )}
+          </div>
+          <pre className="sigmet__raw">{a.text}</pre>
+          <div className="sigmet__src">
+            {a.fir ?? 'FIR tidak disebut'}
+            {a.distanceKm !== null && ` · poligon terdekat ${formatNumber(a.distanceKm)} km dari kawah`}
+            {a.validToISO && ` · berlaku sampai ${formatTime(a.validToISO)}`}
+            {' · '}NOAA Aviation Weather Center
+          </div>
+        </section>
+      ))}
+
+      <h2 className="section">Udara di atas kawah</h2>
           <section className="airq dim">
             <div className="airq__row">
               <div className="airq__cell">

@@ -328,3 +328,65 @@ export function readPopulation(bundle: LiveBundle | null): LivePopulation | null
   rings.sort((a, b) => a.radiusKm - b.radiusKm)
   return { year, rings }
 }
+
+export interface LiveAshAdvisory {
+  fir: string | null
+  validFromISO: string | null
+  validToISO: string | null
+  /** Puncak awan abu dalam kaki di atas permukaan laut, apa adanya dari SIGMET. */
+  topFt: number | null
+  baseFt: number | null
+  moveDir: string | null
+  moveSpeedKt: number | null
+  distanceKm: number | null
+  /** Nama gunung ini benar-benar disebut di teks resminya. */
+  namedHere: boolean
+  text: string
+}
+
+export interface LiveSigmet {
+  radiusKm: number
+  scanned: number
+  advisories: LiveAshAdvisory[]
+}
+
+/**
+ * Peringatan abu penerbangan. Selalu dikembalikan meski kosong, karena "tidak
+ * ada peringatan abu aktif" adalah informasi yang berguna — berbeda dari
+ * "sumbernya gagal", yang ditandai lewat status sumber.
+ */
+export function readSigmet(bundle: LiveBundle | null): LiveSigmet | null {
+  const data = payload(bundle, 'sigmet')
+  if (!isRecord(data)) return null
+  const rawList = Array.isArray(data.nearby) ? data.nearby : []
+
+  const advisories: LiveAshAdvisory[] = []
+  for (const item of rawList) {
+    if (!isRecord(item)) continue
+    const text = strOrNull(item.text)
+    if (!text) continue
+    advisories.push({
+      fir: strOrNull(item.fir),
+      validFromISO: isoOrNull(item.validFrom),
+      validToISO: isoOrNull(item.validTo),
+      topFt: numOrNull(item.topFt),
+      baseFt: numOrNull(item.baseFt),
+      moveDir: strOrNull(item.moveDir),
+      moveSpeedKt: numOrNull(item.moveSpeedKt),
+      distanceKm: numOrNull(item.distanceKm),
+      namedHere: item.namedHere === true,
+      text,
+    })
+  }
+
+  return {
+    radiusKm: numOrNull(data.radiusKm) ?? 500,
+    scanned: numOrNull(data.scanned) ?? 0,
+    advisories,
+  }
+}
+
+/** Kaki ke meter, untuk pembaca yang tidak terbiasa satuan penerbangan. */
+export function feetToMetres(ft: number): number {
+  return Math.round(ft * 0.3048)
+}

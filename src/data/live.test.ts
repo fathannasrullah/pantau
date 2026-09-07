@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   airSeverity,
+  feetToMetres,
   ashHeadingDeg,
   compassLabel,
   newestFetchISO,
@@ -12,6 +13,7 @@ import {
   readPopulation,
   readQuakes,
   readQuakesFrom,
+  readSigmet,
   readWind,
 } from './live.ts'
 
@@ -225,4 +227,45 @@ test('perkiraan penduduk ditolak bila salah satu radius rusak', () => {
   assert.equal(pop?.year, 2020)
   // Selalu urut dari radius terkecil, apa pun urutan aslinya.
   assert.deepEqual(pop?.rings.map((r) => r.radiusKm), [5, 30])
+})
+
+test('peringatan abu tanpa teks resmi dibuang', () => {
+  // Teks SIGMET adalah pernyataan resminya; tanpa itu tidak ada yang bisa
+  // dipertanggungjawabkan, hanya angka lepas.
+  const live = bundle({
+    sigmet: source({
+      radiusKm: 500,
+      scanned: 127,
+      nearby: [
+        { fir: 'WAAF UJUNG PANDANG', topFt: 18000, text: '' },
+        {
+          fir: 'WIIF JAKARTA',
+          validFrom: '2026-09-07T06:40:00Z',
+          validTo: '2026-09-07T12:15:00Z',
+          topFt: 18000,
+          moveDir: 'W',
+          moveSpeedKt: 20,
+          distanceKm: 42,
+          namedHere: true,
+          text: 'WVID01 WIIF 070640 VA ERUPTION MT KRAKATAU',
+        },
+      ],
+    }),
+  })
+  const sig = readSigmet(live)
+  assert.equal(sig?.advisories.length, 1)
+  assert.equal(sig?.advisories[0]?.namedHere, true)
+  assert.equal(sig?.advisories[0]?.topFt, 18000)
+})
+
+test('daftar peringatan kosong tetap dikembalikan, bukan null', () => {
+  // "Tidak ada peringatan abu aktif" adalah kabar yang berguna, dan harus
+  // dibedakan dari "sumbernya gagal dimuat".
+  const live = bundle({ sigmet: source({ radiusKm: 500, scanned: 127, nearby: [] }) })
+  assert.deepEqual(readSigmet(live)?.advisories, [])
+})
+
+test('ketinggian penerbangan dialihkan ke meter', () => {
+  assert.equal(feetToMetres(18000), 5486)
+  assert.equal(feetToMetres(0), 0)
 })

@@ -64,10 +64,11 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Grafik kegempaan per jam | EMSC (utama) dengan USGS FDSN sebagai cadangan | hidup |
 | Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`), disaring 500 km | hidup |
 | Erupsi terakhir tercatat | Smithsonian GVP (katalog, mingguan) | hidup |
+| **Peringatan abu penerbangan** | NOAA Aviation Weather Center (SIGMET) | hidup |
 | SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
 | Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) | hidup |
 | **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **butuh token** |
-| Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
+| Kegempaan vulkanik | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
 | Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | **belum ada sumber** |
 
 Dua hal yang dijaga ketat:
@@ -162,6 +163,31 @@ situ. Sampai saat itu, jangan mengisi level status dari sumber mana pun.
 Tidak ada header CORS di MAGMA, jadi meski token sudah ada, pemanggilannya tetap
 harus lewat CI seperti sumber lain.
 
+### SIGMET abu vulkanik: pernyataan resmi, bukan inferensi
+
+`aviationweather.gov/api/data/isigmet` menyajikan SIGMET internasional dari NOAA
+Aviation Weather Center. Diukur lewat probe: 127 peringatan aktif, **10 di
+antaranya berkode bahaya `VA`** (abu vulkanik), lengkap dengan poligon sebaran,
+ketinggian puncak awan abu, serta arah dan kecepatan geraknya.
+
+Ini mengisi sebagian baris "tinggi kolom abu" yang selama ini kosong — dan dari
+otoritas penerbangan, bukan dari perhitungan kita sendiri. Yang ditampilkan
+adalah puncak awan abu **di atas permukaan laut** menurut SIGMET, bukan tinggi
+kolom di atas puncak yang hanya diukur pos pengamatan PVMBG; keduanya berbeda dan
+kartunya menyebutkan itu. Teks resmi SIGMET ikut ditampilkan apa adanya.
+
+Dua hal yang menentukan benar-salahnya:
+
+- **Kode bahayanya `VA`, bukan `ASH`.** Menyaring dengan `hazard === 'ASH'`
+  mengembalikan nol hasil dari 127 peringatan.
+- **Feed-nya global.** Contoh pertama yang terambil adalah SIGMET abu di Bogota,
+  Kolombia. Tanpa penyaringan, peringatan itu akan muncul saat memantau
+  Krakatau — persis masalah gempa Banggai yang sudah diperbaiki. Penyaringannya
+  dua arah: jarak poligon ke kawah dalam 500 km, atau nama gunung tersebut di
+  teks resminya.
+
+Tidak ada header CORS, jadi pengambilannya lewat CI seperti sumber lain.
+
 ### Sumber tingkat nasional yang diuji
 
 | Calon | Hasil |
@@ -172,6 +198,10 @@ harus lewat CI seperti sumber lain.
 | BMKG `lasttsunami.json` | `404` |
 | `data.go.id` API CKAN | `404` |
 | BNPB `Bencana_Harian/MapServer` | `499 Token Required` |
+| USGS `volcanoApi/volcanoesGVP` | `200`, 1.470 gunung (129 Indonesia) — tapi **tidak ada medan status atau alert sama sekali**; ini direktori, bukan status |
+| USGS `volcanoApi/elevatedVolcanoes` | `404 Resource not found in API` |
+| OpenSky `states/all` tanpa kredensial | `200` — akses anonim ternyata masih jalan, tapi CORS-nya dibatasi ke domain sendiri |
+| OpenAQ v3 `countries` | `401 Unauthorized` tanpa API key |
 
 ### Dampak wilayah dan titik kumpul: belum ada sumber sah
 

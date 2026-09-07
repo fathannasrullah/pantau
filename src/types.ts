@@ -74,6 +74,19 @@ export interface AirQuality {
   note: string
 }
 
+export interface AshAdvisory {
+  fir: string | null
+  validFromISO: string | null
+  validToISO: string | null
+  topFt: number | null
+  topM: number | null
+  moveDir: string | null
+  moveSpeedKt: number | null
+  distanceKm: number | null
+  namedHere: boolean
+  text: string
+}
+
 export interface QuickAction {
   n: string
   text: string
@@ -230,4 +243,6 @@ export interface VolcanoSnapshot {
   air: AirQuality | null
   /** Perkiraan penduduk per radius dari kawah, bila sumbernya hidup. */
   population: { year: number; rings: { radiusKm: number; people: number }[] } | null
+  /** Peringatan abu penerbangan resmi (SIGMET), bila sumbernya hidup. */
+  ashAdvisories: AshAdvisory[] | null
 }

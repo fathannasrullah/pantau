@@ -2158,3 +2158,92 @@ a.row__tel:hover {
     left: 264px;
   }
 }
+
+/* --- Peringatan abu penerbangan (SIGMET) --------------------------------- */
+
+.sigmet {
+  border: 1px solid rgba(251, 146, 60, 0.32);
+  border-radius: 14px;
+  background: rgba(251, 146, 60, 0.06);
+  overflow: hidden;
+}
+
+.sigmet + .sigmet {
+  margin-top: 8px;
+}
+
+.sigmet__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+
+.sigmet__tag {
+  color: #fb923c;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.sigmet__named {
+  padding: 1px 6px;
+  border: 1px solid rgba(251, 146, 60, 0.5);
+  border-radius: 5px;
+  color: #fb923c;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.sigmet__rows {
+  display: flex;
+  padding: 10px 0 0;
+}
+
+.sigmet__cell {
+  flex: 1;
+  padding: 0 14px 12px;
+}
+
+.sigmet__cell + .sigmet__cell {
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sigmet__k {
+  color: #9aa5b3;
+  font-size: 11.5px;
+}
+
+.sigmet__v {
+  margin-top: 4px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sigmet__u {
+  margin-top: 2px;
+  color: #8b96a5;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.sigmet__raw {
+  margin: 0;
+  padding: 11px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  overflow-x: auto;
+  color: #c3cbd5;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sigmet__src {
+  padding: 0 14px 12px;
+  color: #9aa5b3;
+  font-size: 10.5px;
+  line-height: 1.5;
+}

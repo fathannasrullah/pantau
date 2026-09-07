@@ -6,6 +6,8 @@ import {
   readBmkg,
   readEruption,
   readPopulation,
+  readSigmet,
+  feetToMetres,
   readQuakesFrom,
   readWaves,
   readWind,
@@ -150,6 +152,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   const quakeCatalog = emsc ? 'EMSC' : 'USGS'
   const air = readAir(live)
   const population = readPopulation(live)
+  const sigmet = readSigmet(live)
   const bmkg = readBmkg(live)
   const eruption = readEruption(live)
 
@@ -261,6 +264,19 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       : 'Kegempaan tiap jam, 24 jam terakhir',
     lastEruptionNote: eruption ? describeEruption(eruption) : null,
     population,
+    ashAdvisories:
+      sigmet?.advisories.map((a) => ({
+        fir: a.fir,
+        validFromISO: a.validFromISO,
+        validToISO: a.validToISO,
+        topFt: a.topFt,
+        topM: a.topFt === null ? null : feetToMetres(a.topFt),
+        moveDir: a.moveDir,
+        moveSpeedKt: a.moveSpeedKt,
+        distanceKm: a.distanceKm,
+        namedHere: a.namedHere,
+        text: a.text,
+      })) ?? null,
     air: air
       ? {
           so2: air.so2,

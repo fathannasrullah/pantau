@@ -363,6 +363,85 @@ async function emsc(V) {
   }
 }
 
+/**
+ * Peringatan abu vulkanik untuk penerbangan (SIGMET internasional).
+ *
+ * Ini pernyataan resmi otoritas penerbangan lewat NOAA Aviation Weather Center,
+ * bukan inferensi kita. Diverifikasi lewat probe: 127 peringatan aktif dengan 10
+ * di antaranya berkode bahaya "VA", lengkap dengan poligon sebaran, ketinggian
+ * puncak awan abu, serta arah dan kecepatan geraknya.
+ *
+ * Catatan penting: kode bahayanya "VA", bukan "ASH". Penyaringan memakai "ASH"
+ * akan mengembalikan nol hasil.
+ *
+ * Feed ini global, jadi harus disaring: peringatan abu di Kolombia tidak boleh
+ * muncul saat memantau Krakatau. Disaring dua arah — jarak poligon ke kawah,
+ * atau nama gunung yang tersebut di teks resminya.
+ */
+const SIGMET_RADIUS_KM = 500
+
+async function sigmet(V) {
+  const url = 'https://aviationweather.gov/api/data/isigmet?format=geojson'
+  const raw = await fetchJson(url, 'sigmet')
+  const features = Array.isArray(raw?.features) ? raw.features : []
+
+  const nearby = []
+  for (const f of features) {
+    const p = f?.properties
+    if (!p || p.hazard !== 'VA') continue
+
+    const rings = f.geometry?.coordinates
+    const points = []
+    // Poligon bisa bersarang satu atau dua tingkat; ratakan yang berbentuk pasangan.
+    const walk = (node) => {
+      if (!Array.isArray(node)) return
+      if (typeof node[0] === 'number' && typeof node[1] === 'number') {
+        points.push([node[0], node[1]])
+        return
+      }
+      for (const child of node) walk(child)
+    }
+    walk(rings)
+
+    let closestKm = Infinity
+    for (const [lon, lat] of points) {
+      const d = distanceKm(V.lat, V.lon, lat, lon)
+      if (d < closestKm) closestKm = d
+    }
+
+    const text = str(p.rawSigmet) || ''
+    // Nama gunung di teks SIGMET ditulis tanpa spasi ganda dan huruf besar.
+    const namedHere = new RegExp(
+      V.name.replace(/^(Anak|Ili|Gunung)\s+/i, '').split(' ')[0],
+      'i',
+    ).test(text)
+
+    if (!namedHere && closestKm > SIGMET_RADIUS_KM) continue
+
+    nearby.push({
+      fir: str(p.firName),
+      validFrom: str(p.validTimeFrom),
+      validTo: str(p.validTimeTo),
+      // base dan top dilaporkan dalam kaki di atas permukaan laut.
+      baseFt: num(p.base),
+      topFt: num(p.top),
+      moveDir: str(p.dir),
+      moveSpeedKt: num(Number.parseFloat(str(p.spd) ?? '')),
+      distanceKm: Number.isFinite(closestKm) ? Math.round(closestKm) : null,
+      namedHere,
+      text,
+    })
+  }
+
+  nearby.sort((a, b) => (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9))
+
+  return {
+    url,
+    observedAt: null,
+    data: { radiusKm: SIGMET_RADIUS_KM, scanned: features.length, nearby },
+  }
+}
+
 /** Lingkaran kasar di sekitar kawah, untuk meminta hitungan penduduk. */
 function circleGeoJson(lat, lon, km, points = 24) {
   const coords = []
@@ -506,6 +585,11 @@ const sourcesFor = (V) => [
     run: air,
   },
   { id: 'emsc', label: 'EMSC — gempa sekitar, ambang lebih rendah', run: emsc },
+  {
+    id: 'sigmet',
+    label: 'NOAA Aviation Weather Center — SIGMET abu vulkanik',
+    run: sigmet,
+  },
   // Gelombang hanya berarti untuk gunung dengan riwayat bahaya pesisir.
   ...(V.strait
     ? [
