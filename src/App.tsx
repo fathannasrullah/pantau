@@ -16,6 +16,7 @@ import { StatusTab } from './components/tabs/StatusTab'
 import { DEFAULT_RULE_STATE } from './data/notificationRules'
 import { useDemo } from './hooks/useDemo'
 import { useGeolocation } from './hooks/useGeolocation'
+import { useLiveQuakes } from './hooks/useLiveQuakes'
 import { useVolcanoSelection } from './hooks/useVolcanoSelection'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM, LEVEL_COLORS } from './theme'
@@ -27,6 +28,7 @@ export default function App() {
   const { snapshot, level, dataState, refresh } = useVolcanoFeed(volcano, demo)
 
   const geo = useGeolocation()
+  const liveQuakes = useLiveQuakes(volcano)
 
   const [tab, setTab] = useState<TabId>('status')
   const [layer, setLayer] = useState<MapLayer['id']>('radius')
@@ -108,7 +110,11 @@ export default function App() {
           )}
 
           {tab === 'laporan' && (
-            <FeedTab snapshot={snapshot} onOpenReport={() => setReportOpen(true)} />
+            <FeedTab
+              snapshot={snapshot}
+              live={liveQuakes}
+              onOpenReport={() => setReportOpen(true)}
+            />
           )}
 
           {tab === 'panduan' && <GuideTab snapshot={snapshot} level={level} />}

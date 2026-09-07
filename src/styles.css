@@ -1957,3 +1957,204 @@ a.row__tel:hover {
   color: #9aa5b3;
   font-size: 10.5px;
 }
+
+/* --- Gempa terkini langsung dari USGS ------------------------------------ */
+
+.livequakes {
+  margin-bottom: 26px;
+}
+
+.livequakes__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.livedot {
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 5px;
+  color: #9aa5b3;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.livedot--on {
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #4ade80;
+}
+
+.lqlist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lqitem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: inherit;
+  text-decoration: none;
+}
+
+.lqitem:hover .lqitem__place {
+  text-decoration: underline;
+}
+
+.lqitem__mag {
+  flex: none;
+  width: 54px;
+  padding-top: 1px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.lqitem__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.lqitem__place {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.lqitem__meta {
+  color: #8b96a5;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.lqitem__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 1px;
+}
+
+.lqflag {
+  color: #9aa5b3;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.lqflag--tsunami {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.lqsrc {
+  margin: 12px 0 0;
+  color: #8b96a5;
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+
+.lqsrc code {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10px;
+}
+
+/* --- Tablet: kolom lebih lega, grid dalam kartu ikut melebar -------------- */
+
+@media (min-width: 700px) {
+  .shell {
+    max-width: 680px;
+  }
+
+  .content {
+    padding: 0 24px 104px;
+  }
+
+  .grid2 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .sheet__panel {
+    max-width: 620px;
+    border-radius: 18px;
+    margin-bottom: 24px;
+  }
+
+  .sheet {
+    align-items: center;
+  }
+}
+
+/* --- Laptop: navigasi pindah ke sisi kiri, isi tetap satu kolom terbaca --- */
+
+@media (min-width: 1080px) {
+  .page {
+    align-items: flex-start;
+  }
+
+  .shell {
+    max-width: 1040px;
+    display: grid;
+    /* Kolom navigasi tetap, sisanya untuk isi. */
+    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+  }
+
+  .appbar,
+  .banner,
+  .strip {
+    grid-column: 2;
+  }
+
+  .content {
+    grid-column: 2;
+    padding: 0 32px 48px;
+    max-width: 760px;
+  }
+
+  .bottomnav {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100vh;
+    height: 100dvh;
+    padding: 20px 14px;
+    border-top: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .navbtn {
+    flex-direction: row;
+    gap: 12px;
+    justify-content: flex-start;
+    padding: 11px 12px;
+    border-radius: 10px;
+    text-align: left;
+  }
+
+  .navbtn--on {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .navbtn__label {
+    font-size: 13px;
+  }
+
+  .demo,
+  .demo__collapsed {
+    left: 264px;
+  }
+}

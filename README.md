@@ -8,7 +8,9 @@ Lewotolok, Lewotobi Laki-laki, Ibu, Dukono, dan Sinabung.** Pilihan tertulis ke
 URL (`?gunung=semeru`) supaya bisa dibagikan, dan diingat di perangkat.
 
 Bisa dipasang lewat browser (PWA): ada manifest, ikon, dan service worker, sehingga
-layar terakhir tetap terbuka saat sinyal hilang.
+layar terakhir tetap terbuka saat sinyal hilang. Tata letaknya menyesuaikan tiga
+ukuran layar: satu kolom dengan navigasi bawah di ponsel, kolom lebih lega di
+tablet, dan navigasi pindah ke sisi kiri di laptop.
 
 **Live demo: <https://fathannasrullah.github.io/pantau/>**
 
@@ -58,6 +60,7 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Posisi pengguna & jarak ke kawah | Geolocation API perangkat | hidup |
 | Arah abu & kecepatan angin | Open-Meteo | hidup |
 | Tinggi gelombang Selat Sunda | Open-Meteo Marine | hidup |
+| Gempa terkini di sekitar | USGS summary feed, **langsung dari browser** | hidup |
 | Grafik kegempaan per jam | EMSC (utama) dengan USGS FDSN sebagai cadangan | hidup |
 | Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`), disaring 500 km | hidup |
 | Erupsi terakhir tercatat | Smithsonian GVP (katalog, mingguan) | hidup |
@@ -90,7 +93,20 @@ Dua hal yang dijaga ketat:
   layar menyebutkannya, karena letusan/embusan/tremor hanya terekam seismograf
   pos pengamatan.
 
-### Kenapa lewat CI, bukan fetch dari browser
+### Satu sumber yang justru tidak lewat CI
+
+Summary feed USGS (`summary/2.5_day.geojson`) mengirim `Access-Control-Allow-Origin: *`,
+jadi browser boleh memanggilnya sendiri. Itu satu-satunya bagian app yang benar-benar
+mendekati waktu nyata — tidak menunggu siklus CI 30 menit. Diukur lewat probe:
+32 KB, 13 ms, dan membawa medan yang tidak ada di endpoint `fdsnws/event/1/query`
+yang dipakai untuk grafik: `alert` (level PAGER), `tsunami`, `felt`, dan `url` ke
+halaman resmi tiap kejadian.
+
+Cakupannya tipis untuk Indonesia — USGS mencatat kawasan ini sekitar M 4,5 ke
+atas — jadi daftar ini pelengkap, bukan pengganti katalog EMSC yang lebih rapat.
+Keterangan itu ikut tampil di layar saat daftarnya kosong.
+
+### Kenapa sumber lain lewat CI, bukan fetch dari browser
 
 BMKG dan MAGMA tidak mengirim header CORS, jadi panggilan langsung dari halaman
 statis akan diblokir browser. `scripts/fetch-sources.mjs` berjalan di runner
