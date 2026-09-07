@@ -1,4 +1,5 @@
 import type { DataStateView } from '../../data/dataState'
+import { SampleTag } from '../SampleTag'
 import { formatAge, formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { VolcanoLevel, VolcanoSnapshot } from '../../types'
@@ -36,7 +37,12 @@ export function StatusTab({
 
   return (
     <div className="tabview">
-      <StatusCard level={level} dataState={dataState} />
+      <StatusCard
+        level={level}
+        dataState={dataState}
+        provenance={snapshot.provenance}
+        observedWaveHeightM={snapshot.observedWaveHeightM}
+      />
 
       <PositionCard
         position={snapshot.position}
@@ -61,12 +67,18 @@ export function StatusTab({
       <section className="ash dim">
         <div className="ash__split">
           <div className="ash__cell ash__cell--left">
-            <div className="ash__k">Arah abu</div>
+            <div className="ash__k">
+              Arah abu
+              {ashfall.windProvenance === 'sample' && <SampleTag />}
+            </div>
             <div className="ash__v">{ashfall.windDirection}</div>
             <div className="ash__d">angin {ashfall.windSpeedKmh} km/jam</div>
           </div>
           <div className="ash__cell">
-            <div className="ash__k">Tinggi kolom abu</div>
+            <div className="ash__k">
+              Tinggi kolom abu
+              {ashfall.columnProvenance === 'sample' && <SampleTag />}
+            </div>
             <div className="ash__v ash__v--mono mono">
               {formatNumber(ashfall.columnHeightM)} m
             </div>

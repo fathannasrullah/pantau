@@ -1,4 +1,5 @@
 import { formatTime } from '../../lib/format'
+import { SampleTag } from '../SampleTag'
 import { SEVERITY_COLOR } from '../../theme'
 import type { VolcanoSnapshot } from '../../types'
 
@@ -29,6 +30,7 @@ export function FeedTab({ snapshot, onOpenReport }: Props) {
               <span className="feeditem__time mono">
                 {formatTime(item.timeISO)}
               </span>
+              {item.provenance === 'sample' && <SampleTag />}
             </div>
             <h3 className="feeditem__title">{item.title}</h3>
             <p className="feeditem__body">{item.body}</p>

@@ -3,6 +3,11 @@ name: Deploy ke GitHub Pages
 on:
   push:
     branches: [main]
+  # Snapshot sumber resmi ikut terbit tiap deploy, jadi situsnya di-build ulang
+  # berkala supaya angkanya tidak basi. Cron GitHub sifatnya best-effort dan
+  # bisa telat beberapa menit; app menandai sendiri data yang mulai basi.
+  schedule:
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -31,6 +36,15 @@ jobs:
         uses: actions/configure-pages@v5
 
       - run: npm ci
+
+      - run: npm test
+
+      # Sumber resmi tidak mengirim header CORS, jadi pengambilannya dilakukan
+      # di sini, bukan dari browser. Gagal di sini tidak boleh membuat situs
+      # ikut hilang — app menandai sendiri sumber yang kosong.
+      - name: Ambil data sumber resmi
+        run: npm run fetch:data
+        continue-on-error: true
 
       # base_path berisi "/nama-repo" untuk project site, kosong untuk user site.
       - name: Build

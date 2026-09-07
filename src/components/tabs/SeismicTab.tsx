@@ -1,4 +1,5 @@
 import type { DataStateView } from '../../data/dataState'
+import { SampleTag } from '../SampleTag'
 import { SEVERITY_COLOR } from '../../theme'
 import type { VolcanoSnapshot } from '../../types'
 
@@ -24,9 +25,7 @@ export function SeismicTab({
 
   return (
     <div className="tabview">
-      <h2 className="section section--first">
-        Kegempaan tiap jam, 24 jam terakhir
-      </h2>
+      <h2 className="section section--first">{snapshot.seismicLabel}</h2>
       <section className="seis dim">
         <div className="seis__bars">
           {bars.map((value, index) => {
@@ -66,12 +65,20 @@ export function SeismicTab({
           Jam −{hoursAgo}: {bars[selected]} kejadian gempa. Ketuk batang lain
           untuk melihat jam yang berbeda.
         </p>
+        <p className="seis__note">{snapshot.seismicNote}</p>
         <div className="seis__src">
-          Seismograf pos pengamatan · {dataState.sourceTime}
+          {snapshot.provenance.seismic === 'live'
+            ? 'Katalog USGS'
+            : 'Seismograf pos pengamatan (data contoh)'}{' '}
+          · {dataState.sourceTime}
         </div>
       </section>
 
-      <div className="grid2 dim" style={{ marginTop: 10 }}>
+      <h2 className="section">
+        Jenis kegempaan vulkanik
+        <SampleTag title="Hanya PVMBG yang merekam jenis kegempaan vulkanik" />
+      </h2>
+      <div className="grid2 dim">
         {snapshot.quakeTypes.map((type) => (
           <div className="quake" key={type.label}>
             <div className="quake__k">{type.label}</div>

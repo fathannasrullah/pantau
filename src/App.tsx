@@ -4,6 +4,7 @@ import { AppHeader } from './components/AppHeader'
 import { BottomNav, type TabId } from './components/BottomNav'
 import { DataStateBanner } from './components/DataStateBanner'
 import { DemoPanel } from './components/DemoPanel'
+import { SourceList } from './components/SourceList'
 import { NotificationSheet } from './components/sheets/NotificationSheet'
 import { ReportSheet } from './components/sheets/ReportSheet'
 import { FeedTab } from './components/tabs/FeedTab'
@@ -106,12 +107,7 @@ export default function App() {
 
           {tab === 'panduan' && <GuideTab snapshot={snapshot} level={level} />}
 
-          <p className="footer">
-            Prototipe. Angka dan laporan di layar ini hanya data contoh, bukan
-            pengamatan resmi.
-            <br />
-            Rujuk pengumuman Badan Geologi sebelum bertindak.
-          </p>
+          <SourceList snapshot={snapshot} />
         </main>
 
         <BottomNav tab={tab} onChange={changeTab} />

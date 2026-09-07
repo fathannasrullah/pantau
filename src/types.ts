@@ -47,10 +47,14 @@ export interface UserPosition {
 }
 
 export interface AshfallReport {
+  /** Ke mana abu terbawa, bukan arah asal angin. */
   windDirection: string
   windSpeedKmh: number
+  windProvenance: Provenance
   columnHeightM: number
   columnDeltaM: number
+  /** Tinggi kolom hanya dimiliki pos pengamatan PVMBG. */
+  columnProvenance: Provenance
   advice: string
   source: string
 }
@@ -108,6 +112,7 @@ export interface FeedItem {
   title: string
   body: string
   source: string
+  provenance: Provenance
 }
 
 export interface ShelterPoint {
@@ -129,6 +134,40 @@ export interface NotificationRule {
   note: string
   /** Evacuation orders can never be muted. */
   locked: boolean
+}
+
+/** Apakah sebuah bagian layar berisi angka sungguhan atau masih data contoh. */
+export type Provenance = 'live' | 'sample'
+
+/** Satu sumber di public/data/live.json, apa adanya termasuk saat gagal. */
+export interface LiveSourceInfo {
+  id: string
+  label: string
+  ok: boolean
+  url: string | null
+  fetchedAtISO: string
+  observedAtISO: string | null
+  error: string | null
+  data: unknown
+}
+
+export interface LiveBundle {
+  generatedAtISO: string
+  sources: LiveSourceInfo[]
+}
+
+/**
+ * Asal setiap bagian layar. Level status sengaja dipisah: hanya PVMBG yang
+ * berhak menyatakannya, jadi selama belum tersambung nilainya harus ditandai
+ * 'sample' dan tidak boleh diturunkan dari sumber lain.
+ */
+export interface SnapshotProvenance {
+  level: Provenance
+  ashfall: Provenance
+  coastal: Provenance
+  seismic: Provenance
+  feed: Provenance
+  impacts: Provenance
 }
 
 /** One snapshot of everything the screens render, as returned by the data source. */
@@ -154,4 +193,12 @@ export interface VolcanoSnapshot {
   feed: FeedItem[]
   shelters: ShelterPoint[]
   ashfallSteps: GuideStep[]
+  provenance: SnapshotProvenance
+  /** Daftar sumber untuk ditampilkan apa adanya, termasuk yang gagal diambil. */
+  sources: LiveSourceInfo[]
+  /** Tinggi gelombang terukur di Selat Sunda, bila sumbernya hidup. */
+  observedWaveHeightM: number | null
+  /** Keterangan seismik: kegempaan vulkanik PVMBG atau gempa tektonik USGS. */
+  seismicLabel: string
+  seismicNote: string
 }

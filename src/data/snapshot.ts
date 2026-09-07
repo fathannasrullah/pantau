@@ -1,5 +1,13 @@
 import { LEVELS } from './levels'
-import type { FeedStatus, LevelId, VolcanoSnapshot } from '../types'
+import { newestFetchISO, readBmkg, readQuakes, readWaves, readWind } from './live'
+import type {
+  FeedItem,
+  FeedStatus,
+  LevelId,
+  LiveBundle,
+  Severity,
+  VolcanoSnapshot,
+} from '../types'
 
 export const VOLCANO = {
   name: 'Anak Krakatau',
@@ -61,17 +69,65 @@ export interface SnapshotRequest {
   /** How old the newest reading is, in minutes. */
   ageMinutes: number
   seismicHourly?: number[]
+  /** Hasil pengambilan sumber resmi; null berarti app jalan dengan data contoh. */
+  live?: LiveBundle | null
+}
+
+/** BMKG menulis potensi tsunami sebagai kalimat, bukan kode. */
+function quakeSeverity(potential: string | null): Severity {
+  if (!potential) return 'watch'
+  const text = potential.toLowerCase()
+  if (text.includes('tidak berpotensi')) return 'neutral'
+  if (text.includes('tsunami')) return 'danger'
+  return 'watch'
 }
 
 /**
- * The single seam between the UI and the outside world. Everything below is
- * sample data; wiring MAGMA Indonesia / BMKG / BPBD means replacing the body of
- * this function (and making it async) without touching the screens.
+ * Satu-satunya batas antara layar dan dunia luar.
+ *
+ * Yang sudah tersambung ke sumber resmi: angin (Open-Meteo), gelombang Selat
+ * Sunda (Open-Meteo Marine), gempa tektonik sekitar (USGS), dan gempa terkini
+ * BMKG. Yang masih data contoh: level status, radius, dampak wilayah, titik
+ * kumpul, dan kegempaan vulkanik — semuanya hanya dimiliki PVMBG dan BPBD.
+ *
+ * Setiap bagian membawa provenance-nya sendiri supaya layar bisa membedakan
+ * keduanya, bukan mencampurnya diam-diam.
  */
 export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   const { nowISO, levelId, status, ageMinutes } = req
-  const updatedAtISO = shiftISO(nowISO, ageMinutes)
+  const live = req.live ?? null
   const level = LEVELS[levelId]
+
+  const wind = readWind(live)
+  const waves = readWaves(live)
+  const quakes = readQuakes(live)
+  const bmkg = readBmkg(live)
+
+  // Selama ada sumber yang hidup, umur data dihitung dari pengambilan terakhir
+  // yang berhasil — bukan dari jam simulasi.
+  const updatedAtISO = newestFetchISO(live) ?? shiftISO(nowISO, ageMinutes)
+
+  const liveFeed: FeedItem[] = []
+  if (bmkg) {
+    for (const report of [bmkg.latest, ...bmkg.recent]) {
+      liveFeed.push({
+        kind: 'GEMPA',
+        severity: quakeSeverity(report.potential),
+        timeISO: report.timeISO,
+        title: `Gempa M ${report.magnitude}`,
+        body: [
+          report.area,
+          report.depth ? `Kedalaman ${report.depth}.` : null,
+          report.potential,
+          report.felt ? `Dirasakan: ${report.felt}` : null,
+        ]
+          .filter(Boolean)
+          .join(' '),
+        source: 'BMKG · data.bmkg.go.id',
+        provenance: 'live',
+      })
+    }
+  }
 
   return {
     volcano: VOLCANO,
@@ -88,13 +144,18 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     },
 
     ashfall: {
-      windDirection: 'Barat laut',
-      windSpeedKmh: 11,
+      windDirection: wind?.ashHeading ?? 'Barat laut',
+      windSpeedKmh: wind?.speedKmh ?? 11,
+      windProvenance: wind ? 'live' : 'sample',
       columnHeightM: 1200,
       columnDeltaM: 300,
-      advice:
-        'Abu tipis terpantau di Kalianda dan Rajabasa. Pakai masker di luar ruangan, tutup tandon air.',
-      source: 'pos pengamatan + BMKG (angin)',
+      columnProvenance: 'sample',
+      advice: wind
+        ? `Angin membawa abu ke arah ${wind.ashHeading.toLowerCase()}. Pakai masker di luar ruangan dan tutup tandon air.`
+        : 'Abu tipis terpantau di Kalianda dan Rajabasa. Pakai masker di luar ruangan, tutup tandon air.',
+      source: wind
+        ? 'Open-Meteo (angin) · tinggi kolom abu masih data contoh'
+        : 'data contoh',
     },
 
     quickActions: QUICK_ACTIONS,
@@ -213,7 +274,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       },
     ],
 
-    seismicHourly: req.seismicHourly ?? SEISMIC_SEED,
+    seismicHourly: quakes?.hourly ?? req.seismicHourly ?? SEISMIC_SEED,
 
     quakeTypes: [
       { label: 'Letusan', value: '27', ratio: 0.86, severity: 'alert' },
@@ -230,6 +291,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     tremorAmplitudeMm: 24,
 
     feed: [
+      ...liveFeed,
       {
         kind: 'VONA',
         severity: 'alert',
@@ -237,6 +299,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
         title: 'VONA warna ORANGE dikeluarkan',
         body: 'Kolom abu teramati 1.200 m di atas puncak, bergerak ke barat laut. Ketinggian abu FL 120.',
         source: 'Badan Geologi · Pos Pengamatan Anak Krakatau',
+        provenance: 'sample',
       },
       {
         kind: 'ERUPSI',
@@ -245,6 +308,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
         title: 'Erupsi dengan amplitudo maksimum 55 mm',
         body: 'Durasi 3 menit 12 detik. Lontaran material teramati sejauh 800 m dari pusat kawah.',
         source: 'Badan Geologi · rekaman seismograf tersedia',
+        provenance: 'sample',
       },
       {
         kind: 'HIMBAUAN',
@@ -253,6 +317,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
         title: 'Nelayan diminta menjauhi radius 5 km',
         body: 'Kegiatan penangkapan ikan di sekitar tubuh gunung dihentikan sampai status diturunkan.',
         source: 'BPBD Lampung Selatan',
+        provenance: 'sample',
       },
       {
         kind: 'CUACA',
@@ -261,6 +326,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
         title: 'Angin permukaan ke barat laut, 11 km/jam',
         body: 'Abu tipis berpotensi mencapai Kalianda dan Rajabasa hingga sore. Tinggi gelombang 1,5–2,5 m.',
         source: 'BMKG · pembaruan tiap 6 jam',
+        provenance: 'sample',
       },
     ],
 
@@ -279,5 +345,23 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     ],
 
     ashfallSteps: ASHFALL_STEPS,
+
+    provenance: {
+      // Hanya PVMBG yang berhak menyatakan level; belum ada sambungan resmi.
+      level: 'sample',
+      ashfall: wind ? 'live' : 'sample',
+      coastal: waves ? 'live' : 'sample',
+      seismic: quakes ? 'live' : 'sample',
+      feed: liveFeed.length ? 'live' : 'sample',
+      impacts: 'sample',
+    },
+    sources: live?.sources ?? [],
+    observedWaveHeightM: waves?.waveHeightM ?? null,
+    seismicLabel: quakes
+      ? 'Gempa tektonik tiap jam, 24 jam terakhir'
+      : 'Kegempaan tiap jam, 24 jam terakhir',
+    seismicNote: quakes
+      ? `${quakes.total} gempa tercatat dalam radius ${quakes.radiusKm} km (katalog USGS). Ini gempa tektonik regional, bukan kegempaan vulkanik yang hanya terekam seismograf pos pengamatan.`
+      : 'Angka contoh. Kegempaan vulkanik hanya tersedia dari seismograf pos pengamatan PVMBG.',
   }
 }

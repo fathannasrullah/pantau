@@ -44,6 +44,58 @@ lokal tetap memakai `/`. Semua jalur aset, manifest, dan `navigateFallback`
 service worker ikut base tersebut, jadi app tetap bisa dipasang dan dibuka
 offline dari URL Pages.
 
+## Sumber data
+
+Sebagian layar sudah tersambung ke sumber publik, sebagian belum. Yang belum
+ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
+
+| Bagian | Sumber | Status |
+| --- | --- | --- |
+| Arah abu & kecepatan angin | Open-Meteo | hidup |
+| Tinggi gelombang Selat Sunda | Open-Meteo Marine | hidup |
+| Grafik kegempaan per jam | USGS FDSN, radius 300 km | hidup |
+| Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`) | hidup |
+| **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **belum** |
+| Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG | belum |
+| Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | belum |
+
+Dua hal yang dijaga ketat:
+
+- **Level status tidak pernah diturunkan dari sumber lain.** Hanya PVMBG yang
+  berhak menetapkannya, jadi selama belum tersambung kartu status memuat
+  peringatan eksplisit bahwa levelnya belum resmi.
+- **Gempa USGS bukan kegempaan vulkanik.** Itu gempa tektonik regional; label di
+  layar menyebutkannya, karena letusan/embusan/tremor hanya terekam seismograf
+  pos pengamatan.
+
+### Kenapa lewat CI, bukan fetch dari browser
+
+BMKG dan MAGMA tidak mengirim header CORS, jadi panggilan langsung dari halaman
+statis akan diblokir browser. `scripts/fetch-sources.mjs` berjalan di runner
+GitHub tiap 30 menit, menulis `public/data/live.json`, dan berkas itu ikut
+ter-deploy. App membacanya sebagai berkas statis satu origin.
+
+Efek sampingnya bagus: tiap sumber membawa stempel waktunya sendiri, sumber yang
+gagal tetap ditulis apa adanya (`ok:false`) dan tampil merah di daftar "Sumber
+data", dan umur data itulah yang menyalakan label LIVE / BASI / GAGAL — bukan
+simulasi.
+
+```bash
+npm run fetch:data   # ambil sekali secara lokal (butuh akses internet)
+npm test             # uji parser: satuan, bentuk data rusak, arah angin
+```
+
+Satu sumber gagal tidak menjatuhkan yang lain, dan tidak menjatuhkan build —
+situs yang hilang lebih berbahaya daripada satu kartu yang kosong.
+
+### Menyambungkan MAGMA Indonesia
+
+Ini langkah berikutnya yang paling berdampak, dan butuh kredensial: endpoint
+level status MAGMA tidak terbuka bebas. Perlu izin/kerja sama dengan Badan
+Geologi, lalu tokennya disimpan sebagai repository secret dan dibaca
+`scripts/fetch-sources.mjs` sebagai sumber tambahan. Sampai itu ada, jangan
+mengisi level status dari sumber mana pun.
+
 ## Mode demo
 
 Semua level status dan kondisi data bisa ditampilkan tanpa menunggu kejadian nyata:

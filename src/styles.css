@@ -1613,3 +1613,117 @@ button {
 a.row__tel:hover {
   color: var(--lv);
 }
+
+/* --- Penanda asal data --------------------------------------------------- */
+
+.samptag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 5px;
+  color: #9aa5b3;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.unwired {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.unwired__t {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.unwired__n {
+  color: #a8b3c1;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.coastal__live {
+  margin-top: 5px;
+  color: #c3cbd5;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.srclist {
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.srclist__title {
+  margin: 0 0 10px;
+  color: #aeb8c4;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.srclist__items {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.srcitem {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.srcitem__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.srcitem__dot--bad {
+  background: #f87171;
+}
+
+.srcitem__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.srcitem__label {
+  color: #c3cbd5;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.srcitem__meta {
+  color: #8b96a5;
+  font-size: 10px;
+}
+
+.srclist__empty,
+.srclist__note {
+  margin: 12px 0 0;
+  color: #8b96a5;
+  font-size: 11px;
+  line-height: 1.6;
+}

@@ -1,14 +1,22 @@
 import type { DataStateView } from '../data/dataState'
 import { formatDate, formatDateTime } from '../lib/format'
 import { SEVERITY_COLOR } from '../theme'
-import type { VolcanoLevel } from '../types'
+import type { SnapshotProvenance, VolcanoLevel } from '../types'
 
 interface Props {
   level: VolcanoLevel
   dataState: DataStateView
+  provenance: SnapshotProvenance
+  /** Tinggi gelombang terukur, bila sumber pesisir hidup. */
+  observedWaveHeightM: number | null
 }
 
-export function StatusCard({ level, dataState }: Props) {
+export function StatusCard({
+  level,
+  dataState,
+  provenance,
+  observedWaveHeightM,
+}: Props) {
   const since =
     level.sincePrecision === 'minute'
       ? formatDateTime(level.sinceISO)
@@ -40,6 +48,15 @@ export function StatusCard({ level, dataState }: Props) {
               Pesisir Selat Sunda: {level.coastal.tag}
             </div>
             <div className="coastal__note">{level.coastal.note}</div>
+            {observedWaveHeightM !== null && (
+              <div className="coastal__live">
+                Tinggi gelombang terukur sekarang{' '}
+                {observedWaveHeightM.toLocaleString('id-ID', {
+                  maximumFractionDigits: 1,
+                })}{' '}
+                m · Open-Meteo Marine
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -48,9 +65,20 @@ export function StatusCard({ level, dataState }: Props) {
         <span className="pill mono">Radius bahaya {level.radiusKm} km</span>
         <span className="pill mono">Sejak {since}</span>
       </div>
-      <div className="source">
-        Sumber: Badan Geologi / PVMBG · {dataState.sourceTime}
-      </div>
+      {provenance.level === 'live' ? (
+        <div className="source">
+          Sumber: Badan Geologi / PVMBG · {dataState.sourceTime}
+        </div>
+      ) : (
+        <div className="unwired">
+          <strong className="unwired__t">Level ini belum resmi</strong>
+          <span className="unwired__n">
+            Belum ada sambungan ke MAGMA Indonesia (PVMBG), satu-satunya pihak
+            yang berhak menetapkan level. Angka di kartu ini contoh — periksa
+            magma.esdm.go.id sebelum bertindak.
+          </span>
+        </div>
+      )}
     </section>
   )
 }

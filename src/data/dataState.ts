@@ -1,8 +1,11 @@
 import { formatAge, formatDuration, formatTime, minutesBetween } from '../lib/format'
 import type { DataStateId, FeedStatus } from '../types'
 
-/** Past this age a successful read is still shown, but marked as no longer live. */
-export const STALE_AFTER_MINUTES = 15
+/**
+ * Snapshot resmi diperbarui CI tiap 30 menit, jadi ambangnya diberi kelonggaran
+ * satu siklus. Lebih tua dari ini, angkanya tidak boleh lagi terlihat live.
+ */
+export const STALE_AFTER_MINUTES = 45
 
 export interface DataStateView {
   id: DataStateId

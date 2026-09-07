@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { describeDataState, type DataStateView } from '../data/dataState'
 import { LEVELS } from '../data/levels'
+import { parseLiveBundle } from '../data/live'
 import { getSnapshot, SEISMIC_SEED } from '../data/snapshot'
 import { minutesBetween } from '../lib/format'
 import type {
   DataStateId,
   FeedStatus,
   LevelId,
+  LiveBundle,
   VolcanoLevel,
   VolcanoSnapshot,
 } from '../types'
@@ -14,7 +16,16 @@ import type { DemoState } from './useDemo'
 
 const DEFAULT_LEVEL: LevelId = 'siaga'
 const POLL_MS = 30_000
+/** Snapshot di server hanya berubah setiap kali CI berjalan, jadi tak perlu rapat. */
+const LIVE_POLL_MS = 5 * 60_000
 const SEISMIC_TICK_MS = 5_200
+const LIVE_URL = `${import.meta.env.BASE_URL}data/live.json`
+
+/**
+ * 'absent' = deploy ini memang tidak membawa snapshot (404), jadi app jalan
+ * dengan data contoh dan itu bukan kegagalan jaringan.
+ */
+type LiveFetchState = 'loading' | 'ok' | 'absent' | 'failed'
 
 /** Ages picked so each demo state reads like a plausible real one. */
 const DEMO_CONDITION: Record<
@@ -39,6 +50,8 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
   const [lastSyncISO, setLastSyncISO] = useState(nowISO)
   const [online, setOnline] = useState(() => navigator.onLine)
   const [seismicHourly, setSeismicHourly] = useState(SEISMIC_SEED)
+  const [live, setLive] = useState<LiveBundle | null>(null)
+  const [liveFetch, setLiveFetch] = useState<LiveFetchState>('loading')
 
   useEffect(() => {
     const goOnline = () => setOnline(true)
@@ -51,21 +64,64 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
     }
   }, [])
 
+  /**
+   * Snapshot dibaca dari berkas statis yang sudah diisi CI. Salinan lama tetap
+   * dipertahankan saat pengambilan gagal — layar menandainya lewat status,
+   * bukan dengan mengosongkan angka.
+   */
+  const loadLive = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const res = await fetch(LIVE_URL, { cache: 'no-store', signal })
+      if (res.status === 404) {
+        setLiveFetch('absent')
+        return
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const parsed = parseLiveBundle(await res.json())
+      if (!parsed) throw new Error('bentuk live.json tidak dikenali')
+      setLive(parsed)
+      setLiveFetch('ok')
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      setLiveFetch((prev) => (prev === 'absent' ? prev : 'failed'))
+    }
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    loadLive(controller.signal)
+    const id = setInterval(() => loadLive(), LIVE_POLL_MS)
+    return () => {
+      controller.abort()
+      clearInterval(id)
+    }
+  }, [loadLive])
+
   const sync = useCallback(() => {
     const iso = new Date().toISOString()
     setNowISO(iso)
-    if (navigator.onLine) setLastSyncISO(iso)
-  }, [])
+    if (navigator.onLine) {
+      setLastSyncISO(iso)
+      loadLive()
+    }
+  }, [loadLive])
 
   useEffect(() => {
     const id = setInterval(sync, POLL_MS)
     return () => clearInterval(id)
   }, [sync])
 
-  const liveStatus: FeedStatus = online ? 'ok' : 'offline'
+  const liveStatus: FeedStatus = !online
+    ? 'offline'
+    : liveFetch === 'failed'
+      ? 'failed'
+      : 'ok'
 
-  // The seismograph only advances while readings are actually arriving.
+  // Seismograf contoh hanya bergerak selama belum ada data sungguhan dan
+  // bacaan memang sedang mengalir.
+  const hasLiveSeismic = liveFetch === 'ok' && live !== null
   useEffect(() => {
+    if (hasLiveSeismic) return
     if (demo.dataState ? demo.dataState !== 'fresh' : liveStatus !== 'ok') return
     const id = setInterval(() => {
       setSeismicHourly((bars) =>
@@ -75,7 +131,7 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
       )
     }, SEISMIC_TICK_MS)
     return () => clearInterval(id)
-  }, [demo.dataState, liveStatus])
+  }, [demo.dataState, liveStatus, hasLiveSeismic])
 
   const condition = demo.dataState
     ? DEMO_CONDITION[demo.dataState]
@@ -85,6 +141,9 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
       }
 
   const levelId = demo.level ?? DEFAULT_LEVEL
+  // Mode demo memaksakan kondisi buatan, jadi data sungguhan dilepas dulu agar
+  // keduanya tidak tercampur di layar.
+  const liveForSnapshot = demo.dataState ? null : live
 
   const snapshot = useMemo(
     () =>
@@ -94,8 +153,16 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
         status: condition.status,
         ageMinutes: condition.ageMinutes,
         seismicHourly,
+        live: liveForSnapshot,
       }),
-    [nowISO, levelId, condition.status, condition.ageMinutes, seismicHourly],
+    [
+      nowISO,
+      levelId,
+      condition.status,
+      condition.ageMinutes,
+      seismicHourly,
+      liveForSnapshot,
+    ],
   )
 
   const dataState = useMemo(
