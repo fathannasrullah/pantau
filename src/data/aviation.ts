@@ -56,9 +56,12 @@ const GREY: ColorSet = {
  * gagal dimuat — itu keadaan tersendiri, bukan "tidak ada peringatan".
  */
 export function resolveAviationStatus(
-  advisories: AshAdvisory[] | null,
+  all: AshAdvisory[] | null,
   volcanoName: string,
 ): AviationStatus {
+  // Peringatan yang jendelanya sudah lewat bukan lagi peringatan aktif; ikut
+  // dihitung berarti layar bisa berteriak karena kabar kemarin.
+  const advisories = all === null ? null : all.filter((a) => a.validity !== 'lewat')
   if (advisories === null) {
     return {
       id: 'unknown',

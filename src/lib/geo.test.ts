@@ -8,6 +8,7 @@ import {
   fixQuality,
   isDownwind,
   nearestTo,
+  pointInPolygon,
   zoneVerdict,
 } from './geo.ts'
 
@@ -98,4 +99,38 @@ test('bujur tetap dalam rentang −180..180 saat melewati antimeridian', () => {
   const lewat = destinationPoint(dekatBatas, 90, 200)
   assert.ok(lewat.lon >= -180 && lewat.lon <= 180)
   assert.ok(lewat.lon < 0, 'harus melompat ke bujur negatif, bukan 181')
+})
+
+test('titik di dalam dan di luar poligon dibedakan', () => {
+  // Persegi sederhana; jawabannya harus jelas di kedua sisi batas.
+  const kotak: [number, number][] = [
+    [-6, 105],
+    [-6, 106],
+    [-7, 106],
+    [-7, 105],
+  ]
+  assert.equal(pointInPolygon({ lat: -6.5, lon: 105.5 }, kotak), true)
+  assert.equal(pointInPolygon({ lat: -5.5, lon: 105.5 }, kotak), false)
+  assert.equal(pointInPolygon({ lat: -6.5, lon: 104.5 }, kotak), false)
+  assert.equal(pointInPolygon({ lat: -6.5, lon: 106.5 }, kotak), false)
+})
+
+test('poligon cekung tidak menelan titik di teluknya', () => {
+  // Bentuk L: titik di lekukannya ada di luar, walau berada dalam kotak
+  // pembatasnya. Ini bedanya ray casting dengan sekadar memeriksa bounding box.
+  const bentukL: [number, number][] = [
+    [0, 0],
+    [0, 4],
+    [2, 4],
+    [2, 2],
+    [4, 2],
+    [4, 0],
+  ]
+  assert.equal(pointInPolygon({ lat: 1, lon: 1 }, bentukL), true)
+  assert.equal(pointInPolygon({ lat: 3, lon: 3 }, bentukL), false)
+})
+
+test('bentuk yang bukan poligon selalu menjawab di luar', () => {
+  assert.equal(pointInPolygon({ lat: 0, lon: 0 }, []), false)
+  assert.equal(pointInPolygon({ lat: 0, lon: 0 }, [[0, 0], [1, 1]]), false)
 })

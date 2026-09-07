@@ -2,6 +2,9 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   airSeverity,
+  compassFromCode,
+  readAirports,
+  readWindAloft,
   feetToMetres,
   ashHeadingDeg,
   compassLabel,
@@ -359,4 +362,49 @@ test('episentrum BMKG dibaca hanya bila koordinatnya ikut', () => {
   assert.equal(nearby[0]?.lat, -6.31)
   assert.equal(nearby[1]?.lat, null)
   assert.equal(nearby.filter((r) => r.lat !== null && r.lon !== null).length, 1)
+})
+
+test('kode mata angin penerbangan diterjemahkan, yang asing dibiarkan', () => {
+  assert.equal(compassFromCode('W'), 'Barat')
+  assert.equal(compassFromCode('SE'), 'Tenggara')
+  assert.equal(compassFromCode('wnw'), 'Barat barat laut')
+  assert.equal(compassFromCode(null), null)
+  // Kode yang tidak ada di tabel dikembalikan apa adanya, bukan ditebak.
+  assert.equal(compassFromCode('STNR'), 'STNR')
+})
+
+test('lapisan angin yang tidak utuh dibuang, sisanya diurut dari bawah', () => {
+  const live = bundle({
+    windaloft: source({
+      levels: [
+        { hPa: 250, speedKmh: 27, directionDeg: 75, heightM: 10998 },
+        { hPa: 500, speedKmh: 21, directionDeg: 84 }, // tanpa tinggi
+        { hPa: 850, speedKmh: 11, directionDeg: 71, heightM: 1534 },
+      ],
+    }),
+  })
+  const levels = readWindAloft(live)
+  assert.equal(levels?.length, 2)
+  assert.deepEqual(levels?.map((l) => l.hPa), [850, 250])
+})
+
+test('profil angin kosong dikembalikan null, bukan daftar kosong', () => {
+  assert.equal(readWindAloft(bundle({ windaloft: source({ levels: [] }) })), null)
+  assert.equal(readWindAloft(bundle({})), null)
+})
+
+test('bandara tanpa nama atau koordinat tidak jadi penanda', () => {
+  const live = bundle({
+    airports: source({
+      radiusKm: 400,
+      nearby: [
+        { name: 'Radin Inten II', icao: 'WILL', lat: -5.24, lon: 105.18, distanceKm: 98 },
+        { name: 'Tanpa koordinat', icao: 'XXXX', distanceKm: 120 },
+        { lat: -6.1, lon: 106.6, distanceKm: 137 },
+      ],
+    }),
+  })
+  const list = readAirports(live)
+  assert.equal(list?.length, 1)
+  assert.equal(list?.[0]?.icao, 'WILL')
 })

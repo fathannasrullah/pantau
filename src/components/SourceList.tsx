@@ -41,6 +41,16 @@ const CATALOG: Record<string, CatalogEntry> = {
     rate: 'JAM',
     color: '#4ade80',
   },
+  windaloft: {
+    what: 'Angin per lapisan tekanan, menentukan arah abu di ketinggian terbang',
+    rate: 'JAM',
+    color: '#4ade80',
+  },
+  airports: {
+    what: 'Nama, kode, dan koordinat bandara berjadwal — acuan, bukan status operasional',
+    rate: 'HARIAN',
+    color: '#c084fc',
+  },
   air: {
     what: 'SO2, PM10, dan PM2.5 model CAMS di atas kawah',
     rate: 'JAM',

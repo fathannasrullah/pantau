@@ -348,6 +348,8 @@ export interface LiveAshAdvisory {
   polygon: [number, number][] | null
   /** Nama gunung ini benar-benar disebut di teks resminya. */
   namedHere: boolean
+  /** Nama gunung menurut penerbit advisory (medan qualifier), bila ada. */
+  qualifier: string | null
   text: string
 }
 
@@ -401,6 +403,7 @@ export function readSigmet(bundle: LiveBundle | null): LiveSigmet | null {
       distanceKm: numOrNull(item.distanceKm),
       polygon: readPolygon(item.polygon),
       namedHere: item.namedHere === true,
+      qualifier: strOrNull(item.qualifier),
       text,
     })
   }
@@ -410,6 +413,130 @@ export function readSigmet(bundle: LiveBundle | null): LiveSigmet | null {
     scanned: numOrNull(data.scanned) ?? 0,
     advisories,
   }
+}
+
+export interface WindLevel {
+  hPa: number
+  speedKmh: number
+  /** Arah datangnya angin, apa adanya dari sumber. */
+  directionDeg: number
+  /** Tinggi lapisan menurut medan geopotential_height, bukan tabel perkiraan. */
+  heightM: number
+}
+
+/**
+ * Angin per lapisan tekanan. Satu lapisan yang tidak utuh dibuang; deret yang
+ * kosong seluruhnya dikembalikan null supaya layar bisa membedakan "tidak ada
+ * lapisan" dari "sumbernya gagal".
+ */
+export function readWindAloft(bundle: LiveBundle | null): WindLevel[] | null {
+  const data = payload(bundle, 'windaloft')
+  if (!isRecord(data)) return null
+  const raw = Array.isArray(data.levels) ? data.levels : []
+  const levels: WindLevel[] = []
+  for (const item of raw) {
+    if (!isRecord(item)) continue
+    const hPa = numOrNull(item.hPa)
+    const speedKmh = numOrNull(item.speedKmh)
+    const directionDeg = numOrNull(item.directionDeg)
+    const heightM = numOrNull(item.heightM)
+    if (hPa === null || speedKmh === null) continue
+    if (directionDeg === null || heightM === null) continue
+    levels.push({ hPa, speedKmh, directionDeg, heightM })
+  }
+  if (!levels.length) return null
+  // Selalu dari yang paling rendah ke paling tinggi, apa pun urutan aslinya.
+  levels.sort((a, b) => a.heightM - b.heightM)
+  return levels
+}
+
+export interface LiveAirport {
+  name: string
+  city: string | null
+  icao: string | null
+  iata: string | null
+  lat: number
+  lon: number
+  distanceKm: number
+}
+
+/**
+ * Bandara acuan di sekitar gunung. Baris tanpa nama atau koordinat dibuang —
+ * penanda tanpa identitas tidak berguna dan penanda salah tempat berbahaya.
+ */
+export function readAirports(bundle: LiveBundle | null): LiveAirport[] | null {
+  const data = payload(bundle, 'airports')
+  if (!isRecord(data)) return null
+  const raw = Array.isArray(data.nearby) ? data.nearby : []
+  const list: LiveAirport[] = []
+  for (const item of raw) {
+    if (!isRecord(item)) continue
+    const name = strOrNull(item.name)
+    const lat = numOrNull(item.lat)
+    const lon = numOrNull(item.lon)
+    const distanceKm = numOrNull(item.distanceKm)
+    if (!name || lat === null || lon === null || distanceKm === null) continue
+    list.push({
+      name,
+      city: strOrNull(item.city),
+      icao: strOrNull(item.icao),
+      iata: strOrNull(item.iata),
+      lat,
+      lon,
+      distanceKm,
+    })
+  }
+  return list
+}
+
+export interface SigmetNational {
+  total: number
+  /** Nama gunung menurut penerbit advisory, apa adanya. */
+  volcanoes: string[]
+  firs: string[]
+}
+
+/** Berapa peringatan abu sedang berlaku di seluruh ruang udara Indonesia. */
+export function readSigmetNational(
+  bundle: LiveBundle | null,
+): SigmetNational | null {
+  const data = payload(bundle, 'sigmet')
+  if (!isRecord(data)) return null
+  const n = data.nasional
+  if (!isRecord(n)) return null
+  const total = numOrNull(n.total)
+  if (total === null) return null
+  const strings = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+  return { total, volcanoes: strings(n.gunung), firs: strings(n.fir) }
+}
+
+/**
+ * Kode mata angin penerbangan (N, NE, WSW, ...) ke bahasa Indonesia. Kode yang
+ * tidak dikenali dikembalikan apa adanya, bukan ditebak jadi arah lain.
+ */
+const COMPASS_ID: Record<string, string> = {
+  N: 'Utara',
+  NNE: 'Utara timur laut',
+  NE: 'Timur laut',
+  ENE: 'Timur timur laut',
+  E: 'Timur',
+  ESE: 'Timur tenggara',
+  SE: 'Tenggara',
+  SSE: 'Selatan tenggara',
+  S: 'Selatan',
+  SSW: 'Selatan barat daya',
+  SW: 'Barat daya',
+  WSW: 'Barat barat daya',
+  W: 'Barat',
+  WNW: 'Barat barat laut',
+  NW: 'Barat laut',
+  NNW: 'Utara barat laut',
+}
+
+export function compassFromCode(code: string | null): string | null {
+  if (!code) return null
+  return COMPASS_ID[code.trim().toUpperCase()] ?? code
 }
 
 /** Kaki ke meter, untuk pembaca yang tidak terbiasa satuan penerbangan. */

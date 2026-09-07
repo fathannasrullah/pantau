@@ -9,11 +9,15 @@ const advisory = (namedHere: boolean): AshAdvisory => ({
   validToISO: null,
   topFt: 18000,
   topM: 5486,
+  baseFt: 0,
   moveDir: 'W',
   moveSpeedKt: 20,
   distanceKm: 42,
   polygon: null,
   namedHere,
+  qualifier: namedHere ? 'KRAKATAU' : 'SEMERU',
+  validity: 'berlaku' as const,
+  moveDirLabel: 'Barat',
   text: 'WVID01 WIIF 070640 VA ERUPTION',
 })
 
@@ -66,4 +70,28 @@ test('tidak ada keadaan yang memakai nama warna resmi sebagai kata besarnya', ()
       `kata besar "${status.name}" meniru aviation colour code resmi`,
     )
   }
+})
+
+test('peringatan yang jendelanya sudah lewat tidak menaikkan status', () => {
+  // Kabar kemarin tidak boleh membuat layar berteriak hari ini.
+  const lewat = { ...advisory(true), validity: 'lewat' as const }
+  const status = resolveAviationStatus([lewat], 'Anak Krakatau')
+  assert.equal(status.id, 'clear')
+  assert.equal(status.urgent, false)
+})
+
+test('peringatan yang belum mulai tetap dihitung sebagai kabar aktif', () => {
+  // Berbeda dengan yang sudah lewat: ini pemberitahuan ke depan, bukan arsip.
+  const akan = { ...advisory(true), validity: 'akan' as const }
+  assert.equal(resolveAviationStatus([akan], 'Anak Krakatau').id, 'active')
+})
+
+test('semua peringatan lewat sama artinya dengan tidak ada peringatan', () => {
+  const lewat = [
+    { ...advisory(false), validity: 'lewat' as const },
+    { ...advisory(true), validity: 'lewat' as const },
+  ]
+  assert.equal(resolveAviationStatus(lewat, 'Ibu').id, 'clear')
+  // Tapi sumber yang gagal tetap berbeda dari itu.
+  assert.equal(resolveAviationStatus(null, 'Ibu').id, 'unknown')
 })

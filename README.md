@@ -70,12 +70,14 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Peta dasar | petak raster OpenStreetMap dan OpenTopoMap lewat Leaflet | hidup |
 | Bentuk area peringatan abu | poligon SIGMET apa adanya | hidup |
 | Episentrum di peta | BMKG dan USGS, keduanya dengan koordinat aslinya | hidup |
+| Angin per ketinggian terbang | Open-Meteo, lapisan tekanan 850–200 hPa | hidup |
+| Bandara acuan di sekitar gunung | katalog terbuka OurAirports | hidup |
 | Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) | hidup |
 | **Level status, radius bahaya, aviation colour code** | MAGMA Indonesia / PVMBG (VONA) | **butuh token** |
 | Kegempaan vulkanik | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
 | Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | **belum ada sumber** |
 | Lalu lintas pesawat | OpenSky Network | CORS terkunci ke domainnya sendiri |
-| NOTAM dan status bandara | FAA / ICAO | perlu kredensial, tidak boleh diambil ulang |
+| NOTAM dan status operasional bandara | FAA / ICAO | perlu kredensial, tidak boleh diambil ulang |
 
 Dua hal yang dijaga ketat:
 

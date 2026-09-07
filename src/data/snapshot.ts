@@ -7,13 +7,23 @@ import {
   readBmkg,
   readEruption,
   readPopulation,
+  compassFromCode,
   readSigmet,
+  readSigmetNational,
+  readWindAloft,
+  readAirports,
   feetToMetres,
+  ashHeadingDeg as toAshHeading,
+  compassLabel,
   readQuakesFrom,
   readWaves,
   readWind,
 } from './live'
+import { pointInPolygon } from '../lib/geo'
 import type {
+  AdvisoryValidity,
+  AirportNearby,
+  AshAdvisory,
   Epicentre,
   FeedItem,
   FeedStatus,
@@ -22,6 +32,7 @@ import type {
   Severity,
   VolcanoRef,
   VolcanoSnapshot,
+  WindLayer,
 } from '../types'
 import { EMERGENCY_CONTACTS, EMPTY_REGION, REGION_SAMPLES } from './regions'
 
@@ -157,6 +168,9 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   const sigmet = readSigmet(live)
   const bmkg = readBmkg(live)
   const eruption = readEruption(live)
+  const aloft = readWindAloft(live)
+  const airportList = readAirports(live)
+  const ashNational = readSigmetNational(live)
 
   // Selama ada sumber yang hidup, umur data dihitung dari pengambilan terakhir
   // yang berhasil — bukan dari jam simulasi.
@@ -180,6 +194,84 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
           },
         ],
   )
+
+  const nowMs = new Date(nowISO).getTime()
+  /**
+   * Peringatan yang jendelanya sudah lewat tidak boleh menaikkan status app,
+   * dan tidak boleh digambar sebagai area abu yang sedang berlaku.
+   */
+  const validityOf = (fromISO: string | null, toISO: string | null): AdvisoryValidity => {
+    if (!fromISO || !toISO) return 'tidak diketahui'
+    const from = new Date(fromISO).getTime()
+    const to = new Date(toISO).getTime()
+    if (!Number.isFinite(from) || !Number.isFinite(to)) return 'tidak diketahui'
+    if (nowMs < from) return 'akan'
+    if (nowMs > to) return 'lewat'
+    return 'berlaku'
+  }
+
+  const advisories: AshAdvisory[] | null =
+    sigmet?.advisories.map((a) => ({
+      fir: a.fir,
+      validFromISO: a.validFromISO,
+      validToISO: a.validToISO,
+      topFt: a.topFt,
+      topM: a.topFt === null ? null : feetToMetres(a.topFt),
+      baseFt: a.baseFt,
+      moveDir: a.moveDir,
+      moveSpeedKt: a.moveSpeedKt,
+      distanceKm: a.distanceKm,
+      polygon: a.polygon,
+      namedHere: a.namedHere,
+      qualifier: a.qualifier,
+      validity: validityOf(a.validFromISO, a.validToISO),
+      moveDirLabel: compassFromCode(a.moveDir),
+      text: a.text,
+    })) ?? null
+
+  // Lapisan terdekat dengan puncak awan abu adalah yang paling menentukan ke
+  // mana abu terbawa, jadi ditandai supaya layar bisa menyorotnya.
+  const liveAdvisories = (advisories ?? []).filter((a) => a.validity !== 'lewat')
+  const ashTopM = liveAdvisories
+    .filter((a) => a.namedHere && a.topM !== null)
+    .map((a) => a.topM as number)
+    .sort((x, y) => y - x)[0]
+  const nearestLevelHeight =
+    ashTopM === undefined || !aloft
+      ? null
+      : aloft.reduce((best, l) =>
+          Math.abs(l.heightM - ashTopM) < Math.abs(best.heightM - ashTopM)
+            ? l
+            : best,
+        ).heightM
+
+  const windAloft: WindLayer[] | null =
+    aloft?.map((l) => {
+      const heading = toAshHeading(l.directionDeg)
+      return {
+        hPa: l.hPa,
+        heightM: Math.round(l.heightM),
+        // FL adalah ketinggian dalam ratusan kaki, satuan yang dipakai SIGMET.
+        flightLevel: Math.round((l.heightM / 0.3048) / 100),
+        speedKmh: Math.round(l.speedKmh),
+        ashHeadingDeg: heading,
+        ashHeading: compassLabel(heading),
+        nearAshTop: nearestLevelHeight !== null && l.heightM === nearestLevelHeight,
+      }
+    }) ?? null
+
+  // Satu-satunya klaim di sini adalah geometris: koordinat bandara berada di
+  // dalam poligon peringatan yang berlaku, atau tidak. Bukan status operasional.
+  const ashPolygons = liveAdvisories
+    .map((a) => a.polygon)
+    .filter((p): p is [number, number][] => p !== null)
+  const airports: AirportNearby[] | null =
+    airportList?.map((a) => ({
+      ...a,
+      insideAshArea: ashPolygons.some((poly) =>
+        pointInPolygon({ lat: a.lat, lon: a.lon }, poly),
+      ),
+    })) ?? null
 
   const liveFeed: FeedItem[] = (bmkg?.nearby ?? []).map((report) => ({
     kind: 'GEMPA',
@@ -306,20 +398,10 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
     lastEruptionNote: eruption ? describeEruption(eruption) : null,
     population,
     bmkgEpicentres,
-    ashAdvisories:
-      sigmet?.advisories.map((a) => ({
-        fir: a.fir,
-        validFromISO: a.validFromISO,
-        validToISO: a.validToISO,
-        topFt: a.topFt,
-        topM: a.topFt === null ? null : feetToMetres(a.topFt),
-        moveDir: a.moveDir,
-        moveSpeedKt: a.moveSpeedKt,
-        distanceKm: a.distanceKm,
-        polygon: a.polygon,
-        namedHere: a.namedHere,
-        text: a.text,
-      })) ?? null,
+    windAloft,
+    airports,
+    ashNational,
+    ashAdvisories: advisories,
     air: air
       ? {
           so2: air.so2,

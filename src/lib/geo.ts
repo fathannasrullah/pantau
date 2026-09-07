@@ -125,3 +125,33 @@ export function destinationPoint(
   // Bujur dinormalkan supaya tidak melompat ke sisi lain peta.
   return { lat: toDeg(lat2), lon: ((toDeg(lon2) + 540) % 360) - 180 }
 }
+
+/**
+ * Apakah sebuah titik berada di dalam poligon, dengan algoritma ray casting.
+ *
+ * Dipakai untuk menjawab satu pertanyaan konkret: bandara ini ada di dalam area
+ * peringatan abu yang sedang berlaku atau tidak. Jawabannya murni geometri atas
+ * dua data resmi — koordinat bandara dan poligon SIGMET — bukan penilaian
+ * operasional dari siapa pun.
+ *
+ * Poligon SIGMET selalu jauh lebih kecil daripada setengah bumi dan tidak
+ * melewati antimeridian, jadi perhitungan bidang datar sudah memadai.
+ */
+export function pointInPolygon(
+  point: LatLon,
+  polygon: readonly (readonly [number, number])[],
+): boolean {
+  if (polygon.length < 3) return false
+  let inside = false
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+    const [latI, lonI] = polygon[i]
+    const [latJ, lonJ] = polygon[j]
+    // Sisi yang melintasi garis lintang titik uji, di sebelah kanan titik itu.
+    const crosses = latI > point.lat !== latJ > point.lat
+    if (!crosses) continue
+    const lonAtCrossing =
+      ((lonJ - lonI) * (point.lat - latI)) / (latJ - latI) + lonI
+    if (point.lon < lonAtCrossing) inside = !inside
+  }
+  return inside
+}

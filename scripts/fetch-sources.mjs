@@ -414,11 +414,14 @@ async function sigmet(V) {
     }
 
     const text = str(p.rawSigmet) || ''
-    // Nama gunung di teks SIGMET ditulis tanpa spasi ganda dan huruf besar.
-    const namedHere = new RegExp(
-      V.name.replace(/^(Anak|Ili|Gunung)\s+/i, '').split(' ')[0],
-      'i',
-    ).test(text)
+    // AWC menyediakan medan `qualifier` berisi nama gunung yang dimaksud —
+    // pernyataan terstruktur, lebih kuat daripada mencocokkan teks bebas.
+    // Regex atas rawSigmet tetap dipakai sebagai cadangan bila medan itu kosong.
+    const stem = V.name.replace(/^(Anak|Ili|Gunung)\s+/i, '').split(' ')[0]
+    const qualifier = str(p.qualifier) || ''
+    const namedHere = qualifier
+      ? new RegExp(stem, 'i').test(qualifier)
+      : new RegExp(stem, 'i').test(text)
 
     if (!namedHere && closestKm > SIGMET_RADIUS_KM) continue
 
@@ -436,16 +439,39 @@ async function sigmet(V) {
       // bisa menggambar area sebenarnya, bukan bentuk ilustrasi.
       polygon: points.length >= 3 ? points.map(([lon, lat]) => [lat, lon]) : null,
       namedHere,
+      // Nama gunung menurut penerbit advisory, apa adanya.
+      qualifier: qualifier || null,
       text,
     })
   }
 
   nearby.sort((a, b) => (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9))
 
+  // Konteks nasional: berapa peringatan abu sedang berlaku di seluruh ruang
+  // udara Indonesia, bukan hanya di sekitar gunung yang dipantau. FIR Indonesia
+  // berkode WI (Jakarta) dan WA (Ujung Pandang).
+  const indonesia = features.filter((f) => {
+    const p = f?.properties
+    return p?.hazard === 'VA' && /^W[IA]/.test(str(p.firId) || '')
+  })
+
   return {
     url,
     observedAt: null,
-    data: { radiusKm: SIGMET_RADIUS_KM, scanned: features.length, nearby },
+    data: {
+      radiusKm: SIGMET_RADIUS_KM,
+      scanned: features.length,
+      nearby,
+      nasional: {
+        total: indonesia.length,
+        gunung: [
+          ...new Set(indonesia.map((f) => str(f.properties?.qualifier)).filter(Boolean)),
+        ].sort(),
+        fir: [
+          ...new Set(indonesia.map((f) => str(f.properties?.firName)).filter(Boolean)),
+        ].sort(),
+      },
+    },
   }
 }
 
@@ -567,6 +593,159 @@ async function gvp(V) {
   }
 }
 
+/**
+ * Angin per lapisan tekanan di atas kawah.
+ *
+ * Angin permukaan menentukan ke mana abu tipis jatuh di sekitar gunung; angin
+ * di ketinggian menentukan ke mana kolom abu terbawa — dan itulah yang penting
+ * bagi penerbangan. Tinggi tiap lapisan diambil apa adanya dari medan
+ * geopotential_height, bukan dari tabel perkiraan.
+ */
+const PRESSURE_LEVELS = [850, 700, 500, 400, 300, 250, 200]
+
+async function windAloft(V) {
+  const fields = PRESSURE_LEVELS.flatMap((hPa) => [
+    `wind_speed_${hPa}hPa`,
+    `wind_direction_${hPa}hPa`,
+    `geopotential_height_${hPa}hPa`,
+  ]).join(',')
+  const url =
+    'https://api.open-meteo.com/v1/forecast' +
+    `?latitude=${V.lat}&longitude=${V.lon}` +
+    `&hourly=${fields}` +
+    '&forecast_days=1&wind_speed_unit=kmh&timezone=UTC'
+  const raw = await fetchJson(url, 'windaloft')
+  const h = raw?.hourly
+  const times = Array.isArray(h?.time) ? h.time : []
+  if (!times.length) throw new Error('deret waktu angin atas kosong')
+
+  // Ambil jam terdekat yang sudah lewat, bukan jam pertama hari itu.
+  const nowMs = Date.now()
+  let index = 0
+  for (let i = 0; i < times.length; i += 1) {
+    if (new Date(`${times[i]}Z`).getTime() <= nowMs) index = i
+  }
+
+  const levels = []
+  for (const hPa of PRESSURE_LEVELS) {
+    const speed = num(h[`wind_speed_${hPa}hPa`]?.[index])
+    const direction = num(h[`wind_direction_${hPa}hPa`]?.[index])
+    const height = num(h[`geopotential_height_${hPa}hPa`]?.[index])
+    // Satu lapisan yang tidak lengkap dilewati; jangan ditebak dari tetangganya.
+    if (speed === null || direction === null || height === null) continue
+    levels.push({ hPa, speedKmh: speed, directionDeg: direction, heightM: height })
+  }
+  if (!levels.length) throw new Error('tidak ada lapisan tekanan yang utuh')
+
+  return {
+    url,
+    observedAt: `${times[index]}Z`,
+    data: { levels },
+  }
+}
+
+/**
+ * Bandara berjadwal di sekitar gunung, dari katalog terbuka OurAirports.
+ *
+ * Ini data acuan — nama, kode, dan koordinat — bukan status operasional. Status
+ * buka-tutup adalah kewenangan otoritas bandara dan tidak ada di sini. Gunanya:
+ * app bisa menghitung sendiri bandara mana yang koordinatnya berada di dalam
+ * area peringatan abu yang sedang berlaku.
+ */
+const AIRPORT_RADIUS_KM = 400
+const AIRPORTS_URL =
+  'https://davidmegginson.github.io/ourairports-data/airports.csv'
+
+/** Pembaca CSV seadanya yang menghormati tanda kutip dan koma di dalamnya. */
+function parseCsvLine(line) {
+  const out = []
+  let field = ''
+  let quoted = false
+  for (let i = 0; i < line.length; i += 1) {
+    const c = line[i]
+    if (quoted) {
+      if (c === '"') {
+        if (line[i + 1] === '"') {
+          field += '"'
+          i += 1
+        } else quoted = false
+      } else field += c
+    } else if (c === '"') quoted = true
+    else if (c === ',') {
+      out.push(field)
+      field = ''
+    } else field += c
+  }
+  out.push(field)
+  return out
+}
+
+let airportsCache = null
+
+async function airports(V) {
+  if (!airportsCache) {
+    airportsCache = (async () => {
+      const res = await fetchWithRetry(AIRPORTS_URL, {
+        headers: { accept: 'text/csv' },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
+      const text = await res.text()
+      const lines = text.split(/\r?\n/)
+      const header = parseCsvLine(lines[0] ?? '')
+      const col = (name) => header.indexOf(name)
+      const iCountry = col('iso_country')
+      const iService = col('scheduled_service')
+      const iType = col('type')
+      const iName = col('name')
+      const iLat = col('latitude_deg')
+      const iLon = col('longitude_deg')
+      const iIcao = col('icao_code')
+      const iIata = col('iata_code')
+      const iCity = col('municipality')
+      if (iCountry < 0 || iLat < 0 || iLon < 0) {
+        throw new Error('kolom katalog bandara tidak dikenali')
+      }
+
+      const rows = []
+      for (let i = 1; i < lines.length; i += 1) {
+        const line = lines[i]
+        if (!line || !line.includes('"ID"')) continue
+        const f = parseCsvLine(line)
+        if (f[iCountry] !== 'ID') continue
+        if (f[iService] !== 'yes') continue
+        // Lapangan terbang kecil tanpa penerbangan berjadwal bukan urusan
+        // penumpang; yang ditampilkan hanya bandara yang benar-benar dipakai.
+        if (!['large_airport', 'medium_airport'].includes(f[iType])) continue
+        const lat = Number.parseFloat(f[iLat])
+        const lon = Number.parseFloat(f[iLon])
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue
+        rows.push({
+          name: f[iName] || null,
+          city: f[iCity] || null,
+          icao: f[iIcao] || null,
+          iata: f[iIata] || null,
+          lat,
+          lon,
+        })
+      }
+      return rows
+    })()
+  }
+
+  const all = await airportsCache
+  const nearby = all
+    .map((a) => ({ ...a, distanceKm: Math.round(distanceKm(V.lat, V.lon, a.lat, a.lon)) }))
+    .filter((a) => a.distanceKm <= AIRPORT_RADIUS_KM)
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, 8)
+
+  return {
+    url: AIRPORTS_URL,
+    observedAt: null,
+    data: { radiusKm: AIRPORT_RADIUS_KM, scanned: all.length, nearby },
+  }
+}
+
 const sourcesFor = (V) => [
   { id: 'wind', label: 'Open-Meteo — angin permukaan di atas kawah', run: wind },
   {
@@ -596,6 +775,16 @@ const sourcesFor = (V) => [
     id: 'sigmet',
     label: 'NOAA Aviation Weather Center — SIGMET abu vulkanik',
     run: sigmet,
+  },
+  {
+    id: 'windaloft',
+    label: 'Open-Meteo — angin per lapisan tekanan di atas kawah',
+    run: windAloft,
+  },
+  {
+    id: 'airports',
+    label: `OurAirports — bandara berjadwal dalam ${AIRPORT_RADIUS_KM} km`,
+    run: airports,
   },
   // Gelombang hanya berarti untuk gunung dengan riwayat bahaya pesisir.
   ...(V.strait

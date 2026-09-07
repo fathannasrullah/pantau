@@ -93,14 +93,27 @@ export interface AshAdvisory {
   validToISO: string | null
   topFt: number | null
   topM: number | null
+  /** Dasar lapisan abu dalam kaki; 0 berarti dari permukaan. */
+  baseFt: number | null
   moveDir: string | null
   moveSpeedKt: number | null
   distanceKm: number | null
   /** Bentuk asli area advisory sebagai [lintang, bujur], bila utuh. */
   polygon: [number, number][] | null
   namedHere: boolean
+  /** Nama gunung menurut penerbit advisory (medan qualifier), bila ada. */
+  qualifier: string | null
+  /**
+   * Jendela berlakunya dibanding waktu sekarang. Peringatan yang sudah lewat
+   * tidak boleh terbaca sama dengan yang sedang berlaku.
+   */
+  validity: AdvisoryValidity
+  /** Arah gerak dalam bahasa Indonesia; kode aslinya tetap di teks resmi. */
+  moveDirLabel: string | null
   text: string
 }
+
+export type AdvisoryValidity = 'berlaku' | 'akan' | 'lewat' | 'tidak diketahui'
 
 export interface QuickAction {
   n: string
@@ -262,6 +275,43 @@ export interface VolcanoSnapshot {
   ashAdvisories: AshAdvisory[] | null
   /** Episentrum gempa BMKG di sekitar gunung, untuk digambar di peta. */
   bmkgEpicentres: Epicentre[]
+  /** Angin per lapisan tekanan di atas kawah, bila sumbernya hidup. */
+  windAloft: WindLayer[] | null
+  /** Bandara berjadwal di sekitar gunung dan hubungannya dengan area abu. */
+  airports: AirportNearby[] | null
+  /** Peringatan abu aktif di seluruh ruang udara Indonesia. */
+  ashNational: { total: number; volcanoes: string[]; firs: string[] } | null
+}
+
+/** Satu lapisan angin di ketinggian, sudah diterjemahkan ke arah tujuan abu. */
+export interface WindLayer {
+  hPa: number
+  heightM: number
+  /** Ketinggian penerbangan dalam ratusan kaki, seperti ditulis SIGMET. */
+  flightLevel: number
+  speedKmh: number
+  /** Ke mana abu di lapisan ini terbawa, bukan arah asal angin. */
+  ashHeadingDeg: number
+  ashHeading: string
+  /** Lapisan terdekat dengan puncak awan abu menurut peringatan yang berlaku. */
+  nearAshTop: boolean
+}
+
+/** Bandara acuan; statusnya bukan bagian dari data ini. */
+export interface AirportNearby {
+  name: string
+  city: string | null
+  icao: string | null
+  iata: string | null
+  lat: number
+  lon: number
+  distanceKm: number
+  /**
+   * Koordinatnya berada di dalam salah satu poligon peringatan abu yang
+   * berlaku. Ini hitungan geometris app atas dua data resmi, bukan pernyataan
+   * otoritas bandara tentang operasional.
+   */
+  insideAshArea: boolean
 }
 
 /** Satu episentrum yang punya koordinat, siap digambar. */
