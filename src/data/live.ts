@@ -295,3 +295,36 @@ export function airSeverity(value: number, guideline: number): 'safe' | 'watch' 
   if (value <= guideline * 3) return 'watch'
   return 'alert'
 }
+
+export interface PopulationRing {
+  radiusKm: number
+  people: number
+}
+
+export interface LivePopulation {
+  year: number
+  rings: PopulationRing[]
+}
+
+/**
+ * Perkiraan penduduk per radius. Ditolak bila salah satu cincinnya rusak —
+ * angka setengah lengkap lebih menyesatkan daripada tidak ada angka.
+ */
+export function readPopulation(bundle: LiveBundle | null): LivePopulation | null {
+  const data = payload(bundle, 'population')
+  if (!isRecord(data)) return null
+  const year = numOrNull(data.year)
+  const raw = Array.isArray(data.rings) ? data.rings : []
+  if (year === null || !raw.length) return null
+
+  const rings: PopulationRing[] = []
+  for (const item of raw) {
+    if (!isRecord(item)) return null
+    const radiusKm = numOrNull(item.radiusKm)
+    const people = numOrNull(item.people)
+    if (radiusKm === null || people === null) return null
+    rings.push({ radiusKm, people })
+  }
+  rings.sort((a, b) => a.radiusKm - b.radiusKm)
+  return { year, rings }
+}

@@ -9,6 +9,7 @@ import {
   readAir,
   readBmkg,
   readEruption,
+  readPopulation,
   readQuakes,
   readQuakesFrom,
   readWind,
@@ -199,4 +200,29 @@ test('grafik kegempaan bisa dibaca dari katalog mana pun', () => {
   })
   assert.equal(readQuakesFrom(live, 'emsc')?.total, 24)
   assert.equal(readQuakesFrom(live, 'quakes'), null)
+})
+
+test('perkiraan penduduk ditolak bila salah satu radius rusak', () => {
+  // Angka setengah lengkap lebih menyesatkan daripada tidak ada angka.
+  const rusak = bundle({
+    population: source({
+      year: 2020,
+      rings: [{ radiusKm: 5, people: 120 }, { radiusKm: 10 }],
+    }),
+  })
+  assert.equal(readPopulation(rusak), null)
+
+  const live = bundle({
+    population: source({
+      year: 2020,
+      rings: [
+        { radiusKm: 30, people: 480000 },
+        { radiusKm: 5, people: 120 },
+      ],
+    }),
+  })
+  const pop = readPopulation(live)
+  assert.equal(pop?.year, 2020)
+  // Selalu urut dari radius terkecil, apa pun urutan aslinya.
+  assert.deepEqual(pop?.rings.map((r) => r.radiusKm), [5, 30])
 })

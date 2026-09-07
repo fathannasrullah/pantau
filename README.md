@@ -62,6 +62,7 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 | Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`), disaring 500 km | hidup |
 | Erupsi terakhir tercatat | Smithsonian GVP (katalog, mingguan) | hidup |
 | SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
+| Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) | hidup |
 | **Level status, radius bahaya** | MAGMA Indonesia / PVMBG | **butuh token** |
 | Kegempaan vulkanik, tinggi kolom abu | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
 | Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | **belum ada sumber** |
@@ -144,6 +145,17 @@ situ. Sampai saat itu, jangan mengisi level status dari sumber mana pun.
 
 Tidak ada header CORS di MAGMA, jadi meski token sudah ada, pemanggilannya tetap
 harus lewat CI seperti sumber lain.
+
+### Sumber tingkat nasional yang diuji
+
+| Calon | Hasil |
+| --- | --- |
+| **WorldPop** `services/stats` | `200`, terbuka, ber-CORS. Menghitung penduduk di dalam poligon — dipakai untuk perkiraan jiwa dalam radius 5, 10, dan 30 km |
+| BMKG `api.bmkg.go.id/publik/prakiraan-cuaca` | endpoint ada (`404 Data not found` tanpa parameter), tapi butuh kode wilayah adm yang belum terverifikasi per gunung |
+| BMKG `DigitalForecast-*.xml` | `200` tapi mengembalikan halaman 22 KB yang sama untuk dua provinsi berbeda — bukan XML-nya lagi |
+| BMKG `lasttsunami.json` | `404` |
+| `data.go.id` API CKAN | `404` |
+| BNPB `Bencana_Harian/MapServer` | `499 Token Required` |
 
 ### Dampak wilayah dan titik kumpul: belum ada sumber sah
 

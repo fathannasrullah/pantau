@@ -5,6 +5,7 @@ import {
   readAir,
   readBmkg,
   readEruption,
+  readPopulation,
   readQuakesFrom,
   readWaves,
   readWind,
@@ -148,6 +149,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   const quakes = emsc ?? usgs
   const quakeCatalog = emsc ? 'EMSC' : 'USGS'
   const air = readAir(live)
+  const population = readPopulation(live)
   const bmkg = readBmkg(live)
   const eruption = readEruption(live)
 
@@ -258,6 +260,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       ? 'Gempa tektonik tiap jam, 24 jam terakhir'
       : 'Kegempaan tiap jam, 24 jam terakhir',
     lastEruptionNote: eruption ? describeEruption(eruption) : null,
+    population,
     air: air
       ? {
           so2: air.so2,

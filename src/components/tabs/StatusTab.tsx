@@ -1,6 +1,6 @@
 import type { DataStateView } from '../../data/dataState'
 import { SampleTag } from '../SampleTag'
-import { formatAge, formatDecimal } from '../../lib/format'
+import { formatAge, formatDecimal, formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { GeolocationState } from '../../hooks/useGeolocation'
 import type { VolcanoLevel, VolcanoSnapshot } from '../../types'
@@ -156,11 +156,44 @@ export function StatusTab({
         ))}
       </div>
 
+      <h2 className="section">Orang di sekitar gunung</h2>
+      {snapshot.population ? (
+        <section className="popcard dim">
+          <div className="popcard__rows">
+            {snapshot.population.rings.map((ring) => (
+              <div className="popring" key={ring.radiusKm}>
+                <div className="popring__r mono">{ring.radiusKm} km</div>
+                <div className="popring__n mono">
+                  {formatNumber(ring.people)}
+                </div>
+                <div className="popring__u">jiwa</div>
+              </div>
+            ))}
+          </div>
+          <p className="popcard__note">
+            Perkiraan jumlah penduduk yang tinggal dalam radius tersebut dari
+            kawah. Ini keluaran model sebaran penduduk beresolusi 100 m untuk
+            tahun {snapshot.population.year}, bukan sensus terkini dan bukan
+            hitungan orang yang sedang berada di sana hari ini.
+          </p>
+          <div className="popcard__src">
+            Sumber: WorldPop · dataset wpgppop {snapshot.population.year}
+          </div>
+        </section>
+      ) : (
+        <p className="emptynote">
+          Perkiraan jumlah penduduk di sekitar {snapshot.volcano.name} belum bisa
+          dimuat.
+        </p>
+      )}
+
       <h2 className="section">Dampak yang sudah terasa</h2>
       {snapshot.impacts.length === 0 && (
         <p className="emptynote">
-          Dampak wilayah untuk {snapshot.volcano.name} belum tersedia. Data ini
-          berasal dari BPBD kabupaten dan belum tersambung.
+          Laporan dampak di lapangan — hujan abu per desa, warga yang mengungsi,
+          gangguan air bersih — hanya dimiliki BPBD kabupaten dan belum ada
+          API-nya. Yang bisa ditampilkan di sini baru perkiraan jumlah penduduk
+          di atas dan status transportasi bila nanti tersambung.
         </p>
       )}
       {snapshot.impacts.length > 0 && (

@@ -340,6 +340,53 @@ async function emsc(V) {
   }
 }
 
+/** Lingkaran kasar di sekitar kawah, untuk meminta hitungan penduduk. */
+function circleGeoJson(lat, lon, km, points = 24) {
+  const coords = []
+  for (let i = 0; i <= points; i += 1) {
+    const angle = (i / points) * 2 * Math.PI
+    const dLat = (km / 111.32) * Math.cos(angle)
+    const dLon = ((km / 111.32) * Math.sin(angle)) / Math.cos((lat * Math.PI) / 180)
+    coords.push([lon + dLon, lat + dLat])
+  }
+  return { type: 'Polygon', coordinates: [coords] }
+}
+
+/** Radius yang dihitung: sekitar kawah, jangkauan awan panas, dan sebaran abu. */
+const POP_RINGS_KM = [5, 10, 30]
+const POP_YEAR = 2020
+
+/**
+ * Perkiraan jumlah penduduk di dalam beberapa radius dari kawah, dari WorldPop.
+ *
+ * Ini keluaran model raster 100 m untuk tahun 2020 — bukan sensus terkini dan
+ * bukan hitungan orang yang benar-benar ada di sana hari ini. Tetap berguna
+ * karena menjawab "berapa banyak orang tinggal sedekat itu", pertanyaan yang
+ * selama ini dijawab dengan angka karangan.
+ */
+async function population(V) {
+  const rings = await Promise.all(
+    POP_RINGS_KM.map(async (km) => {
+      const geo = encodeURIComponent(
+        JSON.stringify(circleGeoJson(V.lat, V.lon, km)),
+      )
+      const url =
+        'https://api.worldpop.org/v1/services/stats' +
+        `?dataset=wpgppop&year=${POP_YEAR}&geojson=${geo}&runasync=false`
+      const raw = await fetchJson(url, km === POP_RINGS_KM[0] ? 'population' : null)
+      const total = num(raw?.data?.total_population)
+      if (total === null) throw new Error(`hitungan radius ${km} km kosong`)
+      return { radiusKm: km, people: Math.round(total) }
+    }),
+  )
+
+  return {
+    url: 'https://api.worldpop.org/v1/services/stats',
+    observedAt: null,
+    data: { dataset: 'wpgppop', year: POP_YEAR, rings },
+  }
+}
+
 /**
  * Level status resmi dari MAGMA Indonesia.
  *
@@ -426,6 +473,11 @@ const sourcesFor = (V) => [
     run: magma,
   },
   { id: 'gvp', label: 'Smithsonian GVP — katalog erupsi', run: gvp },
+  {
+    id: 'population',
+    label: `WorldPop ${POP_YEAR} — perkiraan penduduk per radius`,
+    run: population,
+  },
   {
     id: 'air',
     label: 'Copernicus CAMS via Open-Meteo — SO2 dan partikel (model)',

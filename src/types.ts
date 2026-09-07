@@ -228,4 +228,6 @@ export interface VolcanoSnapshot {
   lastEruptionNote: string | null
   /** Kualitas udara model CAMS di atas kawah, bila sumbernya hidup. */
   air: AirQuality | null
+  /** Perkiraan penduduk per radius dari kawah, bila sumbernya hidup. */
+  population: { year: number; rings: { radiusKm: number; people: number }[] } | null
 }
