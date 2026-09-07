@@ -115,14 +115,55 @@ async function worldpopFlow() {
   return `taskid=${taskid} belum selesai setelah 16 detik`
 }
 
+/** Ringkasan isi feed USGS: ukuran, jumlah kejadian, dan medan yang belum dipakai. */
+const summariseUsgsFeed = (body) => {
+  try {
+    const d = JSON.parse(body)
+    const f = d.features ?? []
+    const withAlert = f.filter((x) => x.properties?.alert).length
+    const withTsunami = f.filter((x) => x.properties?.tsunami).length
+    const felt = f.filter((x) => x.properties?.felt).length
+    const idn = f.filter((x) => /Indonesia|Java|Sumatra|Sunda|Halmahera|Flores/i.test(x.properties?.place || ''))
+    const sample = idn[0] ?? f[0]
+    return [
+      `judul=${d.metadata?.title}`,
+      `kejadian=${f.length} | ber-alert=${withAlert} | tsunami=${withTsunami} | dirasakan=${felt}`,
+      `dekat Indonesia=${idn.length}`,
+      sample
+        ? `contoh: mag=${sample.properties?.mag} place=${sample.properties?.place} alert=${sample.properties?.alert} tsunami=${sample.properties?.tsunami} felt=${sample.properties?.felt} cdi=${sample.properties?.cdi} mmi=${sample.properties?.mmi} sig=${sample.properties?.sig} url=${sample.properties?.url}`
+        : 'tanpa kejadian',
+    ].join('\n  ')
+  } catch (err) {
+    return `gagal baca: ${err.message}`
+  }
+}
+
+/**
+ * Putaran kedelapan: summary feed USGS. Berbeda dari fdsnws/event/1/query yang
+ * sudah dipakai — feed ini berkas statis yang sudah jadi, jadi perlu diperiksa
+ * apakah lebih cepat, ber-CORS (bisa dipanggil langsung dari browser), dan
+ * membawa medan yang selama ini tidak kita pakai.
+ */
 const TARGETS = [
-  ['worldpop-stats', worldpopFlow],
-  // Endpoint cuaca BMKG yang baru: tanpa parameter, pesan errornya menunjukkan
-  // parameter apa yang sebenarnya diminta.
-  ['bmkg-prakiraan', 'https://api.bmkg.go.id/publik/prakiraan-cuaca'],
   [
-    'bmkg-prakiraan-adm',
-    'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm2=35.08',
+    'usgs-4.5-day',
+    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson',
+    summariseUsgsFeed,
+  ],
+  [
+    'usgs-2.5-day',
+    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson',
+    summariseUsgsFeed,
+  ],
+  [
+    'usgs-significant-week',
+    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson',
+    summariseUsgsFeed,
+  ],
+  [
+    'usgs-all-day',
+    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',
+    summariseUsgsFeed,
   ],
 ]
 
