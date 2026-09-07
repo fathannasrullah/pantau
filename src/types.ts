@@ -194,7 +194,7 @@ export interface NotificationRule {
   id: NotificationRuleId
   label: string
   note: string
-  /** Evacuation orders can never be muted. */
+  /** Aturan yang belum punya sumber: saklarnya mati dan tidak bisa dinyalakan. */
   locked: boolean
 }
 

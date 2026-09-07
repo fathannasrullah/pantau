@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AlertStrip } from './components/AlertStrip'
+import { AppFooter } from './components/AppFooter'
 import { AppHeader } from './components/AppHeader'
 import { BottomNav, type TabId } from './components/BottomNav'
 import { DataStateBanner } from './components/DataStateBanner'
@@ -13,14 +14,28 @@ import { GuideTab } from './components/tabs/GuideTab'
 import { MapTab } from './components/tabs/MapTab'
 import { StatusTab } from './components/tabs/StatusTab'
 import { resolveAviationStatus } from './data/aviation'
-import { DEFAULT_RULE_STATE } from './data/notificationRules'
+import { useAlertWatcher } from './hooks/useAlertWatcher'
 import { useDemo } from './hooks/useDemo'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useLiveQuakes } from './hooks/useLiveQuakes'
 import { useVolcanoSelection } from './hooks/useVolcanoSelection'
+import { useNotifications } from './hooks/useNotifications'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM } from './theme'
-import type { MapLayer, NotificationRuleId } from './types'
+import type { MapLayer } from './types'
+
+/** Ringkasan satu baris di layar Status, apa adanya sesuai keadaan izin. */
+function notifSummary(n: ReturnType<typeof useNotifications>): string {
+  if (n.permission === 'unsupported') return 'Tidak didukung peramban ini'
+  if (n.permission === 'denied') return 'Diblokir di setelan peramban'
+  if (n.permission !== 'granted') return 'Belum diizinkan — ketuk untuk mengatur'
+  const on = [
+    n.rules.level ? 'peringatan abu' : null,
+    n.rules.ash ? 'kualitas udara' : null,
+    n.rules.quake ? 'gempa baru' : null,
+  ].filter(Boolean)
+  return on.length ? `Aktif: ${on.join(', ')}` : 'Aktif, tapi semua aturan dimatikan'
+}
 
 export default function App() {
   const { demo, updateDemo } = useDemo()
@@ -36,7 +51,7 @@ export default function App() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [volcanoOpen, setVolcanoOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
-  const [rules, setRules] = useState(DEFAULT_RULE_STATE)
+  const notifications = useNotifications()
 
   /**
    * Aksen seluruh layar mengikuti keadaan peringatan abu — satu-satunya
@@ -47,6 +62,15 @@ export default function App() {
     () => resolveAviationStatus(snapshot.ashAdvisories, volcano.name),
     [snapshot.ashAdvisories, volcano.name],
   )
+
+  // Mode demo memaksakan keadaan buatan; itu tidak boleh dikabarkan sebagai
+  // kejadian sungguhan ke perangkat pengguna.
+  useAlertWatcher({
+    snapshot,
+    aviation,
+    notifications,
+    paused: demo.dataState !== null || demo.level !== null,
+  })
 
   const dataColors = DATA_STATE_COLORS[dataState.id]
 
@@ -64,9 +88,6 @@ export default function App() {
     setTab(next)
     window.scrollTo({ top: 0 })
   }
-
-  const toggleRule = (id: NotificationRuleId) =>
-    setRules((prev) => ({ ...prev, [id]: !prev[id] }))
 
   return (
     <div className="page">
@@ -90,11 +111,7 @@ export default function App() {
               geo={geo}
               liveQuakes={liveQuakes}
               selectedHour={selectedHour}
-              notifSummary={
-                rules.level
-                  ? 'Aktif: peringatan abu dan perintah evakuasi'
-                  : 'Hanya perintah evakuasi'
-              }
+              notifSummary={notifSummary(notifications)}
               onSelectHour={setSelectedHour}
               onGoGuide={() => changeTab('panduan')}
               onGoMap={() => changeTab('peta')}
@@ -135,6 +152,8 @@ export default function App() {
           {tab === 'panduan' && (
             <GuideTab snapshot={snapshot} aviation={aviation} />
           )}
+
+          <AppFooter />
         </main>
 
         <BottomNav tab={tab} onChange={changeTab} />
@@ -154,8 +173,7 @@ export default function App() {
 
         {notifOpen && (
           <NotificationSheet
-            rules={rules}
-            onToggle={toggleRule}
+            notifications={notifications}
             onClose={() => setNotifOpen(false)}
           />
         )}

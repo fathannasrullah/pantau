@@ -7,9 +7,11 @@ import type { NotificationRule, NotificationRuleId } from '../types'
  */
 export const NOTIFICATION_RULES: NotificationRule[] = [
   {
+    // Tidak ada sumber perintah evakuasi yang bisa dibaca app ini, jadi
+    // saklarnya tidak boleh terlihat menyala seolah kabarnya akan datang.
     id: 'evac',
-    label: 'Perintah evakuasi',
-    note: 'Selalu aktif. Dikirim juga lewat SMS.',
+    label: 'Perintah evakuasi BPBD',
+    note: 'Belum tersambung — perintah evakuasi datang lewat sirene, petugas, dan pengumuman resmi, bukan dari app ini.',
     locked: true,
   },
   {
@@ -33,7 +35,7 @@ export const NOTIFICATION_RULES: NotificationRule[] = [
 ]
 
 export const DEFAULT_RULE_STATE: Record<NotificationRuleId, boolean> = {
-  evac: true,
+  evac: false,
   level: true,
   ash: true,
   quake: false,

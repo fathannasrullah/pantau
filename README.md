@@ -338,6 +338,34 @@ Setiap angka membawa stempel waktu dan sumber. Saat data basi, gagal dimuat, ata
 perangkat offline, bagian yang lama diredupkan dan diberi banner — angka lama tidak
 pernah ditampilkan seolah baru.
 
+## Notifikasi
+
+Notifikasi memakai Notification API peramban lewat service worker — tanpa server
+push. Batas itu ditulis apa adanya di layar: pemberitahuan hanya terbit selama
+halaman berjalan (terbuka di tab, atau app terpasang dan masih hidup di latar),
+dan app tidak bisa membangunkan perangkat yang sedang mati.
+
+Yang memicu pemberitahuan adalah **perpindahan keadaan**, bukan keadaan itu
+sendiri, dan keputusannya ada di `src/data/alerts.ts` supaya bisa diuji tanpa
+peramban:
+
+| Aturan | Terbit saat |
+| --- | --- |
+| Peringatan abu penerbangan | keadaan SIGMET berpindah, misal tidak ada → aktif |
+| Kualitas udara | kategori AQI **memburuk** (yang membaik tidak mengganggu) |
+| Gempa baru | ada gempa BMKG yang lebih baru daripada yang terakhir dikabarkan |
+
+Tiga hal yang dijaga: kunjungan pertama tidak menerbitkan apa pun (tanpa
+pembanding semua terlihat seperti perubahan), keadaan yang sama tidak
+diberitahukan dua kali, dan "sumber gagal dibaca" bukan kabar. Ingatannya
+disimpan per gunung di `localStorage`, jadi berpindah gunung tidak memicu banjir
+kabar. Mode demo tidak pernah mengirim apa pun.
+
+Aturan `evac` sengaja terkunci mati: app ini tidak menerima perintah evakuasi
+dari BPBD, dan saklarnya tidak boleh terlihat menyala seolah kabarnya akan
+datang. Versi awal bahkan menjanjikan pengiriman lewat SMS — janji yang tidak
+punya saluran apa pun di belakangnya, dan sudah dihapus.
+
 ## Sumber yang belum tersambung
 
 Apa yang sudah hidup ada di bagian [Sumber data](#sumber-data). Sisanya:
