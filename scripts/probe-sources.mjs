@@ -144,26 +144,110 @@ const summariseUsgsFeed = (body) => {
  * apakah lebih cepat, ber-CORS (bisa dipanggil langsung dari browser), dan
  * membawa medan yang selama ini tidak kita pakai.
  */
+/**
+ * Apakah daftar gunung USGS benar-benar memuat status, atau hanya direktori?
+ * Sekalian memeriksa nomor gunung Lewotobi, yang jadi titik sengketa.
+ */
+const summariseUsgsVolcanoes = (body) => {
+  try {
+    const d = JSON.parse(body)
+    const list = Array.isArray(d) ? d : (d.items ?? d.data ?? d.volcanoes ?? [])
+    if (!Array.isArray(list) || !list.length) {
+      return `bukan daftar: ${body.slice(0, 300)}`
+    }
+    const keys = Object.keys(list[0])
+    const statusKeys = keys.filter((k) =>
+      /alert|status|level|color|code|activity/i.test(k),
+    )
+    const idn = list.filter((v) =>
+      /indonesia/i.test(JSON.stringify(v.country ?? v.region ?? '')),
+    )
+    const lewotobi = list.find((v) => /lewotobi/i.test(JSON.stringify(v)))
+    return [
+      `jumlah=${list.length} | gunung Indonesia=${idn.length}`,
+      `medan=${keys.join(', ')}`,
+      `medan status/alert=${statusKeys.length ? statusKeys.join(', ') : 'TIDAK ADA'}`,
+      `Lewotobi=${lewotobi ? JSON.stringify(lewotobi).slice(0, 220) : 'tidak ditemukan'}`,
+    ].join('\n  ')
+  } catch (err) {
+    return `gagal baca: ${err.message} | awal=${body.slice(0, 200)}`
+  }
+}
+
+/** Isi SIGMET internasional: adakah bahaya ASH, dan bagaimana bentuk medannya? */
+const summariseSigmet = (body) => {
+  try {
+    const d = JSON.parse(body)
+    const f = Array.isArray(d.features) ? d.features : Array.isArray(d) ? d : []
+    const hazards = {}
+    for (const x of f) {
+      const h = x.properties?.hazard ?? x.hazard ?? '?'
+      hazards[h] = (hazards[h] ?? 0) + 1
+    }
+    const ash = f.find((x) => /ash|va/i.test(x.properties?.hazard ?? x.hazard ?? ''))
+    const sample = ash ?? f[0]
+    return [
+      `fitur=${f.length} | bahaya=${JSON.stringify(hazards)}`,
+      sample
+        ? `medan=${Object.keys(sample.properties ?? sample).join(', ')}`
+        : 'tanpa fitur',
+      sample
+        ? `contoh=${JSON.stringify(sample.properties ?? sample).slice(0, 320)}`
+        : '',
+      sample?.geometry
+        ? `geometry=${JSON.stringify(sample.geometry).slice(0, 200)}`
+        : 'tanpa geometry',
+    ].join('\n  ')
+  } catch (err) {
+    return `gagal baca: ${err.message} | awal=${body.slice(0, 250)}`
+  }
+}
+
+/** Kode negara Indonesia di OpenAQ — klaim countries_id=1 perlu dibuktikan. */
+const findIndonesia = (body) => {
+  try {
+    const d = JSON.parse(body)
+    const rows = d.results ?? []
+    const idn = rows.filter((r) => /indonesia/i.test(r.name ?? ''))
+    return `hasil=${rows.length} | Indonesia=${JSON.stringify(idn).slice(0, 200) || 'tidak ada di halaman ini'}`
+  } catch (err) {
+    return `gagal baca: ${err.message} | awal=${body.slice(0, 250)}`
+  }
+}
+
+/**
+ * Putaran kesembilan: menguji tiga klaim yang dikirim pengguna dari asisten lain
+ * — daftar gunung USGS, SIGMET abu penerbangan, dan akses anonim OpenSky.
+ */
 const TARGETS = [
   [
-    'usgs-4.5-day',
-    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson',
-    summariseUsgsFeed,
+    'usgs-volcanoes-gvp',
+    'https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP',
+    summariseUsgsVolcanoes,
   ],
   [
-    'usgs-2.5-day',
-    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson',
-    summariseUsgsFeed,
+    'usgs-elevated',
+    'https://volcanoes.usgs.gov/vsc/api/volcanoApi/elevatedVolcanoes',
+    summariseUsgsVolcanoes,
   ],
   [
-    'usgs-significant-week',
-    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson',
-    summariseUsgsFeed,
+    'awc-isigmet',
+    'https://aviationweather.gov/api/data/isigmet?format=geojson',
+    summariseSigmet,
   ],
   [
-    'usgs-all-day',
-    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',
-    summariseUsgsFeed,
+    'awc-isigmet-json',
+    'https://aviationweather.gov/api/data/isigmet?format=json',
+    summariseSigmet,
+  ],
+  [
+    'opensky-anon',
+    'https://opensky-network.org/api/states/all?lamin=-11.0&lomin=95.0&lamax=6.0&lomax=141.0',
+  ],
+  [
+    'openaq-countries',
+    'https://api.openaq.org/v3/countries?limit=200',
+    findIndonesia,
   ],
 ]
 
