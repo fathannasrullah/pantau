@@ -67,9 +67,32 @@ function distanceKm(lat1, lon1, lat2, lon2) {
 /** Cuplikan respons mentah terakhir per sumber, untuk laporan diagnostik. */
 const rawSamples = new Map()
 
+/**
+ * Kegagalan di tingkat koneksi ("fetch failed", timeout) sering hanya sesaat,
+ * apalagi saat banyak permintaan berangkat berbarengan. Dicoba ulang beberapa
+ * kali sebelum sumbernya dinyatakan gagal — berbeda dengan jawaban HTTP 4xx,
+ * yang memang keputusan server dan tidak akan berubah bila diulang.
+ */
+async function fetchWithRetry(url, options, attempts = 3) {
+  let lastError
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      return await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      })
+    } catch (err) {
+      lastError = err
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, 600 * (i + 1)))
+      }
+    }
+  }
+  throw lastError
+}
+
 async function fetchJson(url, sampleKey, extraHeaders) {
-  const res = await fetch(url, {
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+  const res = await fetchWithRetry(url, {
     headers: { accept: 'application/json', ...extraHeaders },
   })
   const text = await res.text()
@@ -365,20 +388,19 @@ const POP_YEAR = 2020
  * selama ini dijawab dengan angka karangan.
  */
 async function population(V) {
-  const rings = await Promise.all(
-    POP_RINGS_KM.map(async (km) => {
-      const geo = encodeURIComponent(
-        JSON.stringify(circleGeoJson(V.lat, V.lon, km)),
-      )
-      const url =
-        'https://api.worldpop.org/v1/services/stats' +
-        `?dataset=wpgppop&year=${POP_YEAR}&geojson=${geo}&runasync=false`
-      const raw = await fetchJson(url, km === POP_RINGS_KM[0] ? 'population' : null)
-      const total = num(raw?.data?.total_population)
-      if (total === null) throw new Error(`hitungan radius ${km} km kosong`)
-      return { radiusKm: km, people: Math.round(total) }
-    }),
-  )
+  const rings = []
+  for (const km of POP_RINGS_KM) {
+    const geo = encodeURIComponent(
+      JSON.stringify(circleGeoJson(V.lat, V.lon, km)),
+    )
+    const url =
+      'https://api.worldpop.org/v1/services/stats' +
+      `?dataset=wpgppop&year=${POP_YEAR}&geojson=${geo}&runasync=false`
+    const raw = await fetchJson(url, km === POP_RINGS_KM[0] ? 'population' : null)
+    const total = num(raw?.data?.total_population)
+    if (total === null) throw new Error(`hitungan radius ${km} km kosong`)
+    rings.push({ radiusKm: km, people: Math.round(total) })
+  }
 
   return {
     url: 'https://api.worldpop.org/v1/services/stats',
