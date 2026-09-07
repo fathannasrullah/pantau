@@ -1,7 +1,11 @@
-# Pantau Gunung Berapi — Anak Krakatau
+# Pantau Gunung Berapi
 
 Aplikasi web mobile-first untuk memantau status gunung berapi, dampak erupsi, dan
 panduan tindakan. Dibangun dari prototipe desain di `project/Pantau Gunung v3.dc.html`.
+
+Tujuh gunung bisa dipilih lewat judul di header: **Anak Krakatau, Semeru, Ili
+Lewotolok, Lewotobi Laki-laki, Ibu, Dukono, dan Sinabung.** Pilihan tertulis ke
+URL (`?gunung=semeru`) supaya bisa dibagikan, dan diingat di perangkat.
 
 Bisa dipasang lewat browser (PWA): ada manifest, ikon, dan service worker, sehingga
 layar terakhir tetap terbuka saat sinyal hilang.
@@ -64,6 +68,10 @@ ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
 
 Dua hal yang dijaga ketat:
 
+- **Isi khas wilayah tidak bocor antar gunung.** Dampak, desa terdekat, titik
+  kumpul, dan transportasi hanya ada untuk Anak Krakatau. Gunung lain
+  menampilkan keadaan kosong yang menyebutkan sebabnya — menampilkan posko
+  Kalianda saat memantau Semeru bisa mengarahkan orang ke tempat yang salah.
 - **Level status tidak pernah diturunkan dari sumber lain.** Hanya PVMBG yang
   berhak menetapkannya, jadi selama belum tersambung kartu status memuat
   peringatan eksplisit bahwa levelnya belum resmi.
@@ -90,6 +98,10 @@ Efek sampingnya bagus: tiap sumber membawa stempel waktunya sendiri, sumber yang
 gagal tetap ditulis apa adanya (`ok:false`) dan tampil merah di daftar "Sumber
 data", dan umur data itulah yang menyalakan label LIVE / BASI / GAGAL — bukan
 simulasi.
+
+Sumber diambil per gunung dan ditulis ke `public/data/live-<id>.json`, jadi app
+hanya mengunduh gunung yang sedang dipantau. BMKG diambil sekali lalu disaring
+per gunung.
 
 ```bash
 npm run fetch:data   # ambil sekali secara lokal (butuh akses internet)
@@ -161,6 +173,8 @@ Pilihan di panel ikut tertulis ke URL, jadi satu tautan bisa dibagikan untuk dem
 ```
 src/
   data/          sumber data — satu-satunya tempat yang perlu diganti saat menyambung API
+    volcanoes.ts         registri tujuh gunung; koordinat dari katalog Smithsonian
+    regions.ts           isi khas wilayah per gunung — sengaja tidak boleh bocor antar gunung
     levels.ts            teks per level status (I–IV), radius, sejak kapan
     snapshot.ts          getSnapshot(): seluruh isi layar dalam satu objek bertipe
     dataState.ts         segar / basi / gagal / offline + salinan teks bannernya
@@ -168,6 +182,7 @@ src/
   hooks/
     useVolcanoFeed.ts    polling, umur data, deteksi offline, seismograf berjalan
     useGeolocation.ts    izin lokasi, watchPosition, dan tiap keadaan gagalnya
+    useVolcanoSelection.ts  gunung terpilih, tertulis ke URL dan diingat perangkat
     useDemo.ts           override level/kondisi data lewat query string
   components/    tampilan; tidak ada angka yang ditulis langsung di sini
   theme.ts       warna per level status dan per kondisi data

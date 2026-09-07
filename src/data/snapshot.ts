@@ -15,17 +15,10 @@ import type {
   LevelId,
   LiveBundle,
   Severity,
+  VolcanoRef,
   VolcanoSnapshot,
 } from '../types'
-
-export const VOLCANO = {
-  name: 'Anak Krakatau',
-  location: 'Selat Sunda · Lampung Selatan',
-  elevationM: 2667,
-  lat: -6.102,
-  lon: 105.423,
-  observatory: 'Pos Pengamatan Anak Krakatau, Pasauran',
-}
+import { REGION_SAMPLES, EMPTY_REGION } from './regions'
 
 /** Minutes before the snapshot timestamp that each official report was issued. */
 const FEED_OFFSETS_MIN = [22, 55, 157, 192]
@@ -72,6 +65,7 @@ function shiftISO(baseISO: string, minutes: number): string {
 }
 
 export interface SnapshotRequest {
+  volcano: VolcanoRef
   nowISO: string
   levelId: LevelId
   status: FeedStatus
@@ -141,7 +135,11 @@ function quakeSeverity(potential: string | null): Severity {
  * keduanya, bukan mencampurnya diam-diam.
  */
 export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
-  const { nowISO, levelId, status, ageMinutes } = req
+  const { volcano, nowISO, levelId, status, ageMinutes } = req
+  // Dampak wilayah, titik kumpul, dan transportasi selalu khas satu gunung.
+  // Menampilkan posko Kalianda saat memantau Semeru bukan sekadar salah, itu
+  // menyesatkan orang yang sedang mencari tempat mengungsi.
+  const region = REGION_SAMPLES[volcano.id] ?? EMPTY_REGION
   const live = req.live ?? null
   const level = LEVELS[levelId]
 
@@ -178,7 +176,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   }))
 
   return {
-    volcano: VOLCANO,
+    volcano,
     levelId,
     status,
     updatedAtISO,
@@ -229,92 +227,36 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       },
     ],
 
-    impacts: [
-      {
-        area: 'Kalianda & Rajabasa',
-        note: 'Hujan abu tipis, jarak pandang 4 km. Masker dibagikan di 6 titik.',
-        tag: 'ABU',
-        severity: 'alert',
-      },
-      {
-        area: 'Pulau Sebesi',
-        note: '42 warga dievakuasi sementara ke Kalianda pada 5 Sep.',
-        tag: 'EVAKUASI',
-        severity: 'danger',
-      },
-      {
-        area: 'Air bersih',
-        note: 'Tandon terbuka berpotensi tercampur abu. Rebus air sebelum diminum.',
-        tag: 'SANITASI',
-        severity: 'neutral',
-      },
-    ],
+    impacts: region.impacts,
 
-    transport: [
-      {
-        name: 'Bandara Radin Inten II',
-        note: 'Rute penerbangan dialihkan menjauhi kolom abu',
-        state: 'NORMAL',
-        severity: 'safe',
-      },
-      {
-        name: 'Pelabuhan Bakauheni',
-        note: 'Penyeberangan lanjut dengan pemantauan gelombang',
-        state: 'TERBATAS',
-        severity: 'watch',
-      },
-      {
-        name: 'Wisata Anak Krakatau',
-        note: 'Semua trip dibatalkan sejak 3 Sep',
-        state: 'TUTUP',
-        severity: 'danger',
-      },
-    ],
+    transport: region.transport,
 
     mapLayers: [
       {
         id: 'radius',
         label: 'Radius bahaya',
-        note: `Zona terlarang ${level.radiusKm} km dari kawah. Pos pengamatan berada di Pasauran, 42 km ke timur.`,
+        note: `Zona terlarang ${level.radiusKm} km dari kawah. ${region.mapNotes.radius}`,
       },
       {
         id: 'abu',
         label: 'Sebaran abu',
-        note: 'Abu terbawa angin ke barat laut, 11 km/jam. Perkiraan jangkauan abu tipis 38 km.',
+        note: wind
+          ? `Abu terbawa angin ke ${wind.ashHeading.toLowerCase()}, ${wind.speedKmh} km/jam. ${region.mapNotes.abu}`
+          : region.mapNotes.abu,
       },
-      {
-        id: 'pesisir',
-        label: 'Pesisir',
-        note: 'Enam desa pesisir Selat Sunda masuk zona pemantauan gelombang. Sirene pantai diuji tiap Jumat 10.00.',
-      },
+      // Lapisan pesisir hanya berarti untuk gunung dengan riwayat bahaya laut.
+      ...(volcano.coastalHazard && region.mapNotes.pesisir
+        ? [
+            {
+              id: 'pesisir' as const,
+              label: 'Pesisir',
+              note: region.mapNotes.pesisir,
+            },
+          ]
+        : []),
     ],
 
-    villages: [
-      {
-        distanceKm: 12,
-        name: 'Pulau Sebesi',
-        note: 'Terdekat berpenghuni · 42 jiwa dievakuasi',
-        severity: 'danger',
-      },
-      {
-        distanceKm: 38,
-        name: 'Rajabasa, Lampung Selatan',
-        note: 'Hujan abu tipis · 4 posko',
-        severity: 'alert',
-      },
-      {
-        distanceKm: 42,
-        name: 'Pasauran, Serang',
-        note: 'Pos pengamatan · sirene aktif',
-        severity: 'watch',
-      },
-      {
-        distanceKm: 51,
-        name: 'Anyer, Serang',
-        note: 'Zona pemantauan gelombang',
-        severity: 'neutral',
-      },
-    ],
+    villages: region.villages,
 
     seismicHourly: quakes?.hourly ?? req.seismicHourly ?? SEISMIC_SEED,
 
@@ -372,29 +314,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       },
     ],
 
-    shelters: [
-      {
-        name: 'Lapangan Kalianda',
-        note: 'Kapasitas 1.200 jiwa · dapur umum',
-        tel: '0727 322xxx',
-        lat: -5.7486,
-        lon: 105.5905,
-      },
-      {
-        name: 'SDN 2 Rajabasa',
-        note: 'Kapasitas 400 jiwa · posko kesehatan',
-        tel: '0727 331xxx',
-        lat: -5.7975,
-        lon: 105.6289,
-      },
-      {
-        name: 'BPBD Lampung Selatan',
-        note: 'Siaga 24 jam',
-        tel: '112',
-        lat: -5.753,
-        lon: 105.579,
-      },
-    ],
+    shelters: region.shelters,
 
     ashfallSteps: ASHFALL_STEPS,
 

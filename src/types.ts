@@ -25,13 +25,21 @@ export interface VolcanoLevel {
   sincePrecision: 'day' | 'minute'
 }
 
-export interface Volcano {
+/** Satu gunung dalam registri, koordinatnya dari katalog Smithsonian. */
+export interface VolcanoRef {
+  id: string
   name: string
-  location: string
-  elevationM: number
+  region: string
   lat: number
   lon: number
-  observatory: string
+  elevationM: number
+  gvpNumber: number
+  /** Nama pos pengamatan bila diketahui; jangan dikarang untuk yang belum. */
+  observatory: string | null
+  /** Hanya gunung dengan riwayat bahaya pesisir yang menampilkan gelombang. */
+  coastalHazard: boolean
+  /** Titik perairan untuk pengambilan tinggi gelombang. */
+  strait: { lat: number; lon: number } | null
 }
 
 /** Outcome of the last attempt to reach the upstream sources. */
@@ -182,7 +190,7 @@ export interface SnapshotProvenance {
 
 /** One snapshot of everything the screens render, as returned by the data source. */
 export interface VolcanoSnapshot {
-  volcano: Volcano
+  volcano: VolcanoRef
   levelId: LevelId
   status: FeedStatus
   /** When the upstream data was produced. */

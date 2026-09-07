@@ -6,6 +6,7 @@ import { DataStateBanner } from './components/DataStateBanner'
 import { DemoPanel } from './components/DemoPanel'
 import { SourceList } from './components/SourceList'
 import { NotificationSheet } from './components/sheets/NotificationSheet'
+import { VolcanoSheet } from './components/sheets/VolcanoSheet'
 import { ReportSheet } from './components/sheets/ReportSheet'
 import { FeedTab } from './components/tabs/FeedTab'
 import { GuideTab } from './components/tabs/GuideTab'
@@ -15,13 +16,15 @@ import { StatusTab } from './components/tabs/StatusTab'
 import { DEFAULT_RULE_STATE } from './data/notificationRules'
 import { useDemo } from './hooks/useDemo'
 import { useGeolocation } from './hooks/useGeolocation'
+import { useVolcanoSelection } from './hooks/useVolcanoSelection'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM, LEVEL_COLORS } from './theme'
 import type { MapLayer, NotificationRuleId } from './types'
 
 export default function App() {
   const { demo, updateDemo } = useDemo()
-  const { snapshot, level, dataState, refresh } = useVolcanoFeed(demo)
+  const { volcano, volcanoId, selectVolcano } = useVolcanoSelection()
+  const { snapshot, level, dataState, refresh } = useVolcanoFeed(volcano, demo)
 
   const geo = useGeolocation()
 
@@ -29,6 +32,7 @@ export default function App() {
   const [layer, setLayer] = useState<MapLayer['id']>('radius')
   const [selectedHour, setSelectedHour] = useState(17)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [volcanoOpen, setVolcanoOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [rules, setRules] = useState(DEFAULT_RULE_STATE)
 
@@ -60,6 +64,7 @@ export default function App() {
           volcano={snapshot.volcano}
           dataState={dataState}
           onRefresh={refresh}
+          onPickVolcano={() => setVolcanoOpen(true)}
         />
         <DataStateBanner dataState={dataState} onRetry={refresh} />
         <AlertStrip level={level} />
@@ -112,6 +117,19 @@ export default function App() {
         </main>
 
         <BottomNav tab={tab} onChange={changeTab} />
+
+        {volcanoOpen && (
+          <VolcanoSheet
+            activeId={volcanoId}
+            onSelect={(id) => {
+              selectVolcano(id)
+              setVolcanoOpen(false)
+              setTab('status')
+              window.scrollTo({ top: 0 })
+            }}
+            onClose={() => setVolcanoOpen(false)}
+          />
+        )}
 
         {notifOpen && (
           <NotificationSheet

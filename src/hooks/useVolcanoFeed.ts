@@ -13,13 +13,16 @@ import type {
   VolcanoSnapshot,
 } from '../types'
 import type { DemoState } from './useDemo'
+import type { VolcanoRef } from '../types'
 
 const DEFAULT_LEVEL: LevelId = 'siaga'
 const POLL_MS = 30_000
 /** Snapshot di server hanya berubah setiap kali CI berjalan, jadi tak perlu rapat. */
 const LIVE_POLL_MS = 5 * 60_000
 const SEISMIC_TICK_MS = 5_200
-const LIVE_URL = `${import.meta.env.BASE_URL}data/live.json`
+/** Satu berkas per gunung: yang diunduh hanya gunung yang sedang dipantau. */
+const liveUrl = (volcanoId: string) =>
+  `${import.meta.env.BASE_URL}data/live-${volcanoId}.json`
 
 /**
  * 'absent' = deploy ini memang tidak membawa snapshot (404), jadi app jalan
@@ -45,7 +48,10 @@ export interface VolcanoFeed {
   refresh: () => void
 }
 
-export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
+export function useVolcanoFeed(
+  volcano: VolcanoRef,
+  demo: DemoState,
+): VolcanoFeed {
   const [nowISO, setNowISO] = useState(() => new Date().toISOString())
   const [lastSyncISO, setLastSyncISO] = useState(nowISO)
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -69,9 +75,10 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
    * dipertahankan saat pengambilan gagal — layar menandainya lewat status,
    * bukan dengan mengosongkan angka.
    */
-  const loadLive = useCallback(async (signal?: AbortSignal) => {
+  const loadLive = useCallback(
+    async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(LIVE_URL, { cache: 'no-store', signal })
+      const res = await fetch(liveUrl(volcano.id), { cache: 'no-store', signal })
       if (res.status === 404) {
         setLiveFetch('absent')
         return
@@ -85,9 +92,15 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
       if (err instanceof DOMException && err.name === 'AbortError') return
       setLiveFetch((prev) => (prev === 'absent' ? prev : 'failed'))
     }
-  }, [])
+    },
+    [volcano.id],
+  )
 
   useEffect(() => {
+    // Ganti gunung berarti data lama tidak berlaku lagi; jangan dibiarkan
+    // terlihat sekejap sebagai milik gunung yang baru dipilih.
+    setLive(null)
+    setLiveFetch('loading')
     const controller = new AbortController()
     loadLive(controller.signal)
     const id = setInterval(() => loadLive(), LIVE_POLL_MS)
@@ -148,6 +161,7 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
   const snapshot = useMemo(
     () =>
       getSnapshot({
+        volcano,
         nowISO,
         levelId,
         status: condition.status,
@@ -156,6 +170,7 @@ export function useVolcanoFeed(demo: DemoState): VolcanoFeed {
         live: liveForSnapshot,
       }),
     [
+      volcano,
       nowISO,
       levelId,
       condition.status,

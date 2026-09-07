@@ -66,6 +66,12 @@ export function MapTab({
 
       <h2 className="section">Wilayah terdekat dari kawah</h2>
       <div className="rows">
+        {snapshot.villages.length === 0 && (
+          <p className="emptynote">
+            Daftar wilayah terdekat untuk {snapshot.volcano.name} belum
+            tersedia. Jarak Anda sendiri ke kawah tetap dihitung di kartu Posisi.
+          </p>
+        )}
         {snapshot.villages.map((village) => (
           <div className="row" key={village.name}>
             <div

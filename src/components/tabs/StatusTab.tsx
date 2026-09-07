@@ -158,6 +158,13 @@ export function StatusTab({
       </div>
 
       <h2 className="section">Dampak yang sudah terasa</h2>
+      {snapshot.impacts.length === 0 && (
+        <p className="emptynote">
+          Dampak wilayah untuk {snapshot.volcano.name} belum tersedia. Data ini
+          berasal dari BPBD kabupaten dan belum tersambung.
+        </p>
+      )}
+      {snapshot.impacts.length > 0 && (
       <section className="impacts dim">
         {snapshot.impacts.map((impact) => (
           <div
@@ -177,8 +184,9 @@ export function StatusTab({
           Laporan BPBD kabupaten · {dataState.sourceTime}
         </div>
       </section>
+      )}
 
-      {showTransport && (
+      {showTransport && snapshot.transport.length > 0 && (
         <>
           <h2 className="section">Perjalanan dan transportasi</h2>
           <div className="rows dim">

@@ -18,11 +18,30 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const OUT = resolve(HERE, '..', 'public', 'data', 'live.json')
+const OUT_DIR = resolve(HERE, '..', 'public', 'data')
 
-const VOLCANO = { lat: -6.102, lon: 105.423 }
-/** Perairan Selat Sunda di utara tubuh gunung, untuk tinggi gelombang. */
-const STRAIT = { lat: -6.0, lon: 105.55 }
+/**
+ * Registri gunung. Koordinat dan ketinggian berasal dari katalog Holocene
+ * Volcanoes Smithsonian, diverifikasi lewat scripts/probe-sources.mjs.
+ *
+ * Harus tetap sama dengan src/data/volcanoes.ts.
+ */
+const VOLCANOES = [
+  {
+    id: 'krakatau',
+    name: 'Anak Krakatau',
+    lat: -6.1009,
+    lon: 105.4233,
+    gvp: 262000,
+    strait: { lat: -6.0, lon: 105.55 },
+  },
+  { id: 'semeru', name: 'Semeru', lat: -8.108, lon: 112.922, gvp: 263300, strait: null },
+  { id: 'lewotolok', name: 'Ili Lewotolok', lat: -8.274, lon: 123.508, gvp: 264230, strait: null },
+  { id: 'lewotobi', name: 'Lewotobi Laki-laki', lat: -8.542, lon: 122.775, gvp: 264180, strait: null },
+  { id: 'ibu', name: 'Ibu', lat: 1.4941, lon: 127.6324, gvp: 268030, strait: null },
+  { id: 'dukono', name: 'Dukono', lat: 1.6992, lon: 127.8783, gvp: 268010, strait: null },
+  { id: 'sinabung', name: 'Sinabung', lat: 3.17, lon: 98.392, gvp: 261080, strait: null },
+]
 const QUAKE_RADIUS_KM = 300
 /**
  * BMKG melaporkan gempa se-Indonesia. Untuk app tentang satu gunung, gempa di
@@ -65,14 +84,16 @@ async function fetchJson(url, sampleKey, extraHeaders) {
   }
 }
 
+let bmkgCache = null
+
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null)
 
 /** Angin permukaan di atas kawah — menentukan ke mana abu terbawa. */
-async function wind() {
+async function wind(V) {
   const url =
     'https://api.open-meteo.com/v1/forecast' +
-    `?latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
+    `?latitude=${V.lat}&longitude=${V.lon}` +
     '&current=wind_speed_10m,wind_direction_10m' +
     '&wind_speed_unit=kmh&timezone=UTC'
   const raw = await fetchJson(url, 'wind')
@@ -88,10 +109,10 @@ async function wind() {
 }
 
 /** Tinggi gelombang di Selat Sunda — bahaya khas Krakatau, bukan sekadar abu. */
-async function waves() {
+async function waves(V) {
   const url =
     'https://marine-api.open-meteo.com/v1/marine' +
-    `?latitude=${STRAIT.lat}&longitude=${STRAIT.lon}` +
+    `?latitude=${V.strait.lat}&longitude=${V.strait.lon}` +
     '&current=wave_height&timezone=UTC'
   const raw = await fetchJson(url, 'waves')
   const height = num(raw?.current?.wave_height)
@@ -110,16 +131,16 @@ async function waves() {
  * tremor) yang hanya dimiliki seismograf pos pengamatan PVMBG. Labelnya di app
  * harus tetap membedakan keduanya.
  */
-async function quakes() {
+async function quakes(V) {
   const since = new Date(Date.now() - 24 * 3600_000)
   const url =
     'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson' +
-    `&latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
+    `&latitude=${V.lat}&longitude=${V.lon}` +
     `&maxradiuskm=${QUAKE_RADIUS_KM}` +
     `&starttime=${since.toISOString()}&orderby=time`
   const weekUrl =
     'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson' +
-    `&latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
+    `&latitude=${V.lat}&longitude=${V.lon}` +
     `&maxradiuskm=${QUAKE_RADIUS_KM}` +
     `&starttime=${new Date(Date.now() - 7 * 24 * 3600_000).toISOString()}`
 
@@ -165,15 +186,18 @@ async function quakes() {
 }
 
 /** Gempa dirasakan versi BMKG — sumber resmi Indonesia, termasuk potensi tsunami. */
-async function bmkg() {
+async function bmkg(V) {
   const base = 'https://data.bmkg.go.id/DataMKG/TEWS/'
   const latestUrl = `${base}autogempa.json`
   const recentUrl = `${base}gempaterkini.json`
 
-  const [latestRaw, recentRaw] = await Promise.all([
+  // Satu daftar untuk semua gunung: diambil sekali lalu disaring per gunung,
+  // supaya BMKG tidak dipanggil tujuh kali untuk isi yang sama.
+  bmkgCache ??= Promise.all([
     fetchJson(latestUrl, 'bmkg'),
     fetchJson(recentUrl).catch(() => null),
   ])
+  const [latestRaw, recentRaw] = await bmkgCache
 
   const one = (g) => {
     if (!g || typeof g !== 'object') return null
@@ -196,7 +220,7 @@ async function bmkg() {
       area: wilayah,
       potential: str(g.Potensi),
       felt: str(g.Dirasakan),
-      distanceKm: Math.round(distanceKm(VOLCANO.lat, VOLCANO.lon, lat, lon)),
+      distanceKm: Math.round(distanceKm(V.lat, V.lon, lat, lon)),
     }
   }
 
@@ -233,10 +257,10 @@ async function bmkg() {
  * Ini keluaran model CAMS (Copernicus), bukan pembacaan stasiun di darat. Cukup
  * untuk menunjukkan kecenderungan, tidak cukup untuk diklaim sebagai pengukuran.
  */
-async function air() {
+async function air(V) {
   const url =
     'https://air-quality-api.open-meteo.com/v1/air-quality' +
-    `?latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
+    `?latitude=${V.lat}&longitude=${V.lon}` +
     '&current=sulphur_dioxide,pm10,pm2_5,aerosol_optical_depth&timezone=UTC'
   const raw = await fetchJson(url, 'air')
   const c = raw?.current
@@ -262,7 +286,7 @@ async function air() {
  * lebih rendah: pada pengujian, USGS mencatat nol kejadian dalam radius 300 km
  * sementara EMSC memuat beberapa, sebagian di antaranya justru bersumber BMKG.
  */
-async function emsc() {
+async function emsc(V) {
   const bucket = (features) => {
     const hourly = new Array(24).fill(0)
     let largest = null
@@ -288,7 +312,7 @@ async function emsc() {
 
   const base =
     'https://www.seismicportal.eu/fdsnws/event/1/query?format=json&limit=500' +
-    `&lat=${VOLCANO.lat}&lon=${VOLCANO.lon}&maxradius=3`
+    `&lat=${V.lat}&lon=${V.lon}&maxradius=3`
   const dayUrl = `${base}&starttime=${new Date(Date.now() - 24 * 3600_000).toISOString()}`
   const weekUrl = `${base}&starttime=${new Date(Date.now() - 7 * 24 * 3600_000).toISOString()}`
 
@@ -323,7 +347,7 @@ async function emsc() {
  * Tanpa token, sumber ini sengaja dicatat gagal dengan alasannya, supaya app
  * menampilkan sebabnya alih-alih diam — dan level status tetap data contoh.
  */
-async function magma() {
+async function magma(V) {
   const token = process.env.MAGMA_TOKEN
   if (!token) {
     throw new Error(
@@ -350,13 +374,13 @@ async function magma() {
  * mingguan. Berguna sebagai konteks "erupsi terakhir yang tercatat", bukan
  * sebagai dasar tindakan.
  */
-async function gvp() {
+async function gvp(V) {
   const url =
     'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows' +
     '?service=WFS&version=2.0.0&request=GetFeature' +
     '&typeName=GVP-VOTW:Smithsonian_VOTW_Holocene_Eruptions' +
     '&outputFormat=application/json&count=1' +
-    '&CQL_FILTER=Volcano_Number=262000' +
+    `&CQL_FILTER=Volcano_Number=${V.gvp}` +
     '&sortBy=StartDateYear+D'
   const raw = await fetchJson(url, 'gvp')
   const props = raw?.features?.[0]?.properties
@@ -385,9 +409,8 @@ async function gvp() {
   }
 }
 
-const SOURCES = [
+const sourcesFor = (V) => [
   { id: 'wind', label: 'Open-Meteo — angin permukaan di atas kawah', run: wind },
-  { id: 'waves', label: 'Open-Meteo Marine — gelombang Selat Sunda', run: waves },
   {
     id: 'quakes',
     label: `USGS — gempa tektonik dalam ${QUAKE_RADIUS_KM} km, 24 jam terakhir`,
@@ -406,6 +429,16 @@ const SOURCES = [
     run: air,
   },
   { id: 'emsc', label: 'EMSC — gempa sekitar, ambang lebih rendah', run: emsc },
+  // Gelombang hanya berarti untuk gunung dengan riwayat bahaya pesisir.
+  ...(V.strait
+    ? [
+        {
+          id: 'waves',
+          label: 'Open-Meteo Marine — gelombang perairan sekitar',
+          run: waves,
+        },
+      ]
+    : []),
 ]
 
 /**
@@ -420,105 +453,101 @@ function encodeAnnotation(text) {
 }
 
 /**
- * Annotation per sumber. Berbeda dengan ringkasan job, annotation bisa dibaca
- * lewat API publik, jadi hasil sungguhannya dapat diperiksa dari luar tanpa
- * membuka log CI.
+ * Satu annotation per gunung. Berbeda dengan ringkasan job, annotation bisa
+ * dibaca lewat API publik, jadi hasil sungguhannya dapat diperiksa dari luar
+ * tanpa membuka log.
+ *
+ * Cuplikan respons mentah hanya disertakan untuk gunung pertama; tujuh salinan
+ * bentuk respons yang sama hanya membuat laporannya sulit dibaca.
  */
-function emitAnnotations(sources) {
+function emitAnnotations(V, sources) {
   if (!process.env.GITHUB_ACTIONS) return
-  for (const [id, s] of Object.entries(sources)) {
+  const withRaw = V.id === VOLCANOES[0].id
+  const lines = Object.entries(sources).map(([id, s]) => {
     const detail = s.ok
-      ? `parsed=${JSON.stringify(s.data).slice(0, 500)}`
+      ? `parsed=${JSON.stringify(s.data).slice(0, 260)}`
       : `error=${s.error}`
-    const sample = rawSamples.get(id)
-    const body = [
-      `${id}: ${s.ok ? 'ok' : 'GAGAL'}`,
-      detail,
-      sample ? `raw=${sample.slice(0, 500)}` : 'raw=(tidak ada respons)',
-    ].join('\n')
-    console.log(
-      `::notice title=sumber-${id}::${encodeAnnotation(body)}`,
-    )
-  }
+    const sample = withRaw ? rawSamples.get(id) : null
+    return [`${id}: ${s.ok ? 'ok' : 'GAGAL'}`, `  ${detail}`]
+      .concat(sample ? [`  raw=${sample.slice(0, 300)}`] : [])
+      .join('\n')
+  })
+  console.log(
+    `::notice title=sumber-${V.id}::${encodeAnnotation(`${V.name}\n${lines.join('\n')}`)}`,
+  )
 }
 
-/**
- * Laporan ke ringkasan job Actions: nilai hasil parsing berdampingan dengan
- * cuplikan respons mentah. Tanpa ini, step yang hijau tidak membuktikan apa pun
- * karena sumber yang gagal pun sengaja tidak menjatuhkan build.
- */
-async function writeSummary(sources) {
+/** Ringkasan lintas gunung untuk dibaca manusia di tab Actions. */
+async function writeSummary(index) {
   const path = process.env.GITHUB_STEP_SUMMARY
   if (!path) return
-
-  const rows = Object.entries(sources).map(([id, s]) =>
-    `| \`${id}\` | ${s.ok ? 'ok' : 'GAGAL'} | ${
-      s.ok ? JSON.stringify(s.data).slice(0, 220) : s.error
-    } |`,
+  const rows = index.volcanoes.map(
+    (v) => `| ${v.name} | \`${v.id}\` | ${v.ok}/${v.of} |`,
   )
-
-  const details = Object.keys(sources).map((id) => {
-    const sample = rawSamples.get(id)
-    if (!sample) return `**${id}** — tidak ada respons yang terbaca.`
-    return [
-      `<details><summary>${id} — respons mentah (600 karakter pertama)</summary>`,
-      '',
-      '```json',
-      sample.replace(/```/g, '`​``'),
-      '```',
-      '</details>',
-    ].join('\n')
-  })
-
   const body = [
-    '## Hasil pengambilan sumber resmi',
+    '## Pengambilan sumber per gunung',
     '',
-    '| Sumber | Status | Nilai hasil parsing / error |',
+    '| Gunung | Berkas | Sumber berhasil |',
     '| --- | --- | --- |',
     ...rows,
     '',
-    ...details,
-    '',
   ].join('\n')
-
   await writeFile(path, body, { flag: 'a' })
 }
 
 async function main() {
-  const sources = {}
-  let okCount = 0
+  const index = { generatedAt: new Date().toISOString(), volcanoes: [] }
+  await mkdir(OUT_DIR, { recursive: true })
 
-  for (const { id, label, run } of SOURCES) {
-    const fetchedAt = new Date().toISOString()
-    try {
-      const { url, observedAt, data } = await run()
-      sources[id] = { ok: true, label, url, fetchedAt, observedAt, data }
-      okCount += 1
-      console.log(`ok    ${id}  ${label}`)
-    } catch (err) {
-      sources[id] = {
-        ok: false,
-        label,
-        url: null,
-        fetchedAt,
-        observedAt: null,
-        error: err instanceof Error ? err.message : String(err),
-      }
-      console.warn(`GAGAL ${id}  ${sources[id].error}`)
+  for (const V of VOLCANOES) {
+    const defs = sourcesFor(V)
+    const sources = {}
+
+    // Sumber satu gunung tidak saling bergantung, jadi diambil berbarengan;
+    // antar gunung tetap berurutan agar tidak membanjiri satu penyedia.
+    const results = await Promise.all(
+      defs.map(async ({ id, label, run }) => {
+        const fetchedAt = new Date().toISOString()
+        try {
+          const { url, observedAt, data } = await run(V)
+          return [id, { ok: true, label, url, fetchedAt, observedAt, data }]
+        } catch (err) {
+          return [
+            id,
+            {
+              ok: false,
+              label,
+              url: null,
+              fetchedAt,
+              observedAt: null,
+              error: err instanceof Error ? err.message : String(err),
+            },
+          ]
+        }
+      }),
+    )
+
+    let okCount = 0
+    for (const [id, entry] of results) {
+      sources[id] = entry
+      if (entry.ok) okCount += 1
     }
+
+    const file = resolve(OUT_DIR, `live-${V.id}.json`)
+    await writeFile(
+      file,
+      `${JSON.stringify({ generatedAt: new Date().toISOString(), volcano: V, sources }, null, 2)}\n`,
+    )
+    index.volcanoes.push({ id: V.id, name: V.name, ok: okCount, of: defs.length })
+    emitAnnotations(V, sources)
+    console.log(`${V.id}: ${okCount}/${defs.length} sumber berhasil`)
   }
 
-  const payload = {
-    generatedAt: new Date().toISOString(),
-    volcano: VOLCANO,
-    sources,
-  }
-
-  await mkdir(dirname(OUT), { recursive: true })
-  await writeFile(OUT, `${JSON.stringify(payload, null, 2)}\n`)
-  await writeSummary(sources)
-  emitAnnotations(sources)
-  console.log(`\n${okCount}/${SOURCES.length} sumber berhasil → ${OUT}`)
+  await writeFile(
+    resolve(OUT_DIR, 'index.json'),
+    `${JSON.stringify(index, null, 2)}\n`,
+  )
+  await writeSummary(index)
 
   // Sengaja selalu exit 0: deploy tetap jalan, dan app menandai sendiri sumber
   // mana yang kosong. Build merah hanya akan membuat situs ikut hilang.

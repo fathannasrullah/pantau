@@ -12,14 +12,14 @@ import type {
   AshfallReport,
   ShelterPoint,
   SnapshotProvenance,
-  Volcano,
+  VolcanoRef,
   VolcanoLevel,
 } from '../types'
 import { SampleTag } from './SampleTag'
 
 interface Props {
   geo: GeolocationState
-  volcano: Volcano
+  volcano: VolcanoRef
   level: VolcanoLevel
   ashfall: AshfallReport
   shelters: ShelterPoint[]

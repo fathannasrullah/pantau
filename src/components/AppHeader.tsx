@@ -1,24 +1,38 @@
 import type { DataStateView } from '../data/dataState'
 import { formatNumber } from '../lib/format'
-import type { Volcano } from '../types'
+import type { VolcanoRef } from '../types'
 
 interface Props {
-  volcano: Volcano
+  volcano: VolcanoRef
   dataState: DataStateView
   onRefresh: () => void
+  onPickVolcano: () => void
 }
 
-export function AppHeader({ volcano, dataState, onRefresh }: Props) {
+export function AppHeader({
+  volcano,
+  dataState,
+  onRefresh,
+  onPickVolcano,
+}: Props) {
   return (
     <header className="appbar">
       <div className="appbar__row">
         <div className="appbar__dot" aria-hidden="true" />
-        <div className="appbar__id">
-          <h1 className="appbar__name">{volcano.name}</h1>
+        <button
+          type="button"
+          className="appbar__id"
+          onClick={onPickVolcano}
+          aria-label={`Gunung dipantau: ${volcano.name}. Ketuk untuk memilih gunung lain.`}
+        >
+          <h1 className="appbar__name">
+            {volcano.name}
+            <span className="appbar__caret" aria-hidden="true" />
+          </h1>
           <div className="appbar__meta">
-            {volcano.location} · {formatNumber(volcano.elevationM)} m
+            {volcano.region} · {formatNumber(volcano.elevationM)} m
           </div>
-        </div>
+        </button>
         <button
           type="button"
           className="appbar__sync"
