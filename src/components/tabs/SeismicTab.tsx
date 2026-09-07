@@ -19,7 +19,9 @@ export function SeismicTab({
   onSelectHour,
 }: Props) {
   const bars = snapshot.seismicHourly
-  const max = Math.max(...bars)
+  // Radius yang sepi menghasilkan semua batang nol; tanpa penjaga ini tinggi
+  // batang menjadi NaN dan grafiknya hilang sama sekali.
+  const max = Math.max(1, ...bars)
   const selected = Math.min(selectedHour, bars.length - 1)
   const hoursAgo = bars.length - 1 - selected
 

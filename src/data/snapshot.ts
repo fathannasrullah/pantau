@@ -73,6 +73,26 @@ export interface SnapshotRequest {
   live?: LiveBundle | null
 }
 
+/**
+ * Radius ini sering benar-benar sepi selama 24 jam. Grafik rata harus terbaca
+ * sebagai "tidak ada gempa", bukan sebagai data yang gagal dimuat.
+ */
+function describeQuakes(
+  total: number,
+  total7d: number | null,
+  radiusKm: number,
+): string {
+  const week =
+    total7d === null
+      ? ''
+      : ` Dalam tujuh hari terakhir: ${total7d} kejadian.`
+  const head =
+    total === 0
+      ? `Tidak ada gempa tercatat dalam 24 jam terakhir pada radius ${radiusKm} km.`
+      : `${total} gempa tercatat dalam radius ${radiusKm} km, 24 jam terakhir.`
+  return `${head}${week} Ini gempa tektonik regional dari katalog USGS, bukan kegempaan vulkanik yang hanya terekam seismograf pos pengamatan.`
+}
+
 /** BMKG menulis potensi tsunami sebagai kalimat, bukan kode. */
 function quakeSeverity(potential: string | null): Severity {
   if (!potential) return 'watch'
@@ -107,27 +127,22 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
   // yang berhasil — bukan dari jam simulasi.
   const updatedAtISO = newestFetchISO(live) ?? shiftISO(nowISO, ageMinutes)
 
-  const liveFeed: FeedItem[] = []
-  if (bmkg) {
-    for (const report of [bmkg.latest, ...bmkg.recent]) {
-      liveFeed.push({
-        kind: 'GEMPA',
-        severity: quakeSeverity(report.potential),
-        timeISO: report.timeISO,
-        title: `Gempa M ${report.magnitude}`,
-        body: [
-          report.area,
-          report.depth ? `Kedalaman ${report.depth}.` : null,
-          report.potential,
-          report.felt ? `Dirasakan: ${report.felt}` : null,
-        ]
-          .filter(Boolean)
-          .join(' '),
-        source: 'BMKG · data.bmkg.go.id',
-        provenance: 'live',
-      })
-    }
-  }
+  const liveFeed: FeedItem[] = (bmkg?.nearby ?? []).map((report) => ({
+    kind: 'GEMPA',
+    severity: quakeSeverity(report.potential),
+    timeISO: report.timeISO,
+    title: `Gempa M ${report.magnitude} · ${report.distanceKm} km dari kawah`,
+    body: [
+      report.area,
+      report.depth ? `Kedalaman ${report.depth}.` : null,
+      report.potential,
+      report.felt ? `Dirasakan: ${report.felt}` : null,
+    ]
+      .filter(Boolean)
+      .join(' '),
+    source: 'BMKG · data.bmkg.go.id',
+    provenance: 'live',
+  }))
 
   return {
     volcano: VOLCANO,
@@ -361,7 +376,7 @@ export function getSnapshot(req: SnapshotRequest): VolcanoSnapshot {
       ? 'Gempa tektonik tiap jam, 24 jam terakhir'
       : 'Kegempaan tiap jam, 24 jam terakhir',
     seismicNote: quakes
-      ? `${quakes.total} gempa tercatat dalam radius ${quakes.radiusKm} km (katalog USGS). Ini gempa tektonik regional, bukan kegempaan vulkanik yang hanya terekam seismograf pos pengamatan.`
+      ? describeQuakes(quakes.total, quakes.total7d, quakes.radiusKm)
       : 'Angka contoh. Kegempaan vulkanik hanya tersedia dari seismograf pos pengamatan PVMBG.',
   }
 }

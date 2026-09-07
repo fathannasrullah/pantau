@@ -24,7 +24,24 @@ const VOLCANO = { lat: -6.102, lon: 105.423 }
 /** Perairan Selat Sunda di utara tubuh gunung, untuk tinggi gelombang. */
 const STRAIT = { lat: -6.0, lon: 105.55 }
 const QUAKE_RADIUS_KM = 300
+/**
+ * BMKG melaporkan gempa se-Indonesia. Untuk app tentang satu gunung, gempa di
+ * Sulawesi hanya kebisingan — atau lebih buruk, dikira berhubungan. Hanya yang
+ * sejangkauan Selat Sunda yang ditampilkan.
+ */
+const BMKG_RADIUS_KM = 500
 const TIMEOUT_MS = 20_000
+
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371
+  const rad = (d) => (d * Math.PI) / 180
+  const dLat = rad(lat2 - lat1)
+  const dLon = rad(lon2 - lon1)
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(h))
+}
 
 /** Cuplikan respons mentah terakhir per sumber, untuk laporan diagnostik. */
 const rawSamples = new Map()
@@ -98,7 +115,16 @@ async function quakes() {
     `&latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
     `&maxradiuskm=${QUAKE_RADIUS_KM}` +
     `&starttime=${since.toISOString()}&orderby=time`
-  const raw = await fetchJson(url, 'quakes')
+  const weekUrl =
+    'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson' +
+    `&latitude=${VOLCANO.lat}&longitude=${VOLCANO.lon}` +
+    `&maxradiuskm=${QUAKE_RADIUS_KM}` +
+    `&starttime=${new Date(Date.now() - 7 * 24 * 3600_000).toISOString()}`
+
+  const [raw, weekRaw] = await Promise.all([
+    fetchJson(url, 'quakes'),
+    fetchJson(weekUrl).catch(() => null),
+  ])
   const features = Array.isArray(raw?.features) ? raw.features : []
 
   // 24 ember satu jam, ember terakhir adalah jam berjalan.
@@ -127,6 +153,9 @@ async function quakes() {
     data: {
       radiusKm: QUAKE_RADIUS_KM,
       total: features.length,
+      // Radius ini sering sepi selama sehari; hitungan sepekan mencegah grafik
+      // kosong terbaca sebagai data yang gagal dimuat.
+      total7d: Array.isArray(weekRaw?.features) ? weekRaw.features.length : null,
       hourly,
       largest: events[0] ?? null,
     },
@@ -152,6 +181,12 @@ async function bmkg() {
     if (!wilayah || !magnitude || !dateTime) return null
     const parsed = new Date(dateTime)
     if (Number.isNaN(parsed.getTime())) return null
+
+    const [latText, lonText] = (str(g.Coordinates) || '').split(',')
+    const lat = Number.parseFloat(latText)
+    const lon = Number.parseFloat(lonText)
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null
+
     return {
       timeISO: parsed.toISOString(),
       magnitude,
@@ -159,22 +194,32 @@ async function bmkg() {
       area: wilayah,
       potential: str(g.Potensi),
       felt: str(g.Dirasakan),
+      distanceKm: Math.round(distanceKm(VOLCANO.lat, VOLCANO.lon, lat, lon)),
     }
   }
 
-  const latest = one(latestRaw?.Infogempa?.gempa)
-  if (!latest) throw new Error('bentuk autogempa.json tidak dikenali')
-
-  const listRaw = recentRaw?.Infogempa?.gempa
-  const recent = (Array.isArray(listRaw) ? listRaw : [])
+  const candidates = [
+    latestRaw?.Infogempa?.gempa,
+    ...(Array.isArray(recentRaw?.Infogempa?.gempa)
+      ? recentRaw.Infogempa.gempa
+      : []),
+  ]
     .map(one)
     .filter(Boolean)
-    .slice(0, 5)
+
+  if (!candidates.length) throw new Error('bentuk autogempa.json tidak dikenali')
+
+  const seen = new Set()
+  const nearby = candidates
+    .filter((q) => q.distanceKm <= BMKG_RADIUS_KM)
+    .filter((q) => !seen.has(q.timeISO) && seen.add(q.timeISO))
+    .sort((a, b) => b.timeISO.localeCompare(a.timeISO))
+    .slice(0, 4)
 
   return {
     url: latestUrl,
-    observedAt: latest.timeISO,
-    data: { latest, recent },
+    observedAt: nearby[0]?.timeISO ?? candidates[0].timeISO,
+    data: { radiusKm: BMKG_RADIUS_KM, scanned: candidates.length, nearby },
   }
 }
 

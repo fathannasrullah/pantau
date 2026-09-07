@@ -132,6 +132,8 @@ export function readWaves(bundle: LiveBundle | null): LiveWaves | null {
 export interface LiveQuakes {
   hourly: number[]
   total: number
+  /** Hitungan sepekan, konteks saat 24 jam terakhir kebetulan sepi. */
+  total7d: number | null
   radiusKm: number
   largest: { mag: number; place: string | null; timeISO: string } | null
 }
@@ -156,6 +158,7 @@ export function readQuakes(bundle: LiveBundle | null): LiveQuakes | null {
   return {
     hourly,
     total: numOrNull(data.total) ?? hourly.reduce((a, b) => a + b, 0),
+    total7d: numOrNull(data.total7d),
     radiusKm: numOrNull(data.radiusKm) ?? 300,
     largest,
   }
@@ -168,11 +171,13 @@ export interface LiveQuakeReport {
   area: string
   potential: string | null
   felt: string | null
+  /** Jarak dari kawah — dasar penyaringan agar feed tetap tentang gunung ini. */
+  distanceKm: number
 }
 
 export interface LiveBmkg {
-  latest: LiveQuakeReport
-  recent: LiveQuakeReport[]
+  radiusKm: number
+  nearby: LiveQuakeReport[]
 }
 
 function parseReport(raw: unknown): LiveQuakeReport | null {
@@ -181,6 +186,8 @@ function parseReport(raw: unknown): LiveQuakeReport | null {
   const magnitude = strOrNull(raw.magnitude)
   const area = strOrNull(raw.area)
   if (!timeISO || !magnitude || !area) return null
+  const distanceKm = numOrNull(raw.distanceKm)
+  if (distanceKm === null) return null
   return {
     timeISO,
     magnitude,
@@ -188,21 +195,25 @@ function parseReport(raw: unknown): LiveQuakeReport | null {
     depth: strOrNull(raw.depth),
     potential: strOrNull(raw.potential),
     felt: strOrNull(raw.felt),
+    distanceKm,
   }
 }
 
+/**
+ * Mengembalikan null saat tidak ada gempa di sekitar gunung. Feed kosong lebih
+ * baik daripada feed berisi gempa 2.000 km jauhnya yang dikira berhubungan.
+ */
 export function readBmkg(bundle: LiveBundle | null): LiveBmkg | null {
   const data = payload(bundle, 'bmkg')
   if (!isRecord(data)) return null
-  const latest = parseReport(data.latest)
-  if (!latest) return null
-  const recentRaw = Array.isArray(data.recent) ? data.recent : []
-  const recent: LiveQuakeReport[] = []
-  for (const item of recentRaw) {
+  const rawList = Array.isArray(data.nearby) ? data.nearby : []
+  const nearby: LiveQuakeReport[] = []
+  for (const item of rawList) {
     const parsed = parseReport(item)
-    if (parsed && parsed.timeISO !== latest.timeISO) recent.push(parsed)
+    if (parsed) nearby.push(parsed)
   }
-  return { latest, recent }
+  if (!nearby.length) return null
+  return { radiusKm: numOrNull(data.radiusKm) ?? 500, nearby }
 }
 
 /** Kapan salinan terbaru yang berhasil diambil — dasar label LIVE / BASI. */

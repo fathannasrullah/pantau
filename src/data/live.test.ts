@@ -91,27 +91,48 @@ test('histogram gempa dibaca lengkap dengan gempa terbesar', () => {
 test('laporan BMKG tanpa medan wajib dibuang', () => {
   const live = bundle({
     bmkg: source({
-      latest: {
-        timeISO: '2026-09-06T09:30:00Z',
-        magnitude: '5.1',
-        area: 'Selat Sunda',
-        depth: '10 km',
-        potential: 'Tidak berpotensi tsunami',
-      },
-      recent: [
-        { magnitude: '4.2' }, // tanpa waktu dan wilayah — dibuang
+      radiusKm: 500,
+      nearby: [
         {
-          timeISO: '2026-09-06T08:00:00Z',
-          magnitude: '4.4',
-          area: 'Banten',
+          timeISO: '2026-09-06T09:30:00Z',
+          magnitude: '5.1',
+          area: 'Selat Sunda',
+          depth: '10 km',
+          potential: 'Tidak berpotensi tsunami',
+          distanceKm: 40,
         },
+        { magnitude: '4.2', distanceKm: 12 }, // tanpa waktu dan wilayah
+        { timeISO: '2026-09-06T08:00:00Z', magnitude: '4.4', area: 'Banten' }, // tanpa jarak
       ],
     }),
   })
   const bmkg = readBmkg(live)
-  assert.equal(bmkg?.latest.magnitude, '5.1')
-  assert.equal(bmkg?.recent.length, 1)
-  assert.equal(bmkg?.recent[0]?.area, 'Banten')
+  assert.equal(bmkg?.nearby.length, 1)
+  assert.equal(bmkg?.nearby[0]?.magnitude, '5.1')
+  assert.equal(bmkg?.nearby[0]?.distanceKm, 40)
+})
+
+test('feed kosong saat tidak ada gempa di sekitar gunung', () => {
+  // Lebih baik tidak menampilkan apa pun daripada gempa 2.000 km jauhnya yang
+  // dikira berhubungan dengan gunung ini.
+  const live = bundle({ bmkg: source({ radiusKm: 500, scanned: 16, nearby: [] }) })
+  assert.equal(readBmkg(live), null)
+})
+
+test('radius sepi terbaca sebagai nol kejadian, bukan data hilang', () => {
+  const live = bundle({
+    quakes: source({
+      hourly: new Array(24).fill(0),
+      total: 0,
+      total7d: 3,
+      radiusKm: 300,
+      largest: null,
+    }),
+  })
+  const quakes = readQuakes(live)
+  assert.equal(quakes?.total, 0)
+  assert.equal(quakes?.total7d, 3)
+  assert.equal(quakes?.largest, null)
 })
 
 test('umur data diambil dari pengambilan tersukses terbaru', () => {
