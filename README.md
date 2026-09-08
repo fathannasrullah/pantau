@@ -1,434 +1,302 @@
 # Pantau Gunung Berapi
 
-Aplikasi web mobile-first untuk memantau status gunung berapi, dampak erupsi, dan
-panduan tindakan. Dibangun dari prototipe desain di `project/Pantau Gunung v3.dc.html`.
+Aplikasi web untuk memantau status gunung berapi Indonesia: peringatan abu
+penerbangan, gempa di sekitar, kualitas udara, arah angin, dan jarak Anda
+sendiri ke kawah — semuanya dari sumber resmi yang bisa ditelusuri.
 
-Tujuh gunung bisa dipilih lewat judul di header: **Anak Krakatau, Semeru, Ili
-Lewotolok, Lewotobi Laki-laki, Ibu, Dukono, dan Sinabung.** Pilihan tertulis ke
-URL (`?gunung=semeru`) supaya bisa dibagikan, dan diingat di perangkat.
+**Demo: <https://gunungfire.github.io/>**
 
-Bisa dipasang lewat browser (PWA): ada manifest, ikon, dan service worker, sehingga
-layar terakhir tetap terbuka saat sinyal hilang. Tata letaknya menyesuaikan tiga
-ukuran layar: satu kolom dengan navigasi bawah di ponsel, kolom lebih lega di
-tablet, dan navigasi pindah ke sisi kiri di laptop.
+Tujuh gunung: Anak Krakatau, Semeru, Ili Lewotolok, Lewotobi Laki-laki, Ibu,
+Dukono, Sinabung. Pilihan tertulis ke URL (`?gunung=semeru`) supaya bisa
+dibagikan, dan diingat di perangkat.
 
-**Live demo: <https://fathannasrullah.github.io/pantau/>**
+Aturan yang memandu seluruh keputusan di repo ini: **tidak ada satu angka pun
+yang dikarang.** Bagian yang belum punya sumber dibiarkan kosong dengan
+keterangan siapa pemiliknya. Di aplikasi kebencanaan, angka palsu yang terlihat
+meyakinkan lebih berbahaya daripada layar kosong.
 
-## Menjalankan
+---
+
+## Tech stack
+
+| Lapisan | Pilihan | Alasannya |
+| --- | --- | --- |
+| Bahasa | TypeScript 5.9, mode ketat | `tsc --noEmit` jadi gerbang di `npm run build`; build gagal sebelum tipe yang salah sempat terbit |
+| UI | React 19.2 | tanpa pustaka state — seluruh keadaan app muat di `useState` dan beberapa hook sendiri |
+| Build | Vite 8.2 + `@vitejs/plugin-react` | |
+| PWA | `vite-plugin-pwa` 1.3 (Workbox, `generateSW`) | manifest, ikon, service worker, dan cache petak peta |
+| Peta | Leaflet 1.9.4 sebagai dependensi npm | bukan dari CDN: app harus tetap terpasang dan terbuka saat jaringan mati |
+| Petak peta | OpenStreetMap (jalan) dan OpenTopoMap (relief) | keduanya terbuka; relief dipakai karena bentuk lereng menentukan ke mana aliran dan lahar turun |
+| Gaya | CSS tulis tangan, satu berkas, 57 token (34 di antaranya ditimpa tema terang) | tanpa Tailwind, tanpa CSS-in-JS. Tema terang/gelap butuh satu daftar nama warna, bukan kelas yang tersebar |
+| Huruf | IBM Plex Sans dan Mono | |
+| Tes | `node --test` bawaan Node 22 dengan `--experimental-strip-types` | tanpa Jest maupun Vitest; TypeScript dijalankan apa adanya |
+| Pengambilan data | skrip Node di GitHub Actions | lihat [Kenapa data diambil di CI](#kenapa-data-diambil-di-ci) |
+| Deploy | GitHub Actions → GitHub Pages | statis penuh, tanpa server |
+
+Tidak ada backend, tidak ada basis data, tidak ada kunci API di sisi klien.
+
+Ukuran: 62 berkas TypeScript (~8.200 baris) dan satu berkas CSS (~3.700 baris).
+Bundel terbit 134 KB JavaScript dan 14 KB CSS setelah gzip.
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm run build      # typecheck + build produksi ke dist/
-npm run preview    # jalankan hasil build (service worker aktif di sini)
+npm run build      # typecheck + build ke dist/
+npm run preview    # jalankan hasil build — service worker hanya aktif di sini
+npm test           # 75 tes
+npm run fetch:data # ambil sumber resmi sekali secara lokal
 ```
 
-Service worker hanya aktif pada hasil build, jadi uji perilaku offline lewat
-`npm run preview`, bukan `npm run dev`.
+---
 
-## Live demo di GitHub Pages
+## Cara kerjanya
 
-Setiap push ke `main` mem-build dan menerbitkan app lewat
-`.github/workflows/deploy-pages.yml` ke
-<https://fathannasrullah.github.io/pantau/>. Bisa juga dijalankan manual dari
-tab Actions (`workflow_dispatch`).
+### Kenapa data diambil di CI
 
-Setelan sekali saja di GitHub:
+Sebagian besar sumber resmi tidak mengirim header CORS, jadi halaman statis tidak
+boleh memanggilnya langsung. `scripts/fetch-sources.mjs` berjalan di runner
+GitHub tiap 30 menit, menulis `public/data/live-<id-gunung>.json`, dan berkas itu
+ikut ter-deploy. App membacanya sebagai berkas statis satu origin.
 
-1. Repositori harus **public** (Pages untuk repo private butuh paket berbayar).
-2. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-3. **Settings → Environments → `github-pages` → Deployment branches and tags**
-   harus mengizinkan `main`. Aturan ini menyimpan nama branch secara eksplisit
-   saat Pages pertama diaktifkan; kalau waktu itu default branch-nya lain,
-   mengganti default branch belakangan tidak memperbaruinya, dan job `deploy`
-   gagal dengan _"Branch main is not allowed to deploy to github-pages due to
-   environment protection rules"_ meskipun job `build` sukses.
+Efek sampingnya justru bagus:
 
-Karena Pages menyajikan project site di sub-path `/pantau/`, base Vite diisi
-lewat `VITE_BASE` di CI (`actions/configure-pages` yang menghitungnya). Build
-lokal tetap memakai `/`. Semua jalur aset, manifest, dan `navigateFallback`
-service worker ikut base tersebut, jadi app tetap bisa dipasang dan dibuka
-offline dari URL Pages.
+- Tiap sumber membawa stempel waktunya sendiri.
+- Sumber yang gagal tetap ditulis apa adanya (`ok:false`) dan tampil merah di
+  daftar "Sumber data" — tidak menghilang diam-diam.
+- Umur data itulah yang menyalakan label LIVE / BASI / GAGAL, bukan simulasi.
+- Satu sumber gagal tidak menjatuhkan yang lain, dan tidak menjatuhkan build.
+  Situs yang hilang lebih berbahaya daripada satu kartu yang kosong.
 
-## Sumber data
-
-Sebagian layar sudah tersambung ke sumber publik, sebagian belum. Yang belum
-ditandai **contoh** tepat di sebelah angkanya, bukan hanya di catatan kaki.
-
-| Bagian | Sumber | Status |
-| --- | --- | --- |
-| Posisi pengguna & jarak ke kawah | Geolocation API perangkat | hidup |
-| Arah abu & kecepatan angin | Open-Meteo | hidup |
-| Tinggi gelombang Selat Sunda | Open-Meteo Marine | hidup |
-| Gempa terkini di sekitar | USGS summary feed, **langsung dari browser** | hidup |
-| Grafik kegempaan per jam | EMSC (utama) dengan USGS FDSN sebagai cadangan | hidup |
-| Feed gempa & potensi tsunami | BMKG (`data.bmkg.go.id`), disaring 500 km | hidup |
-| Erupsi terakhir tercatat | Smithsonian GVP (katalog, mingguan) | hidup |
-| **Peringatan abu penerbangan** | NOAA Aviation Weather Center (SIGMET) | hidup |
-| SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) | hidup |
-| Indeks AQI | dihitung dari PM2.5 CAMS dengan rumus US EPA | hidup |
-| Peta dasar | petak raster OpenStreetMap dan OpenTopoMap lewat Leaflet | hidup |
-| Bentuk area peringatan abu | poligon SIGMET apa adanya | hidup |
-| Episentrum di peta | BMKG dan USGS, keduanya dengan koordinat aslinya | hidup |
-| Angin per ketinggian terbang | Open-Meteo, lapisan tekanan 850–200 hPa | hidup |
-| Bandara acuan di sekitar gunung | katalog terbuka OurAirports | hidup |
-| Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) | hidup |
-| **Level status, radius bahaya, aviation colour code** | MAGMA Indonesia / PVMBG (VONA) | **butuh token** |
-| Kegempaan vulkanik | Pos pengamatan PVMBG (lewat MAGMA) | butuh token |
-| Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | **belum ada sumber** |
-| Lalu lintas pesawat | OpenSky Network | CORS terkunci ke domainnya sendiri |
-| NOTAM dan status operasional bandara | FAA / ICAO | perlu kredensial, tidak boleh diambil ulang |
-
-Dua hal yang dijaga ketat:
-
-- **Tidak ada angka atau laporan karangan di layar mana pun.** Versi awal memuat
-  contoh yang terbaca seperti pengamatan sungguhan — "42 warga dievakuasi dari
-  Pulau Sebesi", "Pelabuhan Bakauheni terbatas", kolom abu 1.200 m, nomor posko
-  `0727 322xxx`. Semuanya dihapus. Bagian yang belum bersumber kini kosong
-  dengan keterangan yang menyebut siapa pemilik datanya. Sifat ini dikunci lewat
-  tes, termasuk larangan menyebut nama tempat tertentu di teks level status.
-- **Level status tidak pernah diturunkan dari sumber lain.** Hanya PVMBG yang
-  berhak menetapkannya, jadi selama belum tersambung kartu status memuat
-  peringatan eksplisit bahwa levelnya belum resmi.
-- **Feed BMKG disaring per jarak.** `autogempa.json` melaporkan gempa terbaru
-  se-Indonesia; pada pengambilan pertama yang masuk adalah gempa Banggai,
-  Sulawesi, 2.065 km dari Anak Krakatau. Hanya gempa dalam radius 500 km dan
-  tujuh hari terakhir yang ditampilkan, lengkap dengan jaraknya di judul.
-- **Kualitas udara adalah keluaran model, bukan pengukuran.** Angka SO2 dan PM10
-  berasal dari model CAMS Copernicus, bukan stasiun di darat, dan kartunya
-  menyebutkan itu. Ambang warnanya mengikuti pedoman WHO 2021 (SO2 40 µg/m³,
-  PM10 45 µg/m³ rata-rata 24 jam).
-- **Gempa EMSC dan USGS bukan kegempaan vulkanik.** Itu gempa tektonik regional; label di
-  layar menyebutkannya, karena letusan/embusan/tremor hanya terekam seismograf
-  pos pengamatan.
-
-### Satu sumber yang justru tidak lewat CI
-
-Summary feed USGS (`summary/2.5_day.geojson`) mengirim `Access-Control-Allow-Origin: *`,
-jadi browser boleh memanggilnya sendiri. Itu satu-satunya bagian app yang benar-benar
-mendekati waktu nyata — tidak menunggu siklus CI 30 menit. Diukur lewat probe:
-32 KB, 13 ms, dan membawa medan yang tidak ada di endpoint `fdsnws/event/1/query`
-yang dipakai untuk grafik: `alert` (level PAGER), `tsunami`, `felt`, dan `url` ke
-halaman resmi tiap kejadian.
-
-Cakupannya tipis untuk Indonesia — USGS mencatat kawasan ini sekitar M 4,5 ke
-atas — jadi daftar ini pelengkap, bukan pengganti katalog EMSC yang lebih rapat.
-Keterangan itu ikut tampil di layar saat daftarnya kosong.
-
-### Kenapa sumber lain lewat CI, bukan fetch dari browser
-
-BMKG dan MAGMA tidak mengirim header CORS, jadi panggilan langsung dari halaman
-statis akan diblokir browser. `scripts/fetch-sources.mjs` berjalan di runner
-GitHub tiap 30 menit, menulis `public/data/live.json`, dan berkas itu ikut
-ter-deploy. App membacanya sebagai berkas statis satu origin.
-
-Efek sampingnya bagus: tiap sumber membawa stempel waktunya sendiri, sumber yang
-gagal tetap ditulis apa adanya (`ok:false`) dan tampil merah di daftar "Sumber
-data", dan umur data itulah yang menyalakan label LIVE / BASI / GAGAL — bukan
-simulasi.
-
-Sumber diambil per gunung dan ditulis ke `public/data/live-<id>.json`, jadi app
-hanya mengunduh gunung yang sedang dipantau. BMKG diambil sekali lalu disaring
-per gunung.
-
-```bash
-npm run fetch:data   # ambil sekali secara lokal (butuh akses internet)
-npm test             # uji parser: satuan, bentuk data rusak, arah angin
-```
-
-Tiap kali berjalan di CI, script menuliskan hasilnya sebagai annotation pada run
+Tiap kali berjalan, skrip menuliskan hasilnya sebagai annotation pada run
 Actions: status tiap sumber, nilai hasil parsing, dan 600 karakter pertama
-respons mentah. Step yang hijau tidak membuktikan datanya masuk — sumber yang
-gagal sengaja tidak menjatuhkan build — jadi annotation itulah tempat memeriksa
-apakah sumbernya benar-benar menjawab.
+respons mentah. Step hijau tidak membuktikan datanya masuk — annotation itulah
+tempat memeriksanya.
 
-Satu sumber gagal tidak menjatuhkan yang lain, dan tidak menjatuhkan build —
-situs yang hilang lebih berbahaya daripada satu kartu yang kosong.
+Satu pengecualian: summary feed USGS mengirim `Access-Control-Allow-Origin: *`,
+jadi dipanggil langsung dari peramban. Itu satu-satunya bagian yang tidak
+menunggu siklus 30 menit.
 
-### Menyambungkan MAGMA Indonesia
+### Antarmuka
 
-Yang menghalangi bukan ketiadaan API, melainkan kredensial. Ini hasil pengujian
-`scripts/probe-sources.mjs`, bukan dugaan:
+Peta bukan salah satu tab, melainkan **latar seluruh app**. Isi lain duduk di
+lembar geser dengan tiga posisi: rendah untuk melihat peta, setengah untuk
+membaca sambil melihat, penuh untuk membaca saja. Di laptop lembar itu jadi
+panel kiri dan peta memakai sisa ruangnya.
 
-| Endpoint | Jawaban |
-| --- | --- |
-| `/api/v1/magma-var` | `401 {"message":"Token not provided"}` |
-| `/api/v1/vona` | `401 {"message":"Token not provided"}` |
-| `/api/v1/home`, `/api/v1/laporan`, `/api/v1/gunung-api` | `404 { "message": "" }` — jalur tidak ada |
-| `/v1/gunung-api/tingkat-aktivitas` | `200`, tapi HTML halaman web, bukan API |
+Lima bagian di dalam lembar: **Status**, **Wilayah**, **Udara**, **Laporan**,
+**Panduan**.
 
-Jadi endpoint level status dan VONA memang ada dan menunggu `Authorization`.
-Setelah token dari Badan Geologi didapat, simpan sebagai repository secret
-bernama `MAGMA_TOKEN`; sumber `magma` di `scripts/fetch-sources.mjs` sudah
-membacanya. Tanpa token, sumber itu tercatat gagal dengan alasannya sehingga
-tampil di daftar "Sumber data", bukan menghilang diam-diam.
-
-Satu hal yang belum selesai: bentuk responsnya belum pernah terlihat, jadi
-pemetaan field-nya sengaja belum ditulis. Pengambilan pertama dengan token akan
-menerbitkan cuplikan responsnya sebagai annotation; pemetaan dikerjakan dari
-situ. Sampai saat itu, jangan mengisi level status dari sumber mana pun.
-
-Tidak ada header CORS di MAGMA, jadi meski token sudah ada, pemanggilannya tetap
-harus lewat CI seperti sumber lain.
-
-### SIGMET abu vulkanik: pernyataan resmi, bukan inferensi
-
-`aviationweather.gov/api/data/isigmet` menyajikan SIGMET internasional dari NOAA
-Aviation Weather Center. Diukur lewat probe: 127 peringatan aktif, **10 di
-antaranya berkode bahaya `VA`** (abu vulkanik), lengkap dengan poligon sebaran,
-ketinggian puncak awan abu, serta arah dan kecepatan geraknya.
-
-Ini mengisi sebagian baris "tinggi kolom abu" yang selama ini kosong — dan dari
-otoritas penerbangan, bukan dari perhitungan kita sendiri. Yang ditampilkan
-adalah puncak awan abu **di atas permukaan laut** menurut SIGMET, bukan tinggi
-kolom di atas puncak yang hanya diukur pos pengamatan PVMBG; keduanya berbeda dan
-kartunya menyebutkan itu. Teks resmi SIGMET ikut ditampilkan apa adanya.
-
-Dua hal yang menentukan benar-salahnya:
-
-- **Kode bahayanya `VA`, bukan `ASH`.** Menyaring dengan `hazard === 'ASH'`
-  mengembalikan nol hasil dari 127 peringatan.
-- **Feed-nya global.** Contoh pertama yang terambil adalah SIGMET abu di Bogota,
-  Kolombia. Tanpa penyaringan, peringatan itu akan muncul saat memantau
-  Krakatau — persis masalah gempa Banggai yang sudah diperbaiki. Penyaringannya
-  dua arah: jarak poligon ke kawah dalam 500 km, atau nama gunung tersebut di
-  teks resminya.
-
-Karena penyaringan jarak bisa ikut menangkap peringatan milik gunung tetangga di
-FIR yang sama, tiap kartu menyebutkan apakah teks resminya benar-benar menyebut
-gunung yang sedang dipantau. Bila tidak, kartunya bertanda "periksa teks — bisa
-untuk gunung lain", dan teks SIGMET-nya ditampilkan lengkap supaya bisa dinilai
-sendiri.
-
-Tidak ada header CORS, jadi pengambilannya lewat CI seperti sumber lain.
-
-### Sumber tingkat nasional yang diuji
-
-| Calon | Hasil |
-| --- | --- |
-| **WorldPop** `services/stats` | `200`, terbuka, ber-CORS. Menghitung penduduk di dalam poligon — dipakai untuk perkiraan jiwa dalam radius 5, 10, dan 30 km |
-| BMKG `api.bmkg.go.id/publik/prakiraan-cuaca` | endpoint ada (`404 Data not found` tanpa parameter), tapi butuh kode wilayah adm yang belum terverifikasi per gunung |
-| BMKG `DigitalForecast-*.xml` | `200` tapi mengembalikan halaman 22 KB yang sama untuk dua provinsi berbeda — bukan XML-nya lagi |
-| BMKG `lasttsunami.json` | `404` |
-| `data.go.id` API CKAN | `404` |
-| BNPB `Bencana_Harian/MapServer` | `499 Token Required` |
-| USGS `volcanoApi/volcanoesGVP` | `200`, 1.470 gunung (129 Indonesia) — tapi **tidak ada medan status atau alert sama sekali**; ini direktori, bukan status |
-| USGS `volcanoApi/elevatedVolcanoes` | `404 Resource not found in API` |
-| OpenSky `states/all` tanpa kredensial | `200` — akses anonim ternyata masih jalan, tapi CORS-nya dibatasi ke domain sendiri |
-| OpenAQ v3 `countries` | `401 Unauthorized` tanpa API key |
-
-### Dampak wilayah dan titik kumpul: belum ada sumber sah
-
-Diuji dan tidak menghasilkan data yang bisa dipertanggungjawabkan:
-
-| Calon | Hasil |
-| --- | --- |
-| InaRISK `Arah_jalur_evakuasi` | `200`, tapi layernya bernama `arahJ`, `arahI`, `arahH` — simbol panah arah pada satu peta, bukan daftar titik kumpul bernama |
-| BNPB `Bencana_Harian`, `Bencana_Mingguan`, `POI` | `200` tapi kosong, tanpa service |
-| GDACS | melewati batas 25 detik pada dua percobaan terpisah |
-| ReliefWeb v2 | `403`, butuh appname yang disetujui |
-
-Karena itu dampak wilayah, transportasi, daftar desa terdekat, dan titik kumpul
-dibiarkan kosong dengan keterangan. Satu-satunya nomor yang ditampilkan adalah
-**112**, panggilan darurat nasional — nomor posko per kabupaten tidak dicantumkan
-selama belum ada sumber resminya, karena nomor yang salah saat keadaan darurat
-lebih buruk daripada tidak ada nomor.
-
-### Yang sengaja tidak dipakai
-
-- **VAAC Darwin (BOM Australia)** menjawab `403` dengan pesan tegas bahwa situs
-  mereka tidak mendukung web scraping. Tinggi kolom abu untuk penerbangan
-  karenanya tidak diambil dari sana.
-- **RSS mingguan GVP** juga `403` karena proteksi bot; yang dipakai adalah
-  layanan WFS mereka yang memang disediakan untuk diakses program.
-- **GDACS** terbuka dan memuat Krakatau, tapi lambat (17 detik untuk daftar,
-  dan endpoint rinciannya melewati batas 25 detik), jadi belum dipakai.
-
-## Mode demo
-
-Semua level status dan kondisi data bisa ditampilkan tanpa menunggu kejadian nyata:
-
-```
-/?demo=1                       panel demo muncul di atas navigasi bawah
-/?demo=1&level=awas&data=failed
-```
-
-- `level`: `normal` · `waspada` · `siaga` (default) · `awas`
-- `data`: `fresh` · `stale` · `failed` · `offline` (tanpa parameter = mengikuti kondisi asli)
-- `transport=0`: sembunyikan bagian transportasi
-
-Pilihan di panel ikut tertulis ke URL, jadi satu tautan bisa dibagikan untuk demo.
-
-## Struktur
-
-```
-src/
-  data/          sumber data — satu-satunya tempat yang perlu diganti saat menyambung API
-    volcanoes.ts         registri tujuh gunung; koordinat dari katalog Smithsonian
-    regions.ts           isi khas wilayah per gunung — sengaja tidak boleh bocor antar gunung
-    levels.ts            teks per level status (I–IV), radius, sejak kapan
-    snapshot.ts          getSnapshot(): seluruh isi layar dalam satu objek bertipe
-    dataState.ts         segar / basi / gagal / offline + salinan teks bannernya
-    notificationRules.ts aturan peredaman notifikasi dan tag laporan warga
-  hooks/
-    useVolcanoFeed.ts    polling, umur data, deteksi offline, seismograf berjalan
-    useGeolocation.ts    izin lokasi, watchPosition, dan tiap keadaan gagalnya
-    useVolcanoSelection.ts  gunung terpilih, tertulis ke URL dan diingat perangkat
-    useDemo.ts           override level/kondisi data lewat query string
-    useTheme.ts          tema terang/gelap: bawaan ikut sistem, pilihan diingat
-  components/    tampilan; tidak ada angka yang ditulis langsung di sini
-  theme.ts       warna per tingkat bahaya dan per kondisi data, sebagai token
-  data/aviation.ts  keadaan peringatan abu; warna aksen seluruh layar
-  data/aqi.ts       AQI dari PM2.5 dengan tabel breakpoint US EPA
-  lib/format.ts  format waktu WIB, tanggal, durasi, dan angka Indonesia
-  lib/geo.ts     jarak, arah, vonis zona, dan titik kumpul terdekat
-```
-
-## Prioritas informasi
-
-Urutan layar Status mengikuti prototipe v4:
-
-1. Peringatan abu untuk penerbangan — satu-satunya penilaian bahaya di app ini
-   yang benar-benar datang dari otoritas resmi (SIGMET), sekaligus warna aksen
-   seluruh layar
-2. Kartu kewenangan: level resmi Indonesia belum tersambung, dan siapa yang
-   berhak menetapkannya
-3. Posisi pengguna terhadap kawah + jalan ke titik kumpul terdekat
-4. Kualitas udara (AQI) di sekitar kawah
-5. Abu vulkanik dan arah angin
-6. Gempa terkini dan grafik kegempaan per jam
-7. Tiga tindakan praktis
-
-Petanya bukan salah satu tab, melainkan **latar seluruh app**. Isi lain duduk
-di lembar geser yang bisa ditarik ke tiga posisi — rendah untuk melihat peta,
-setengah untuk membaca sambil melihat, penuh untuk membaca saja. Di layar
-laptop lembar itu berubah jadi panel kiri dan peta memakai sisa ruangnya.
-
-Lima bagian di dalam lembar: **Status**, **Wilayah** (wilayah terdekat,
-penduduk, penyeberangan, dampak), **Udara** (peringatan abu, angin per
-ketinggian, bandara), **Laporan** (feed resmi), **Panduan** (tindakan, nomor
-penting, dan daftar sumber). Prototipe hanya memuat empat — tab Udara tidak ada
-di sana — tapi bagian itu membawa integrasi yang sudah bekerja, jadi
-dipertahankan.
-
-Peta menerima ukuran antarmuka yang mengapung di atasnya (kepala halaman,
-banner, lembar geser) supaya `fitBounds` tidak menaruh bentuk di balik apa pun.
-
-Peta memakai Leaflet dengan dua petak dasar terbuka — OpenStreetMap (jalan) dan
-OpenTopoMap (relief; bentuk lereng menentukan ke mana aliran turun) — dan
-**hanya menggambar geometri sungguhan**:
+Peta hanya menggambar geometri sungguhan:
 
 | Bentuk | Sumbernya |
 | --- | --- |
 | Kawah | koordinat katalog Smithsonian GVP |
-| Cincin ungu 5/10/30 km | radius perkiraan penduduk WorldPop, jumlahnya di popup |
+| Cincin 5/10/30 km | radius perkiraan penduduk WorldPop, jumlahnya di popup |
 | Area berarsir | poligon SIGMET apa adanya dari otoritas penerbangan |
-| Garis putus-putus oranye | arah angin permukaan terukur, panjang = jarak tempuh satu jam |
-| Titik biru / kuning | episentrum BMKG dan USGS, besar titik mengikuti magnitudo |
-| Titik hijau + garis | posisi GPS pengguna dan jaraknya ke kawah |
+| Garis putus-putus | arah angin permukaan terukur, panjang = jarak tempuh satu jam |
+| Titik biru / kuning | episentrum BMKG dan USGS, besarnya mengikuti magnitudo |
+| Titik hijau + garis | posisi GPS Anda dan jaraknya ke kawah |
 
-Poligon abu ilustratif dan enam penanda desa yang ditulis tangan di prototipe
-tidak dipakai — bentuk karangan di peta lebih menyesatkan daripada angka
-karangan, karena peta terbaca sebagai hasil pengukuran. Lingkaran radius diberi
-label **pembanding**, bukan zona terlarang, karena zona resmi hanya ditetapkan
-Badan Geologi.
+Lingkaran radius diberi label **pembanding**, bukan zona terlarang — zona resmi
+hanya ditetapkan Badan Geologi. Setiap bentuk bisa diketuk untuk melihat
+sumbernya. Petak yang pernah dilihat disimpan service worker dua minggu supaya
+peta tetap terbaca saat sinyal hilang.
 
-Setiap bentuk bisa diketuk untuk melihat sumbernya, ada skala metrik dan
-keterangan warna yang hanya memuat lapisan yang sedang tergambar, dan pandangan
-peta menyesuaikan diri agar seluruh bentuk lapisan itu muat. Petak yang pernah
-dilihat disimpan service worker dua minggu supaya peta tetap terbaca saat sinyal
-hilang; kalau petak gagal dimuat, petanya mengatakan itu alih-alih menyisakan
-layar kosong.
+### Tema terang dan gelap
 
-Kata besar di kartu utama sengaja **bukan** GREEN/YELLOW/ORANGE/RED. Aviation
-colour code adalah pernyataan resmi observatorium gunung api; menuliskannya dari
-hasil turunan sendiri akan membuat tebakan terlihat resmi. Yang ditampilkan
-adalah ada tidaknya peringatan abu di jalur terbang, dan itu dikunci lewat uji
-di `src/data/aviation.test.ts`.
+Bawaannya mengikuti setelan sistem; tombol di kepala halaman menukarnya, dan
+pilihan itu diingat serta menang atas setelan sistem sesudahnya. Temanya dipasang
+sebelum gambar pertama, jadi tidak ada kedipan.
 
-Setiap angka membawa stempel waktu dan sumber. Saat data basi, gagal dimuat, atau
-perangkat offline, bagian yang lama diredupkan dan diberi banner — angka lama tidak
-pernah ditampilkan seolah baru.
+Seluruh warna lewat token CSS — tidak ada nilai warna yang ditulis langsung di
+aturan CSS mana pun. Warna keparahan tidak bisa dipakai ulang di dua tema: hijau
+`#4ade80` yang jelas di atas latar gelap hanya 1,7:1 di atas putih, dan kuning
+`#facc15` jatuh ke 1,3:1. Warna itu membawa arti di sini, jadi tema terang punya
+deretnya sendiri. Kedua tema diaudit di peramban: 324 potong teks per tema,
+semuanya lolos WCAG AA.
 
-## Notifikasi
+### Notifikasi
 
-Notifikasi memakai Notification API peramban lewat service worker — tanpa server
-push. Batas itu ditulis apa adanya di layar: pemberitahuan hanya terbit selama
-halaman berjalan (terbuka di tab, atau app terpasang dan masih hidup di latar),
-dan app tidak bisa membangunkan perangkat yang sedang mati.
+Notification API peramban lewat service worker, **tanpa server push**. Batas itu
+ditulis apa adanya di layar: pemberitahuan hanya terbit selama halaman berjalan.
 
-Yang memicu pemberitahuan adalah **perpindahan keadaan**, bukan keadaan itu
-sendiri, dan keputusannya ada di `src/data/alerts.ts` supaya bisa diuji tanpa
-peramban:
+Yang memicu adalah **perpindahan keadaan**, bukan keadaan itu sendiri;
+keputusannya di `src/data/alerts.ts` supaya bisa diuji tanpa peramban.
 
 | Aturan | Terbit saat |
 | --- | --- |
 | Peringatan abu penerbangan | keadaan SIGMET berpindah, misal tidak ada → aktif |
 | Kualitas udara | kategori AQI **memburuk** (yang membaik tidak mengganggu) |
-| Gempa baru | ada gempa BMKG yang lebih baru daripada yang terakhir dikabarkan |
+| Gempa baru | ada gempa BMKG lebih baru daripada yang terakhir dikabarkan |
 
-Tiga hal yang dijaga: kunjungan pertama tidak menerbitkan apa pun (tanpa
-pembanding semua terlihat seperti perubahan), keadaan yang sama tidak
-diberitahukan dua kali, dan "sumber gagal dibaca" bukan kabar. Ingatannya
-disimpan per gunung di `localStorage`, jadi berpindah gunung tidak memicu banjir
-kabar. Mode demo tidak pernah mengirim apa pun.
+Kunjungan pertama tidak menerbitkan apa pun, keadaan yang sama tidak
+diberitahukan dua kali, dan "sumber gagal dibaca" bukan kabar. Aturan evakuasi
+sengaja terkunci mati: app ini tidak menerima perintah evakuasi dari BPBD.
 
-Aturan `evac` sengaja terkunci mati: app ini tidak menerima perintah evakuasi
-dari BPBD, dan saklarnya tidak boleh terlihat menyala seolah kabarnya akan
-datang. Versi awal bahkan menjanjikan pengiriman lewat SMS — janji yang tidak
-punya saluran apa pun di belakangnya, dan sudah dihapus.
+---
 
-## Sumber yang belum tersambung
+## Sumber data
 
-Apa yang sudah hidup ada di bagian [Sumber data](#sumber-data). Sisanya:
+### Sudah hidup
+
+| Bagian | Sumber |
+| --- | --- |
+| Posisi Anda & jarak ke kawah | Geolocation API perangkat |
+| **Peringatan abu penerbangan** | NOAA Aviation Weather Center (SIGMET) |
+| Arah abu & kecepatan angin | Open-Meteo |
+| Angin per ketinggian terbang | Open-Meteo, lapisan tekanan 850–200 hPa |
+| Tinggi gelombang Selat Sunda | Open-Meteo Marine |
+| Gempa terkini di sekitar | USGS summary feed, langsung dari peramban |
+| Grafik kegempaan per jam | EMSC, dengan USGS FDSN sebagai cadangan |
+| Feed gempa & potensi tsunami | BMKG `data.bmkg.go.id`, disaring 500 km |
+| Erupsi terakhir tercatat | Smithsonian GVP (katalog mingguan) |
+| SO2 dan partikel di atas kawah | Copernicus CAMS via Open-Meteo (model) |
+| Indeks AQI | dihitung dari PM2.5 CAMS, rumus US EPA |
+| Perkiraan penduduk per radius | WorldPop 2020 (model 100 m) |
+| Bandara acuan di sekitar gunung | katalog terbuka OurAirports |
+| Peta dasar | OpenStreetMap dan OpenTopoMap lewat Leaflet |
+
+### Belum tersambung
 
 | Data | Sumber | Kendala |
 | --- | --- | --- |
-| Level status, laporan pos pengamatan, VONA | Badan Geologi / PVMBG (MAGMA Indonesia) | endpoint tidak terbuka bebas, perlu izin |
-| Advisory abu penerbangan | VAAC Darwin | terbit sebagai teks/HTML, bukan API |
-| Kualitas udara | OpenAQ / sensor lokal | OpenAQ v3 menuntut API key |
-| Titik kumpul, kapasitas posko, nomor darurat | BPBD kabupaten | umumnya manual, belum ada API |
+| **Level status, radius bahaya, VONA** | MAGMA Indonesia / PVMBG | butuh token dari Badan Geologi |
+| Kegempaan vulkanik | Pos pengamatan PVMBG | idem |
+| Dampak wilayah, titik kumpul, transportasi | BPBD kabupaten | belum ada API |
+| Lalu lintas pesawat | OpenSky Network | CORS terkunci ke domainnya sendiri |
+| NOTAM & status bandara | FAA / ICAO | perlu kredensial |
+
+### Yang dijaga ketat
+
+- **Level status tidak pernah diturunkan dari sumber lain.** Hanya PVMBG yang
+  berhak menetapkannya. Selama belum tersambung, kartunya memuat peringatan
+  eksplisit bahwa levelnya belum resmi.
+- **Kata besar di kartu utama bukan GREEN/YELLOW/ORANGE/RED.** Aviation colour
+  code adalah pernyataan resmi observatorium; menuliskannya dari turunan sendiri
+  membuat tebakan terlihat resmi. Dikunci lewat `src/data/aviation.test.ts`.
+- **Feed BMKG disaring per jarak.** `autogempa.json` melaporkan gempa se-Indonesia;
+  pengambilan pertama menghasilkan gempa Banggai, 2.065 km dari Anak Krakatau.
+  Hanya radius 500 km dan tujuh hari terakhir yang tampil, dengan jaraknya
+  tertulis.
+- **SIGMET disaring dua arah.** Feed-nya global — contoh pertama yang terambil
+  adalah abu di Bogota. Penyaringannya: poligon dalam 500 km, atau nama gunung
+  disebut di teks resminya. Kalau teksnya tidak menyebut gunung yang dipantau,
+  kartunya bertanda "periksa teks — bisa untuk gunung lain".
+- **Kualitas udara adalah keluaran model, bukan pengukuran.** Angka SO2 dan PM10
+  dari model CAMS, bukan stasiun darat, dan kartunya menyebutkan itu. Ambang
+  warnanya mengikuti WHO 2021.
+- **Gempa EMSC dan USGS bukan kegempaan vulkanik.** Itu tektonik regional; label
+  di layar menyebutkannya.
+- **Satu-satunya nomor yang ditampilkan adalah 112.** Nomor posko per kabupaten
+  tidak dicantumkan selama belum ada sumber resminya — nomor yang salah saat
+  darurat lebih buruk daripada tidak ada nomor.
+
+### Catatan pengujian sumber
+
+Semua di bawah ini hasil `scripts/probe-sources.mjs`, bukan dugaan.
+
+- **MAGMA** `/api/v1/magma-var` dan `/api/v1/vona` menjawab
+  `401 {"message":"Token not provided"}` — endpointnya ada dan menunggu
+  `Authorization`. Simpan token sebagai repository secret `MAGMA_TOKEN`; sumber
+  `magma` di `fetch-sources.mjs` sudah membacanya. Bentuk responsnya belum pernah
+  terlihat, jadi pemetaan field-nya sengaja belum ditulis — pengambilan pertama
+  dengan token akan menerbitkan cuplikannya sebagai annotation.
+- **SIGMET: kode bahayanya `VA`, bukan `ASH`.** Menyaring dengan `hazard === 'ASH'`
+  mengembalikan nol hasil dari 127 peringatan aktif.
+- **USGS `volcanoApi/volcanoesGVP`** mengembalikan 1.470 gunung tapi **tanpa medan
+  status atau alert sama sekali** — itu direktori, bukan status.
+- **VAAC Darwin** menjawab `403` dengan pesan tegas menolak scraping.
+- **InaRISK `Arah_jalur_evakuasi`** berisi layer `arahJ`, `arahI`, `arahH` — simbol
+  panah pada peta, bukan daftar titik kumpul bernama.
+- **BNPB** `Bencana_Harian` `499 Token Required`; **OpenAQ v3** `401`;
+  **ReliefWeb v2** `403`; **GDACS** melewati batas 25 detik.
 
 Menambah sumber baru: tulis satu fungsi di `scripts/fetch-sources.mjs`, daftarkan
-di `SOURCES`, lalu buat pembacanya di `src/data/live.ts` dan pakai di
+di `SOURCES`, buat pembacanya di `src/data/live.ts`, lalu pakai di
 `getSnapshot()`. Beri provenance `'live'` hanya untuk bagian yang benar-benar
 berasal dari sumber itu.
 
-Yang belum dikerjakan dan perlu diputuskan sebelum dipakai publik:
+---
+
+## Struktur
+
+```
+src/
+  data/          satu-satunya tempat yang perlu diganti saat menyambung API
+    volcanoes.ts         registri tujuh gunung; koordinat dari Smithsonian
+    regions.ts           isi khas wilayah per gunung, tidak boleh bocor antar gunung
+    levels.ts            teks per level status (I–IV), radius, sejak kapan
+    snapshot.ts          getSnapshot(): seluruh isi layar dalam satu objek
+    dataState.ts         segar / basi / gagal / offline + salinan teks bannernya
+    live.ts              parser berkas snapshot dari CI
+    aviation.ts          keadaan peringatan abu; warna aksen seluruh layar
+    aqi.ts               AQI dari PM2.5, tabel breakpoint US EPA
+    alerts.ts            aturan kapan notifikasi terbit
+  hooks/
+    useVolcanoFeed.ts    polling, umur data, deteksi offline
+    useGeolocation.ts    izin lokasi, watchPosition, tiap keadaan gagalnya
+    useVolcanoSelection.ts  gunung terpilih, tertulis ke URL
+    useTheme.ts          tema terang/gelap, bawaan ikut sistem
+    useDemo.ts           override level/kondisi data lewat query string
+  components/    tampilan; tidak ada angka yang ditulis langsung di sini
+  lib/geo.ts     jarak, arah, vonis zona, titik kumpul terdekat
+  lib/format.ts  waktu WIB, tanggal, durasi, angka Indonesia
+  theme.ts       warna per tingkat bahaya dan kondisi data, sebagai token
+scripts/
+  fetch-sources.mjs  pengambil sumber resmi, jalan di CI
+  probe-sources.mjs  alat ukur endpoint kandidat
+```
+
+---
+
+## Mode demo
+
+Semua level status dan kondisi data bisa ditampilkan tanpa menunggu kejadian:
+
+```
+/?demo=1
+/?demo=1&level=awas&data=failed
+```
+
+- `level`: `normal` · `waspada` · `siaga` (bawaan) · `awas`
+- `data`: `fresh` · `stale` · `failed` · `offline` (kosong = kondisi asli)
+- `transport=0`: sembunyikan bagian transportasi
+
+Pilihan ikut tertulis ke URL, jadi satu tautan bisa dibagikan. Mode demo tidak
+pernah mengirim notifikasi.
+
+---
+
+## Deploy
+
+Setiap push ke `main` — dan tiap 30 menit lewat cron — mem-build dan menerbitkan
+app lewat `.github/workflows/deploy-pages.yml`. Bisa juga dijalankan manual dari
+tab Actions.
+
+Setelan sekali saja di GitHub:
+
+1. Repositori harus **public** (Pages untuk repo private butuh paket berbayar).
+2. **Settings → Pages → Source: GitHub Actions.**
+3. **Settings → Environments → `github-pages` → Deployment branches** harus
+   mengizinkan `main`. Aturan ini menyimpan nama branch saat Pages pertama
+   diaktifkan; mengganti default branch belakangan tidak memperbaruinya, dan job
+   `deploy` gagal dengan _"Branch main is not allowed to deploy to github-pages"_
+   meskipun `build` sukses.
+
+Base Vite diisi dari `actions/configure-pages`: kosong untuk user site seperti
+`gunungfire.github.io`, `/nama-repo/` untuk project site. Semua jalur aset,
+manifest, dan `navigateFallback` service worker ikut base tersebut.
+
+---
+
+## Yang belum selesai
 
 - **Titik kumpul masih perkiraan.** Jaraknya dihitung sungguhan dari GPS, tapi
-  koordinat titik kumpulnya setingkat desa/kecamatan, bukan koordinat bangunan,
-  dan belum berasal dari BPBD. Cukup untuk mengurutkan mana yang terdekat, tidak
-  cukup untuk menuntun langkah.
-- **Notifikasi belum dikirim.** Aturan peredaman sudah ada di UI dan datanya, tapi
-  belum ada Push API maupun jalur SMS.
-- **Laporan warga belum terkirim ke mana pun** dan alur verifikasi petugas belum dirancang.
+  koordinatnya setingkat desa, bukan bangunan, dan belum dari BPBD. Cukup untuk
+  mengurutkan mana yang terdekat, tidak cukup untuk menuntun langkah.
+- **Laporan warga belum terkirim ke mana pun**, dan alur verifikasi petugas belum
+  dirancang.
+- **Notifikasi belum punya Push API**, jadi tidak sampai ke perangkat yang mati.
 
-Selama angkanya masih contoh, catatan kaki "Prototipe — data contoh" di setiap
-halaman jangan dihapus.
-
-## Tema terang dan gelap
-
-Bawaannya mengikuti setelan sistem; tombol di kepala halaman menukarnya, dan
-pilihan itu diingat serta menang atas setelan sistem sesudahnya.
-
-Seluruh warna app lewat token CSS — tidak ada nilai warna yang ditulis langsung
-di aturan CSS mana pun, dan `theme.ts` maupun `data/aviation.ts` menunjuk token,
-bukan kode warna. Warna keparahan tidak bisa dipakai ulang di dua tema: hijau
-`#4ade80` yang enak dibaca di atas latar gelap hanya 1,7:1 di atas putih, dan
-kuning `#facc15` jatuh ke 1,3:1. Di app kebencanaan warna itu membawa arti, jadi
-tema terang punya deretnya sendiri.
-
-Kedua tema diaudit rasio kontrasnya di peramban: 324 potong teks per tema di
-lima tab dan lembar pemilih gunung, semuanya lolos ambang WCAG AA.
-
-## Catatan implementasi terhadap desain
-
-Satu koreksi yang sengaja dibuat terhadap prototipe: pada peta skematik, gumpalan
-abu digambar mengarah ke barat laut (kiri atas) agar sesuai dengan keterangannya —
-di prototipe arahnya ke kanan atas.
-
-## Berkas desain asal
-
-`project/` berisi prototipe HTML dari Claude Design dan `chats/` berisi transkrip
+`project/` berisi prototipe HTML dari Claude Design dan `chats/` transkrip
 percakapan desainnya. Keduanya rujukan, tidak ikut dibuild.

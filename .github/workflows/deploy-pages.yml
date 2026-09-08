@@ -46,11 +46,19 @@ jobs:
         run: npm run fetch:data
         continue-on-error: true
 
-      # base_path berisi "/nama-repo" untuk project site, kosong untuk user site.
+      # base_path berisi "/nama-repo" untuk project site, dan kosong atau "/"
+      # untuk user site seperti gunungfire.github.io. Menempelkan "/" begitu
+      # saja menghasilkan "//" pada kasus kedua, jadi jalurnya dirapikan dulu.
       - name: Build
-        run: npm run build
-        env:
-          VITE_BASE: ${{ steps.pages.outputs.base_path }}/
+        run: |
+          BASE='${{ steps.pages.outputs.base_path }}'
+          case "$BASE" in
+            ''|'/') BASE='/' ;;
+            */)     ;;
+            *)      BASE="$BASE/" ;;
+          esac
+          echo "VITE_BASE=$BASE"
+          VITE_BASE="$BASE" npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:
