@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertStrip } from './components/AlertStrip'
 import { AppFooter } from './components/AppFooter'
 import { BottomSheet, type SheetMetrics } from './components/BottomSheet'
@@ -27,10 +27,13 @@ import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM } from './theme'
 import type { MapLayer } from './types'
 
-/** Tinggi kepala mengapung, dipakai peta untuk tidak menaruh bentuk di baliknya. */
+/**
+ * Tebakan awal tinggi kepala mengapung, hanya dipakai untuk gambar pertama
+ * sebelum tumpukan atas benar-benar terukur.
+ */
 const HEADER_PX = 66
-/** Tambahan saat banner kondisi data ikut tampil. */
-const BANNER_PX = 72
+/** Jarak lega antara tumpukan atas dan kendali peta di bawahnya. */
+const CHROME_GAP = 8
 
 /** Ringkasan satu baris di layar Status, apa adanya sesuai keadaan izin. */
 function notifSummary(n: ReturnType<typeof useNotifications>): string {
@@ -67,6 +70,33 @@ export default function App() {
     panelWidth: 0,
   })
   const notifications = useNotifications()
+  const bannersRef = useRef<HTMLDivElement | null>(null)
+  const [chromeTop, setChromeTop] = useState(HEADER_PX)
+
+  /**
+   * Tinggi tumpukan atas diukur, bukan ditebak dari angka tetap.
+   * Isinya berubah-ubah — banner kondisi data bisa ada atau tidak, pita
+   * peringatan abu bisa satu atau tiga baris tergantung lebar layar — dan
+   * tebakan tetap sempat membuat keterangan warna peta tertimbun pita
+   * peringatan.
+   */
+  useEffect(() => {
+    const el = bannersRef.current
+    if (!el) return
+    const measure = () => {
+      const next = Math.round(el.getBoundingClientRect().bottom) + CHROME_GAP
+      setChromeTop((prev) => (prev === next ? prev : next))
+    }
+    measure()
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
 
   /**
    * Aksen seluruh layar mengikuti keadaan peringatan abu — satu-satunya
@@ -99,7 +129,7 @@ export default function App() {
     '--panel-w': `${sheet.panelWidth}px`,
     // Ruang yang dipakai kepala dan banner, supaya kendali bawaan peta —
     // skala, pemilih peta dasar, keterangan warna — tidak duduk di baliknya.
-    '--chrome-top': `${HEADER_PX + (dataState.banner ? BANNER_PX : 0)}px`,
+    '--chrome-top': `${chromeTop}px`,
   } as React.CSSProperties
 
   // Berpindah tab ikut membuka lembar: memilih bagian lalu hanya melihat
@@ -118,11 +148,11 @@ export default function App() {
 
   const chrome = useMemo(
     () => ({
-      top: HEADER_PX + (dataState.banner ? BANNER_PX : 0),
+      top: chromeTop,
       left: sheet.panelWidth,
       bottom: sheet.height,
     }),
-    [dataState.banner, sheet.panelWidth, sheet.height],
+    [chromeTop, sheet.panelWidth, sheet.height],
   )
 
   return (
@@ -152,7 +182,7 @@ export default function App() {
         onPickVolcano={() => setVolcanoOpen(true)}
       />
 
-      <div className="app__banners">
+      <div className="app__banners" ref={bannersRef}>
         <DataStateBanner dataState={dataState} onRetry={refresh} />
         <AlertStrip status={aviation} />
       </div>
