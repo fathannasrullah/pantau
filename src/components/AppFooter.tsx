@@ -1,6 +1,11 @@
 /**
- * Kaki halaman. Satu tautan pembuat, dan satu kalimat yang harus terbaca di
- * setiap layar: app ini bukan penerbit status resmi.
+ * Kaki halaman: satu tautan pembuat, tidak lebih.
+ *
+ * Sempat ada kalimat "bukan sumber resmi" di sini, tapi keterangan itu sudah
+ * dibawa di tempat yang benar — kartu "Level resmi Indonesia" di layar Status,
+ * daftar sumber di Panduan, dan catatan di tiap kartu yang angkanya turunan.
+ * Di kaki halaman ia hanya jadi pengulangan yang terbaca sebagai penyangkalan
+ * umum, jenis kalimat yang justru dilewati orang.
  */
 export function AppFooter() {
   return (
@@ -15,11 +20,11 @@ export function AppFooter() {
         <svg
           className="foot__icon"
           viewBox="0 0 24 24"
-          width="16"
-          height="16"
+          width="15"
+          height="15"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.8"
+          strokeWidth="1.7"
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
@@ -30,10 +35,6 @@ export function AppFooter() {
         </svg>
         <span className="foot__name">nfathan</span>
       </a>
-      <p className="foot__note">
-        Bukan sumber resmi. Level status gunung api ditetapkan Badan Geologi;
-        perintah evakuasi datang dari BPBD.
-      </p>
     </footer>
   )
 }
