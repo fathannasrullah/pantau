@@ -30,26 +30,22 @@ export interface AviationStatus {
   colors: ColorSet
 }
 
-const GREEN: ColorSet = {
-  color: '#4ade80',
-  line: 'rgba(74,222,128,.3)',
-  wash: 'rgba(74,222,128,.06)',
-}
-const YELLOW: ColorSet = {
-  color: '#facc15',
-  line: 'rgba(250,204,21,.3)',
-  wash: 'rgba(250,204,21,.06)',
-}
-const ORANGE: ColorSet = {
-  color: '#fb923c',
-  line: 'rgba(251,146,60,.32)',
-  wash: 'rgba(251,146,60,.07)',
-}
-const GREY: ColorSet = {
-  color: '#94a3b8',
-  line: 'rgba(148,163,184,.3)',
-  wash: 'rgba(148,163,184,.06)',
-}
+/*
+ * Sama seperti di src/theme.ts: warna ditunjuk lewat token supaya nilainya
+ * ikut berganti bersama tema. Nama GREEN/YELLOW dipertahankan karena itu
+ * keadaan yang diwakilinya, bukan kode warna penerbangan — app ini memang
+ * tidak pernah mengeluarkan Aviation Colour Code.
+ */
+const tone = (token: string, linePct: number, washPct: number): ColorSet => ({
+  color: `var(${token})`,
+  line: `color-mix(in srgb, var(${token}) ${linePct}%, transparent)`,
+  wash: `color-mix(in srgb, var(${token}) ${washPct}%, transparent)`,
+})
+
+const GREEN: ColorSet = tone('--c-safe', 30, 6)
+const YELLOW: ColorSet = tone('--c-watch', 30, 6)
+const ORANGE: ColorSet = tone('--c-alert', 32, 7)
+const GREY: ColorSet = tone('--c-neutral', 30, 6)
 
 /**
  * Terjemahkan daftar SIGMET menjadi satu keadaan. `null` berarti sumbernya

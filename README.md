@@ -275,8 +275,9 @@ src/
     useGeolocation.ts    izin lokasi, watchPosition, dan tiap keadaan gagalnya
     useVolcanoSelection.ts  gunung terpilih, tertulis ke URL dan diingat perangkat
     useDemo.ts           override level/kondisi data lewat query string
+    useTheme.ts          tema terang/gelap: bawaan ikut sistem, pilihan diingat
   components/    tampilan; tidak ada angka yang ditulis langsung di sini
-  theme.ts       warna per tingkat bahaya dan per kondisi data
+  theme.ts       warna per tingkat bahaya dan per kondisi data, sebagai token
   data/aviation.ts  keadaan peringatan abu; warna aksen seluruh layar
   data/aqi.ts       AQI dari PM2.5 dengan tabel breakpoint US EPA
   lib/format.ts  format waktu WIB, tanggal, durasi, dan angka Indonesia
@@ -405,6 +406,21 @@ Yang belum dikerjakan dan perlu diputuskan sebelum dipakai publik:
 
 Selama angkanya masih contoh, catatan kaki "Prototipe — data contoh" di setiap
 halaman jangan dihapus.
+
+## Tema terang dan gelap
+
+Bawaannya mengikuti setelan sistem; tombol di kepala halaman menukarnya, dan
+pilihan itu diingat serta menang atas setelan sistem sesudahnya.
+
+Seluruh warna app lewat token CSS — tidak ada nilai warna yang ditulis langsung
+di aturan CSS mana pun, dan `theme.ts` maupun `data/aviation.ts` menunjuk token,
+bukan kode warna. Warna keparahan tidak bisa dipakai ulang di dua tema: hijau
+`#4ade80` yang enak dibaca di atas latar gelap hanya 1,7:1 di atas putih, dan
+kuning `#facc15` jatuh ke 1,3:1. Di app kebencanaan warna itu membawa arti, jadi
+tema terang punya deretnya sendiri.
+
+Kedua tema diaudit rasio kontrasnya di peramban: 324 potong teks per tema di
+lima tab dan lembar pemilih gunung, semuanya lolos ambang WCAG AA.
 
 ## Catatan implementasi terhadap desain
 

@@ -1,3 +1,14 @@
+/*
+ * Dua tema, satu daftar nama.
+ *
+ * Semua warna di berkas ini lewat token di bawah — tidak ada satu pun nilai
+ * warna mati di aturan mana pun. Itu syaratnya supaya tema bisa ditukar tanpa
+ * memburu ratusan tempat satu per satu.
+ *
+ * Tema gelap adalah bawaan di sini. Tema terang ditulis di blok
+ * [data-theme='terang'] jauh di bawah, dan hanya menimpa nilai warnanya —
+ * ukuran huruf, jarak, dan radius tetap sama untuk keduanya.
+ */
 :root {
   color-scheme: dark;
 
@@ -47,11 +58,36 @@
   --c-card: #141a22;
   --c-sunken: #0f151c;
 
-  /* Garis dan latar tipis, dipakai berulang di seluruh kartu. */
-  --c-line: rgba(255, 255, 255, 0.08);
-  --c-line-2: rgba(255, 255, 255, 0.14);
-  --c-hairline: rgba(255, 255, 255, 0.055);
-  --c-veil: rgba(255, 255, 255, 0.06);
+  /*
+   * Garis dan latar tipis. Dulu ada enam belas tingkat selubung putih yang
+   * bedanya nol koma sekian — tidak terbaca sebagai apa pun. Lima cukup.
+   */
+  --c-hairline: rgba(255, 255, 255, 0.05);
+  --c-veil: rgba(255, 255, 255, 0.07);
+  --c-line: rgba(255, 255, 255, 0.09);
+  --c-line-2: rgba(255, 255, 255, 0.13);
+  --c-line-3: rgba(255, 255, 255, 0.18);
+  --c-grip: rgba(255, 255, 255, 0.22);
+  --c-edge: rgba(255, 255, 255, 0.35);
+  --c-knob: #ffffff;
+
+  /* Permukaan yang mengapung di atas peta, harus tetap terbaca di atasnya. */
+  --c-float: rgba(13, 17, 23, 0.94);
+  --c-float-soft: rgba(13, 17, 23, 0.82);
+  --c-float-hover: rgba(30, 41, 55, 0.95);
+  --c-scrim: rgba(4, 6, 9, 0.72);
+
+  /* Bayangan. Di tema gelap ia menghitamkan, di tema terang cuma menepikan. */
+  --sh-1: rgba(0, 0, 0, 0.26);
+  --sh-2: rgba(0, 0, 0, 0.4);
+  --sh-3: rgba(0, 0, 0, 0.52);
+
+  /*
+   * Peredup petak peta. Petak OSM dibuat untuk latar terang, jadi di tema
+   * gelap ia diredupkan supaya penanda di atasnya tetap yang paling menonjol.
+   * Di tema terang tidak ada yang perlu diredupkan.
+   */
+  --map-tint: brightness(0.72) saturate(0.72) contrast(1.05);
 
   /* Warna keparahan; harus sama dengan SEVERITY_COLOR di src/theme.ts. */
   --c-safe: #4ade80;
@@ -75,6 +111,68 @@
   --panel-w: 0px;
   --chrome-top: 66px;
 }
+
+/*
+ * Tema terang.
+ *
+ * Ditulis sekali saja, tidak diulang di @media, karena tema yang berlaku
+ * selalu dipasang sebagai data-theme di elemen html — termasuk saat pengguna
+ * membiarkannya mengikuti setelan sistem. Skrip kecil di index.html yang
+ * memasangnya sebelum gambar pertama, supaya tidak ada kedipan gelap.
+ *
+ * Warna keparahan tidak bisa dipakai ulang begitu saja: hijau #4ade80 di atas
+ * putih hanya 1,7:1, kuning #facc15 malah 1,3:1. Di app kebencanaan warna itu
+ * membawa arti, jadi tema terang punya deretnya sendiri yang semuanya lolos
+ * 4,5:1 di atas permukaan tempatnya dipakai.
+ */
+:root[data-theme='terang'] {
+  color-scheme: light;
+
+  --c-text: #101828;
+  --c-text-2: #344054;
+  --c-text-3: #475467;
+  --c-text-4: #5b6577;
+
+  --c-page: #dfe6ef;
+  --c-shell: #f6f8fb;
+  --c-card: #ffffff;
+  --c-sunken: #eef2f7;
+
+  --c-hairline: rgba(16, 24, 40, 0.05);
+  --c-veil: rgba(16, 24, 40, 0.06);
+  --c-line: rgba(16, 24, 40, 0.11);
+  --c-line-2: rgba(16, 24, 40, 0.16);
+  --c-line-3: rgba(16, 24, 40, 0.24);
+  --c-grip: rgba(16, 24, 40, 0.26);
+  --c-edge: rgba(16, 24, 40, 0.45);
+  --c-knob: #ffffff;
+
+  --c-float: rgba(255, 255, 255, 0.96);
+  --c-float-soft: rgba(255, 255, 255, 0.86);
+  --c-float-hover: rgba(226, 232, 240, 0.97);
+  --c-scrim: rgba(16, 24, 40, 0.42);
+
+  /* Di latar terang bayangan menepikan, bukan menghitamkan. */
+  --sh-1: rgba(16, 24, 40, 0.07);
+  --sh-2: rgba(16, 24, 40, 0.11);
+  --sh-3: rgba(16, 24, 40, 0.16);
+
+  --c-safe: #15803d;
+  --c-watch: #a16207;
+  --c-alert: #c2410c;
+  --c-danger: #b42318;
+  --c-neutral: #475467;
+  --c-model: #7e22ce;
+  --c-sea: #0369a1;
+  --c-link: #0b5cab;
+  --c-link-hover: #063f78;
+  /* Aksen jadi gelap di tema ini, jadi teks di atasnya jadi putih. */
+  --c-on-accent: #ffffff;
+
+  /* Petak OSM memang dibuat untuk latar terang; tidak ada yang perlu diredam. */
+  --map-tint: none;
+}
+
 
 *,
 *::before,
@@ -267,11 +365,11 @@ button {
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  background: rgba(13, 17, 23, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--c-float);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   padding: 10px var(--s-3);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 30px var(--sh-2);
   pointer-events: auto;
 }
 
@@ -327,6 +425,45 @@ button {
   min-height: var(--tap);
 }
 
+/* Pengalih tema. Hanya ikon: di layar 320 piksel kepala halaman sudah berisi
+   nama gunung dan kondisi data, tidak ada ruang untuk satu label lagi. */
+.fhead__tema {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-line);
+  background: var(--c-veil);
+  color: var(--c-text-2);
+}
+
+.fhead__tema:hover {
+  color: var(--c-text);
+  border-color: var(--c-line-3);
+}
+
+.fhead__tema svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+/* Bulan digambar sebagai bidang penuh, mataharinya sebagai garis. */
+.fhead__tema svg path[d^='M16.2'] {
+  fill: currentColor;
+  stroke: none;
+}
+
+.fhead__tema svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+
 /* Banner kondisi data dan pita peringatan, menumpuk di bawah kepala. */
 
 .app__banners {
@@ -344,7 +481,7 @@ button {
 .app__banners > * {
   pointer-events: auto;
   border-radius: var(--r-md);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px var(--sh-2);
 }
 
 /* Kendali peta, duduk tepat di atas lembar geser dan ikut bergerak. */
@@ -396,17 +533,17 @@ button {
   font-weight: 600;
   padding: 8px 11px;
   border-radius: var(--r-md);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid var(--c-line-2);
+  background: var(--c-float);
   color: var(--c-text-2);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 18px var(--sh-2);
   white-space: nowrap;
 }
 
 .mapctl__btn--on {
   border-color: var(--lv);
   color: var(--lv);
-  background: rgba(13, 17, 23, 0.96);
+  background: var(--c-float);
 }
 
 /* Lembar geser. */
@@ -420,9 +557,9 @@ button {
   display: flex;
   flex-direction: column;
   background: var(--c-shell);
-  border-top: 1px solid rgba(255, 255, 255, 0.11);
+  border-top: 1px solid var(--c-line-2);
   border-radius: 18px 18px 0 0;
-  box-shadow: 0 -14px 44px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 -14px 44px var(--sh-3);
   transition: height 0.26s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -452,7 +589,7 @@ button {
   width: 40px;
   height: 4px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--c-grip);
 }
 
 .sheetpanel__head {
@@ -493,7 +630,7 @@ button {
   padding: 9px 4px;
   min-height: var(--tap);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--c-hairline);
   color: var(--c-text-3);
   white-space: nowrap;
   overflow: hidden;
@@ -537,7 +674,7 @@ button {
   color: var(--c-text);
   margin: 26px 0 10px;
   padding-left: 10px;
-  border-left: 2px solid rgba(255, 255, 255, 0.16);
+  border-left: 2px solid var(--c-line-3);
   line-height: 1.35;
 }
 
@@ -643,7 +780,7 @@ button {
 
 .avcard__plainbox {
   margin-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--c-line);
   padding-top: 13px;
 }
 
@@ -669,7 +806,7 @@ button {
 
 .pill {
   font-size: var(--t-2xs);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--c-line);
   border-radius: var(--r-sm);
   padding: 6px 9px;
 }
@@ -678,7 +815,7 @@ button {
 
 .poscard {
   margin-top: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   padding: 15px;
@@ -688,7 +825,7 @@ button {
   display: block;
   width: 100%;
   border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--c-line-3);
 }
 
 .poscard__head {
@@ -786,14 +923,14 @@ button {
   font-weight: 600;
   padding: 12px 14px;
   border-radius: var(--r-md);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--c-line-2);
   color: var(--c-text);
 }
 
 /* ---------- ashfall ---------- */
 
 .failnote {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   padding: 16px;
@@ -812,7 +949,7 @@ button {
 }
 
 .ash {
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   margin-top: 8px;
@@ -829,7 +966,7 @@ button {
 }
 
 .ash__cell--left {
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-right: 1px solid var(--c-veil);
 }
 
 .ash__k {
@@ -858,7 +995,7 @@ button {
 }
 
 .ash__advice {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
   padding: 12px 14px;
   font-size: var(--t-xs);
   color: var(--c-text-2);
@@ -883,7 +1020,7 @@ button {
   display: flex;
   gap: 12px;
   padding: 12px 2px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--c-hairline);
 }
 
 .step__n {
@@ -912,7 +1049,7 @@ button {
 /* ---------- metrics ---------- */
 
 .metric {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-md);
   padding: 12px 13px;
   background: var(--c-card);
@@ -939,7 +1076,7 @@ button {
 /* ---------- impacts ---------- */
 
 .impacts {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   overflow: hidden;
@@ -949,7 +1086,7 @@ button {
   display: flex;
   gap: 12px;
   padding: 13px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid var(--c-hairline);
   align-items: flex-start;
 }
 
@@ -1000,7 +1137,7 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-md);
   padding: 12px 14px;
   background: var(--c-card);
@@ -1059,7 +1196,7 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-md);
   padding: 13px 14px;
   width: 100%;
@@ -1067,7 +1204,7 @@ button {
 }
 
 .notifrow:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--c-line-3);
 }
 
 .notifrow__body {
@@ -1146,7 +1283,7 @@ button {
 
 .mapbox {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   overflow: hidden;
   height: 400px;
@@ -1175,8 +1312,8 @@ button {
   gap: 2px;
   padding: 2px;
   border-radius: var(--r-md);
-  background: rgba(13, 17, 23, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--c-float);
+  border: 1px solid var(--c-line-2);
 }
 
 .lmapbase__btn {
@@ -1189,7 +1326,7 @@ button {
 }
 
 .lmapbase__btn--on {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--c-line);
   color: var(--c-text);
 }
 
@@ -1202,8 +1339,8 @@ button {
   padding: 7px 9px;
   list-style: none;
   border-radius: var(--r-md);
-  background: rgba(13, 17, 23, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--c-float);
+  border: 1px solid var(--c-line);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1254,8 +1391,8 @@ button {
   z-index: 500;
   padding: 9px 11px;
   border-radius: var(--r-md);
-  background: rgba(13, 17, 23, 0.92);
-  border: 1px solid rgba(250, 204, 21, 0.35);
+  background: var(--c-float);
+  border: 1px solid color-mix(in srgb, var(--c-watch) 35%, transparent);
   color: var(--c-watch);
   font-size: var(--t-2xs);
   line-height: 1.5;
@@ -1264,7 +1401,7 @@ button {
 /* Petak OSM terang di layar gelap; diredupkan sedikit supaya penanda dan
    poligon tetap yang paling menonjol, tanpa mengubah isi petanya. */
 .lmap .leaflet-tile-pane {
-  filter: brightness(0.72) saturate(0.72) contrast(1.05);
+  filter: var(--map-tint);
 }
 
 .lmap .leaflet-container {
@@ -1273,7 +1410,7 @@ button {
 }
 
 .lmap .leaflet-control-attribution {
-  background: rgba(13, 17, 23, 0.82);
+  background: var(--c-float-soft);
   color: var(--c-text-3);
   font-size: var(--t-3xs);
 }
@@ -1283,21 +1420,21 @@ button {
 }
 
 .lmap .leaflet-control-zoom a {
-  background: rgba(13, 17, 23, 0.9);
+  background: var(--c-float);
   color: var(--c-text);
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: var(--c-line-2);
 }
 
 .lmap .leaflet-control-zoom a:hover {
-  background: rgba(30, 41, 55, 0.95);
-  color: #fff;
+  background: var(--c-float-hover);
+  color: var(--c-text);
 }
 
 .lmap .leaflet-popup-content-wrapper,
 .lmap .leaflet-popup-tip {
   background: var(--c-card);
   color: var(--c-text);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 22px var(--sh-3);
 }
 
 .lmap .leaflet-popup-content {
@@ -1316,20 +1453,20 @@ button {
 }
 
 .lmap .leaflet-tooltip {
-  background: rgba(13, 17, 23, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--c-float);
+  border: 1px solid var(--c-line-2);
   color: var(--c-text);
   font-size: var(--t-2xs);
   box-shadow: none;
 }
 
 .lmap .leaflet-tooltip::before {
-  border-top-color: rgba(255, 255, 255, 0.14);
+  border-top-color: var(--c-line-2);
 }
 
 .lmap .leaflet-control-scale-line {
-  background: rgba(13, 17, 23, 0.82);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: var(--c-float-soft);
+  border-color: var(--c-edge);
   color: var(--c-text-2);
   font-size: var(--t-3xs);
 }
@@ -1360,7 +1497,7 @@ button {
   font-weight: 600;
   padding: 11px 4px;
   border-radius: var(--r-md);
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  border: 1px solid var(--c-line-2);
   background: transparent;
   color: var(--c-text-2);
 }
@@ -1381,7 +1518,7 @@ button {
 /* ---------- seismic ---------- */
 
 .seis {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   padding: 16px 14px 12px;
@@ -1417,7 +1554,7 @@ button {
 }
 
 .seis__note {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
   margin-top: 11px;
   padding-top: 11px;
   font-size: var(--t-xs);
@@ -1439,7 +1576,7 @@ button {
 }
 
 .quake {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-md);
   padding: 12px 13px;
   background: var(--c-card);
@@ -1459,7 +1596,7 @@ button {
 .quake__track {
   height: 4px;
   border-radius: var(--r-xs);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--c-line);
   margin-top: 8px;
   overflow: hidden;
 }
@@ -1496,7 +1633,7 @@ button {
 }
 
 .feeditem {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   padding: 14px;
@@ -1577,9 +1714,9 @@ button {
   position: sticky;
   bottom: 0;
   z-index: 30;
-  background: rgba(13, 17, 23, 0.95);
+  background: var(--c-float);
   backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--c-line);
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   padding: 8px 6px 12px;
@@ -1622,7 +1759,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(4, 6, 9, 0.72);
+  background: var(--c-scrim);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1640,7 +1777,7 @@ button {
   max-width: 460px;
   background: var(--c-card);
   color: var(--c-text);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--c-line-2);
   border-radius: 18px 18px 0 0;
   padding: 18px 16px 22px;
   padding-bottom: calc(22px + env(safe-area-inset-bottom));
@@ -1686,7 +1823,7 @@ button {
 
 .sheet__fallback {
   margin-top: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-md);
   padding: 13px;
   background: var(--c-sunken);
@@ -1716,7 +1853,7 @@ button {
   align-items: center;
   gap: 12px;
   padding: 13px 2px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--c-hairline);
   width: 100%;
 }
 
@@ -1751,7 +1888,7 @@ button {
   width: 40px;
   height: 23px;
   border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--c-line-2);
   position: relative;
   flex: none;
   transition: background 0.2s;
@@ -1762,7 +1899,7 @@ button {
 }
 
 .switch--locked.switch--on {
-  background: rgba(148, 163, 184, 0.45);
+  background: color-mix(in srgb, var(--c-neutral) 45%, transparent);
 }
 
 .switch__knob {
@@ -1772,7 +1909,7 @@ button {
   width: 17px;
   height: 17px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--c-knob);
   transition: left 0.2s;
 }
 
@@ -1791,7 +1928,7 @@ button {
   font-weight: 600;
   padding: 9px 13px;
   border-radius: var(--r-pill);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  border: 1px solid var(--c-line-2);
   background: transparent;
   color: var(--c-text-2);
 }
@@ -1807,7 +1944,7 @@ button {
   align-items: center;
   gap: 10px;
   margin-top: 16px;
-  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border: 1px dashed var(--c-line-2);
   border-radius: var(--r-md);
   padding: 14px;
   background: var(--c-sunken);
@@ -1830,7 +1967,7 @@ button {
 }
 
 .submit--sent {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--c-line);
   color: var(--c-text-3);
 }
 
@@ -1845,9 +1982,9 @@ button {
   z-index: 50;
   width: calc(100% - 24px);
   max-width: 436px;
-  background: rgba(15, 21, 28, 0.96);
+  background: var(--c-float);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-lg);
   padding: 12px 13px;
 }
@@ -1895,7 +2032,7 @@ button {
   font-weight: 600;
   padding: 6px 9px;
   border-radius: var(--r-sm);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--c-line-2);
   color: var(--c-text-2);
 }
 
@@ -1914,8 +2051,8 @@ button {
   font-size: var(--t-2xs);
   font-weight: 600;
   color: var(--c-text-2);
-  background: rgba(15, 21, 28, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--c-float);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-pill);
   padding: 8px 12px;
 }
@@ -1930,7 +2067,7 @@ a.row__tel:hover {
   display: inline-block;
   margin-left: 6px;
   padding: 1px 6px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  border: 1px solid color-mix(in srgb, var(--c-neutral) 45%, transparent);
   border-radius: var(--r-xs);
   color: var(--c-text-3);
   font-size: var(--t-3xs);
@@ -1947,9 +2084,9 @@ a.row__tel:hover {
   gap: 3px;
   margin-top: 12px;
   padding: 11px 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid color-mix(in srgb, var(--c-neutral) 35%, transparent);
   border-radius: var(--r-md);
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--sh-1);
 }
 
 .unwired__t {
@@ -1974,7 +2111,7 @@ a.row__tel:hover {
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   overflow: hidden;
@@ -1985,7 +2122,7 @@ a.row__tel:hover {
   gap: 12px;
   align-items: flex-start;
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid var(--c-hairline);
 }
 
 .srcitem:last-child {
@@ -2052,7 +2189,7 @@ a.row__tel:hover {
   align-self: flex-start;
   padding: 9px 14px;
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--c-line);
   color: var(--c-text);
   font-size: var(--t-xs);
   font-weight: 700;
@@ -2109,7 +2246,7 @@ a.row__tel:hover {
   width: 100%;
   padding: 13px 2px;
   border: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--c-hairline);
   background: none;
   color: inherit;
   font: inherit;
@@ -2148,7 +2285,7 @@ a.row__tel:hover {
 .emptynote {
   margin: 0;
   padding: 14px;
-  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border: 1px dashed var(--c-line-2);
   border-radius: var(--r-md);
   color: var(--c-text-3);
   font-size: var(--t-xs);
@@ -2164,7 +2301,7 @@ a.row__tel:hover {
 /* --- Penduduk per radius ------------------------------------------------- */
 
 .popcard {
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   overflow: hidden;
@@ -2181,7 +2318,7 @@ a.row__tel:hover {
 }
 
 .popring + .popring {
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 1px solid var(--c-veil);
 }
 
 .popring__r {
@@ -2205,7 +2342,7 @@ a.row__tel:hover {
 .popcard__note {
   margin: 0;
   padding: 12px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
   color: var(--c-text-2);
   font-size: var(--t-xs);
   line-height: 1.5;
@@ -2233,7 +2370,7 @@ a.row__tel:hover {
 .livedot {
   flex: none;
   padding: 2px 7px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
+  border: 1px solid color-mix(in srgb, var(--c-neutral) 40%, transparent);
   border-radius: var(--r-xs);
   color: var(--c-text-3);
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
@@ -2243,7 +2380,7 @@ a.row__tel:hover {
 }
 
 .livedot--on {
-  border-color: rgba(74, 222, 128, 0.45);
+  border-color: color-mix(in srgb, var(--c-safe) 45%, transparent);
   color: var(--c-safe);
 }
 
@@ -2261,7 +2398,7 @@ a.row__tel:hover {
   gap: 12px;
   align-items: flex-start;
   padding: 12px 2px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--c-hairline);
   color: inherit;
   text-decoration: none;
 }
@@ -2363,9 +2500,9 @@ a.row__tel:hover {
     bottom: 0;
     height: auto;
     border-top: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.09);
+    border-right: 1px solid var(--c-line);
     border-radius: 0;
-    box-shadow: 0 0 44px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 44px var(--sh-3);
     /* Ruang untuk kepala mengapung yang melayang di atasnya. */
     padding-top: 66px;
     transition: none;
@@ -2415,7 +2552,7 @@ a.row__tel:hover {
 /* ---------- kotak izin notifikasi ---------- */
 
 .permbox {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-md);
   background: var(--c-sunken);
   padding: 13px 14px;
@@ -2423,11 +2560,11 @@ a.row__tel:hover {
 }
 
 .permbox--ok {
-  border-color: rgba(74, 222, 128, 0.35);
+  border-color: color-mix(in srgb, var(--c-safe) 35%, transparent);
 }
 
 .permbox--bad {
-  border-color: rgba(248, 113, 113, 0.35);
+  border-color: color-mix(in srgb, var(--c-danger) 35%, transparent);
 }
 
 .permbox__t {
@@ -2475,7 +2612,7 @@ a.row__tel:hover {
      isinya pendek dan ikut mengalir biasa saat isinya panjang. */
   margin-top: auto;
   padding: 14px 0 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--c-hairline);
   display: flex;
   justify-content: center;
 }
@@ -2527,7 +2664,7 @@ a.row__tel:hover {
   flex-direction: column;
   gap: 2px;
   padding: 11px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-md);
   background: var(--c-card);
   text-align: left;
@@ -2539,7 +2676,7 @@ a.row__tel:hover {
 }
 
 .sumtile--tap:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--c-line-3);
 }
 
 .sumtile__k {
@@ -2566,7 +2703,7 @@ a.row__tel:hover {
 
 .why {
   margin-top: 11px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--c-line);
   padding-top: 10px;
 }
 
@@ -2624,7 +2761,7 @@ a.row__tel:hover {
 
 /* Kaki kartu angin: lipatan dan sumber berbagi satu garis pemisah. */
 .waloft__foot {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
   padding: 12px 14px;
 }
 
@@ -2653,7 +2790,7 @@ a.row__tel:hover {
 /* Daftar apa yang belum tersambung: dua baris, bukan dua paragraf. */
 
 .unwired2 {
-  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border: 1px dashed var(--c-line-2);
   border-radius: var(--r-md);
   background: var(--c-sunken);
   padding: 12px 14px;
@@ -2665,7 +2802,7 @@ a.row__tel:hover {
   justify-content: space-between;
   gap: 10px;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid var(--c-hairline);
 }
 
 .unwired2__k {
@@ -2677,7 +2814,7 @@ a.row__tel:hover {
   flex: none;
   font-size: var(--t-3xs);
   color: var(--c-text-4);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-xs);
   padding: 3px 6px;
 }
@@ -2708,7 +2845,7 @@ a.row__tel:hover {
 .avcard__caveat {
   margin: 12px 0 0;
   padding-top: 11px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--c-line);
   font-size: var(--t-2xs);
   line-height: 1.55;
   color: var(--c-text-3);
@@ -2719,7 +2856,7 @@ a.row__tel:hover {
 
 .offlevel {
   margin-top: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-lg);
   background: var(--c-card);
   padding: 15px;
@@ -2742,7 +2879,7 @@ a.row__tel:hover {
   font-size: var(--t-3xs);
   font-weight: 600;
   color: var(--c-text-3);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--c-line-3);
   border-radius: var(--r-xs);
   padding: 3px 6px;
 }
@@ -2763,7 +2900,7 @@ a.row__tel:hover {
 
 .pill--muted {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--c-line-2);
   color: var(--c-text-3);
   font-size: var(--t-3xs);
   padding: 5px 8px;
@@ -2772,7 +2909,7 @@ a.row__tel:hover {
 /* Kartu kualitas udara: satu angka besar, kategorinya, lalu angka mentahnya. */
 
 .aqcard {
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-lg);
   background: var(--c-card);
   padding: 15px;
@@ -2816,7 +2953,7 @@ a.row__tel:hover {
 .aqcard__track {
   height: 5px;
   border-radius: var(--r-xs);
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--c-line);
   margin-top: 13px;
   overflow: hidden;
 }
@@ -2829,7 +2966,7 @@ a.row__tel:hover {
 .aqcard__raw {
   display: flex;
   margin-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
 }
 
 .aqcard__cell {
@@ -2838,7 +2975,7 @@ a.row__tel:hover {
 }
 
 .aqcard__cell + .aqcard__cell {
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 1px solid var(--c-veil);
   padding-left: 14px;
 }
 
@@ -2915,7 +3052,7 @@ a.row__tel:hover {
 /* Rekap nasional: satu angka besar, lalu nama gunung apa adanya dari sumber. */
 
 .natash {
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   padding: 15px;
@@ -2949,7 +3086,7 @@ a.row__tel:hover {
 
 .natash__chip {
   font-size: var(--t-3xs);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-xs);
   padding: 4px 7px;
   color: var(--c-text-2);
@@ -2971,7 +3108,7 @@ a.row__tel:hover {
 /* Profil angin: dibaca dari atas ke bawah, seperti penampang udara. */
 
 .waloft {
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
   background: var(--c-card);
   overflow: hidden;
@@ -2988,7 +3125,7 @@ a.row__tel:hover {
   align-items: center;
   gap: 10px;
   padding: 11px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid var(--c-hairline);
 }
 
 .waloft__row:last-child {
@@ -3000,7 +3137,7 @@ a.row__tel:hover {
 }
 
 .waloft__row--surface {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--c-hairline);
 }
 
 .waloft__lvl {
@@ -3064,7 +3201,7 @@ a.row__tel:hover {
 .waloft__note {
   margin: 0;
   padding: 12px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
   font-size: var(--t-2xs);
   color: var(--c-text-2);
   line-height: 1.55;
@@ -3110,7 +3247,7 @@ a.row__tel:hover {
 /* ---------- kotak izin notifikasi ---------- */
 
 .permbox {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-md);
   background: var(--c-sunken);
   padding: 13px 14px;
@@ -3118,11 +3255,11 @@ a.row__tel:hover {
 }
 
 .permbox--ok {
-  border-color: rgba(74, 222, 128, 0.35);
+  border-color: color-mix(in srgb, var(--c-safe) 35%, transparent);
 }
 
 .permbox--bad {
-  border-color: rgba(248, 113, 113, 0.35);
+  border-color: color-mix(in srgb, var(--c-danger) 35%, transparent);
 }
 
 .permbox__t {
@@ -3170,7 +3307,7 @@ a.row__tel:hover {
      isinya pendek dan ikut mengalir biasa saat isinya panjang. */
   margin-top: auto;
   padding: 14px 0 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--c-hairline);
   display: flex;
   justify-content: center;
 }
@@ -3222,7 +3359,7 @@ a.row__tel:hover {
   flex-direction: column;
   gap: 2px;
   padding: 11px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-md);
   background: var(--c-card);
   text-align: left;
@@ -3234,7 +3371,7 @@ a.row__tel:hover {
 }
 
 .sumtile--tap:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--c-line-3);
 }
 
 .sumtile__k {
@@ -3261,7 +3398,7 @@ a.row__tel:hover {
 
 .why {
   margin-top: 11px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--c-line);
   padding-top: 10px;
 }
 
@@ -3319,7 +3456,7 @@ a.row__tel:hover {
 
 /* Kaki kartu angin: lipatan dan sumber berbagi satu garis pemisah. */
 .waloft__foot {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
   padding: 12px 14px;
 }
 
@@ -3348,7 +3485,7 @@ a.row__tel:hover {
 /* Daftar apa yang belum tersambung: dua baris, bukan dua paragraf. */
 
 .unwired2 {
-  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border: 1px dashed var(--c-line-2);
   border-radius: var(--r-md);
   background: var(--c-sunken);
   padding: 12px 14px;
@@ -3360,7 +3497,7 @@ a.row__tel:hover {
   justify-content: space-between;
   gap: 10px;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid var(--c-hairline);
 }
 
 .unwired2__k {
@@ -3372,7 +3509,7 @@ a.row__tel:hover {
   flex: none;
   font-size: var(--t-3xs);
   color: var(--c-text-4);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--c-line-2);
   border-radius: var(--r-xs);
   padding: 3px 6px;
 }
@@ -3472,7 +3609,7 @@ a.row__tel:hover {
 .strip__tag {
   font-size: var(--t-3xs);
   font-weight: 600;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--sh-1);
   border-radius: var(--r-xs);
   padding: 2px 5px;
   flex: none;
@@ -3483,9 +3620,9 @@ a.row__tel:hover {
   line-height: 1.35;
 }
 .sigmet {
-  border: 1px solid rgba(251, 146, 60, 0.32);
+  border: 1px solid color-mix(in srgb, var(--c-alert) 32%, transparent);
   border-radius: var(--r-lg);
-  background: rgba(251, 146, 60, 0.06);
+  background: color-mix(in srgb, var(--c-alert) 6%, transparent);
   overflow: hidden;
 }
 .sigmet + .sigmet {
@@ -3505,14 +3642,14 @@ a.row__tel:hover {
 }
 .sigmet__named {
   padding: 1px 6px;
-  border: 1px solid rgba(251, 146, 60, 0.5);
+  border: 1px solid color-mix(in srgb, var(--c-alert) 50%, transparent);
   border-radius: var(--r-xs);
   color: var(--c-alert);
   font-size: var(--t-3xs);
   font-weight: 600;
 }
 .sigmet__named--other {
-  border-color: rgba(148, 163, 184, 0.45);
+  border-color: color-mix(in srgb, var(--c-neutral) 45%, transparent);
   color: var(--c-text-3);
 }
 .sigmet__rows {
@@ -3524,7 +3661,7 @@ a.row__tel:hover {
   padding: 0 14px 12px;
 }
 .sigmet__cell + .sigmet__cell {
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 1px solid var(--c-veil);
 }
 .sigmet__k {
   color: var(--c-text-3);
@@ -3545,7 +3682,7 @@ a.row__tel:hover {
 .sigmet__raw {
   margin: 0;
   padding: 11px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--c-veil);
   overflow-x: auto;
   color: var(--c-text-2);
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
@@ -3566,7 +3703,7 @@ a.row__tel:hover {
 
 .banner {
   margin: 0;
-  background: rgba(13, 17, 23, 0.95);
+  background: var(--c-float);
   border: 1px solid var(--ds-line);
   padding: 10px var(--s-3);
   backdrop-filter: blur(10px);
@@ -3586,7 +3723,7 @@ a.row__tel:hover {
   flex: none;
   font-size: var(--t-3xs);
   font-weight: 600;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--sh-1);
   border-radius: var(--r-xs);
   padding: 2px 5px;
 }

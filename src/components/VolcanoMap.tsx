@@ -64,18 +64,68 @@ interface Props {
   chrome: { top: number; left: number; bottom: number }
   /** Ke mana peta dipusatkan: kawah, atau posisi pengguna. */
   focus: 'gunung' | 'saya'
+  /** Bukan untuk dibaca isinya — pemicu agar bentuk digambar ulang saat tema berganti. */
+  tema: string
 }
 
-/** Warna PAGER USGS — satu-satunya penilaian dampak resmi yang kita punya. */
-const PAGER_COLOR: Record<string, string> = {
-  green: '#4ade80',
-  yellow: '#facc15',
-  orange: '#fb923c',
-  red: '#f87171',
+/*
+ * Leaflet menggambar ke SVG lewat atribut, bukan lewat CSS, jadi ia butuh
+ * nilai warna sungguhan — var(--...) tidak bisa dipakai di sini. Nilainya
+ * dibaca dari token yang sama yang dipakai seluruh app, saat menggambar.
+ *
+ * Ini penting untuk tema terang: bentuk di peta duduk di atas petak yang
+ * berubah dari redup jadi cerah, dan hijau muda penanda posisi yang jelas di
+ * atas petak gelap nyaris hilang di atas petak terang.
+ */
+function token(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim()
+  return v || fallback
 }
 
-const BMKG_COLOR = '#38bdf8'
-const USGS_COLOR = '#facc15'
+/**
+ * Warna aksen datang dari lapisan data sebagai penunjuk token — bentuknya
+ * "var(--c-alert)". Bagus untuk CSS, tidak berguna untuk Leaflet, jadi di sini
+ * ditukar dengan nilai warnanya.
+ */
+function resolveColor(value: string, fallback: string): string {
+  const m = /^var\((--[\w-]+)\)$/.exec(value.trim())
+  return m ? token(m[1], fallback) : value
+}
+
+interface MapPalette {
+  danger: string
+  model: string
+  safe: string
+  sea: string
+  watch: string
+  alert: string
+  neutral: string
+  /** Garis tepi penanda, supaya bentuk tetap punya batas di dua tema. */
+  stroke: string
+  pager: Record<string, string>
+}
+
+function readPalette(): MapPalette {
+  const safe = token('--c-safe', '#4ade80')
+  const watch = token('--c-watch', '#facc15')
+  const alert = token('--c-alert', '#fb923c')
+  const danger = token('--c-danger', '#f87171')
+  return {
+    safe,
+    watch,
+    alert,
+    danger,
+    model: token('--c-model', '#c084fc'),
+    sea: token('--c-sea', '#38bdf8'),
+    neutral: token('--c-neutral', '#94a3b8'),
+    stroke: token('--c-page', '#0d1117'),
+    /** Warna PAGER USGS — satu-satunya penilaian dampak resmi yang kita punya. */
+    pager: { green: safe, yellow: watch, orange: alert, red: danger },
+  }
+}
 
 /** Jari-jari penanda gempa mengikuti magnitudo, dibatasi agar tetap terbaca. */
 function magRadius(mag: number): number {
@@ -120,6 +170,7 @@ export function VolcanoMap({
   usgsQuakes,
   chrome,
   focus,
+  tema,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -267,6 +318,8 @@ export function VolcanoMap({
 
     drawnRef.current.forEach((item) => map.removeLayer(item))
     drawnRef.current = []
+    const pal = readPalette()
+    const accentColor = resolveColor(accent, pal.alert)
     const add = (item: L.Layer) => {
       item.addTo(map)
       drawnRef.current.push(item)
@@ -279,10 +332,10 @@ export function VolcanoMap({
     add(
       L.circle(vent, {
         radius: radiusKm * 1000,
-        color: '#f87171',
+        color: pal.danger,
         weight: 2,
         dashArray: '5 5',
-        fillColor: '#f87171',
+        fillColor: pal.danger,
         fillOpacity: 0.12,
       }).bindPopup(
         `Radius pembanding ${radiusKm} km. Zona terlarang resmi hanya ditetapkan Badan Geologi dan belum tersambung.`,
@@ -308,7 +361,7 @@ export function VolcanoMap({
         add(
           L.circle(vent, {
             radius: ring.radiusKm * 1000,
-            color: '#c084fc',
+            color: pal.model,
             weight: 1,
             opacity: 0.65,
             fill: false,
@@ -335,7 +388,7 @@ export function VolcanoMap({
           L.polygon(a.polygon, {
             color: a.namedHere ? '#cbd5e1' : '#64748b',
             weight: 1.5,
-            fillColor: '#94a3b8',
+            fillColor: pal.neutral,
             fillOpacity: a.namedHere ? 0.28 : 0.14,
             dashArray: a.namedHere ? undefined : '4 5',
           }).bindPopup(
@@ -361,7 +414,7 @@ export function VolcanoMap({
         )
         add(
           L.polyline([vent, [tip.lat, tip.lon]], {
-            color: accent,
+            color: accentColor,
             weight: 3,
             opacity: 0.85,
             dashArray: '2 6',
@@ -383,9 +436,9 @@ export function VolcanoMap({
         add(
           L.circleMarker([q.lat, q.lon], {
             radius: magRadius(Number.isFinite(mag) ? mag : 3),
-            color: '#0d1117',
+            color: pal.stroke,
             weight: 1.5,
-            fillColor: BMKG_COLOR,
+            fillColor: pal.sea,
             fillOpacity: 0.75,
           })
             .bindTooltip(`M ${q.magnitude} · BMKG`, { direction: 'top' })
@@ -401,11 +454,11 @@ export function VolcanoMap({
       }
 
       for (const q of usgsQuakes) {
-        const color = q.alert ? (PAGER_COLOR[q.alert] ?? USGS_COLOR) : USGS_COLOR
+        const color = q.alert ? (pal.pager[q.alert] ?? pal.watch) : pal.watch
         add(
           L.circleMarker([q.lat, q.lon], {
             radius: magRadius(q.mag),
-            color: '#0d1117',
+            color: pal.stroke,
             weight: 1.5,
             fillColor: color,
             fillOpacity: 0.7,
@@ -427,9 +480,9 @@ export function VolcanoMap({
       add(
         L.circleMarker([volcano.strait.lat, volcano.strait.lon], {
           radius: 6,
-          color: '#0d1117',
+          color: pal.stroke,
           weight: 2,
-          fillColor: BMKG_COLOR,
+          fillColor: pal.sea,
           fillOpacity: 0.9,
         })
           .bindTooltip('titik ukur gelombang', { direction: 'top' })
@@ -443,9 +496,9 @@ export function VolcanoMap({
     add(
       L.circleMarker(vent, {
         radius: 7,
-        color: '#0d1117',
+        color: pal.stroke,
         weight: 2,
-        fillColor: accent,
+        fillColor: accentColor,
         fillOpacity: 1,
       })
         .bindTooltip(volcano.name, { direction: 'top' })
@@ -473,6 +526,7 @@ export function VolcanoMap({
     ashHeadingDeg,
     windSpeedKmh,
     dataKey,
+    tema,
     fitToFocus,
   ])
 
@@ -485,6 +539,7 @@ export function VolcanoMap({
 
     geoDrawnRef.current.forEach((item) => map.removeLayer(item))
     geoDrawnRef.current = []
+    const pal = readPalette()
     const add = (item: L.Layer) => {
       item.addTo(map)
       geoDrawnRef.current.push(item)
@@ -502,10 +557,10 @@ export function VolcanoMap({
     add(
       L.circle(me, {
         radius: geo.fix.accuracyM,
-        color: '#4ade80',
+        color: pal.safe,
         weight: 1,
         opacity: 0.5,
-        fillColor: '#4ade80',
+        fillColor: pal.safe,
         fillOpacity: 0.1,
       }),
     )
@@ -513,7 +568,7 @@ export function VolcanoMap({
     // dibaca sebagai angka.
     add(
       L.polyline([me, vent], {
-        color: '#4ade80',
+        color: pal.safe,
         weight: 1.5,
         opacity: 0.55,
         dashArray: '4 6',
@@ -525,9 +580,9 @@ export function VolcanoMap({
     add(
       L.circleMarker(me, {
         radius: 6,
-        color: '#0d1117',
+        color: pal.stroke,
         weight: 2,
-        fillColor: '#4ade80',
+        fillColor: pal.safe,
         fillOpacity: 1,
       })
         .bindTooltip('posisi Anda', { direction: 'top' })
@@ -546,7 +601,7 @@ export function VolcanoMap({
       hadFixRef.current = true
       fitToFocus(false)
     }
-  }, [geo.fix, volcano.lat, volcano.lon, fitToFocus])
+  }, [geo.fix, volcano.lat, volcano.lon, tema, fitToFocus])
 
   // Memusatkan ke posisi pengguna tidak boleh menggambar ulang lapisan, jadi
   // dipisah dari efek di atas. Ini pilihan pengguna sendiri, jadi ikut dicatat
@@ -628,7 +683,12 @@ interface LegendItem {
   label: string
 }
 
-/** Keterangan warna hanya memuat yang benar-benar sedang tergambar. */
+/**
+ * Keterangan warna hanya memuat yang benar-benar sedang tergambar.
+ *
+ * Tidak seperti bentuk di peta, baris-baris ini digambar React sebagai HTML,
+ * jadi warnanya cukup menunjuk token dan ikut berganti tema sendiri.
+ */
 function buildLegend(params: {
   layer: MapLayer['id']
   radiusKm: number
@@ -639,23 +699,43 @@ function buildLegend(params: {
   hasFix: boolean
 }): LegendItem[] {
   const items: LegendItem[] = [
-    { shape: 'ring', color: '#f87171', label: `radius pembanding ${params.radiusKm} km` },
+    {
+      shape: 'ring',
+      color: 'var(--c-danger)',
+      label: `radius pembanding ${params.radiusKm} km`,
+    },
   ]
   if (params.hasPopulation) {
-    items.push({ shape: 'ring', color: '#c084fc', label: 'cincin penduduk WorldPop' })
+    items.push({
+      shape: 'ring',
+      color: 'var(--c-model)',
+      label: 'cincin penduduk WorldPop',
+    })
   }
   if (params.hasAdvisory) {
-    items.push({ shape: 'area', color: '#94a3b8', label: 'area peringatan abu (SIGMET)' })
+    items.push({
+      shape: 'area',
+      color: 'var(--c-neutral)',
+      label: 'area peringatan abu (SIGMET)',
+    })
   }
   if (params.hasWind) {
-    items.push({ shape: 'line', color: '#fb923c', label: 'arah angin terukur' })
+    items.push({
+      shape: 'line',
+      color: 'var(--c-alert)',
+      label: 'arah angin terukur',
+    })
   }
   if (params.quakeCount > 0) {
-    items.push({ shape: 'dot', color: BMKG_COLOR, label: 'episentrum BMKG' })
-    items.push({ shape: 'dot', color: USGS_COLOR, label: 'episentrum USGS' })
+    items.push({ shape: 'dot', color: 'var(--c-sea)', label: 'episentrum BMKG' })
+    items.push({
+      shape: 'dot',
+      color: 'var(--c-watch)',
+      label: 'episentrum USGS',
+    })
   }
   if (params.hasFix) {
-    items.push({ shape: 'dot', color: '#4ade80', label: 'posisi Anda' })
+    items.push({ shape: 'dot', color: 'var(--c-safe)', label: 'posisi Anda' })
   }
   return items
 }

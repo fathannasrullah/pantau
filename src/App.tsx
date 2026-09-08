@@ -23,6 +23,7 @@ import { useGeolocation } from './hooks/useGeolocation'
 import { useLiveQuakes } from './hooks/useLiveQuakes'
 import { useVolcanoSelection } from './hooks/useVolcanoSelection'
 import { useNotifications } from './hooks/useNotifications'
+import { useTheme } from './hooks/useTheme'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM } from './theme'
 import type { MapLayer } from './types'
@@ -70,6 +71,7 @@ export default function App() {
     panelWidth: 0,
   })
   const notifications = useNotifications()
+  const theme = useTheme()
   const bannersRef = useRef<HTMLDivElement | null>(null)
   const [chromeTop, setChromeTop] = useState(HEADER_PX)
 
@@ -172,6 +174,7 @@ export default function App() {
           usgsQuakes={liveQuakes.quakes}
           chrome={chrome}
           focus={focus}
+          tema={theme.tema}
         />
       </div>
 
@@ -180,6 +183,8 @@ export default function App() {
         dataState={dataState}
         onRefresh={refresh}
         onPickVolcano={() => setVolcanoOpen(true)}
+        tema={theme.tema}
+        onToggleTheme={theme.toggle}
       />
 
       <div className="app__banners" ref={bannersRef}>
