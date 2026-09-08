@@ -173,66 +173,61 @@ button {
   }
 }
 
-/* ---------- shell ---------- */
+/* ---------- kerangka: peta sebagai latar ---------- */
 
-.page {
-  min-height: 100vh;
-  min-height: 100dvh;
+.app {
+  position: fixed;
+  inset: 0;
   background: var(--c-page);
-  display: flex;
-  justify-content: center;
-}
-
-.shell {
-  width: 100%;
-  max-width: 460px;
-  background: var(--c-shell);
   color: var(--c-text);
-  position: relative;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+  overflow: hidden;
 }
 
-.content {
-  flex: 1;
-  /* Navigasi bawah memakai position:sticky, jadi ia tetap menempati ruangnya
-     sendiri di ujung aliran; jarak aman besar di sini hanya jadi ruang mati di
-     bawah kaki halaman. Sisakan seperlunya saja. */
-  padding: 0 16px 18px;
-  /* Kolom lentur supaya kaki halaman bisa didorong ke dasar layar saat isinya
-     pendek — tab Laporan bisa hanya setinggi 390 px, dan tanpa ini kakinya
-     berhenti menggantung di tengah. */
-  display: flex;
-  flex-direction: column;
+.app__map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
-.tabview {
-  animation: riseIn 0.35s ease both;
+.app__map .mapbox,
+.app__map .lmapwrap,
+.app__map .lmap {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
 }
 
-/* ---------- header ---------- */
+/* Kepala mengapung: pembungkusnya tembus ketukan supaya peta di sekitarnya
+   tetap bisa digeser, hanya kartunya yang menerima. */
 
-.appbar {
-  position: sticky;
+.fhead {
+  position: absolute;
   top: 0;
+  left: 0;
+  right: 0;
+  /* Di atas lembar geser: saat lembar dibuka penuh (dan sebagai panel kiri di
+     laptop) ia menutupi kepala halaman, sehingga pemilih gunung tak bisa
+     disentuh. */
   z-index: 30;
-  background: rgba(13, 17, 23, 0.94);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  padding-top: env(safe-area-inset-top);
+  padding: var(--s-3);
+  padding-top: calc(var(--s-3) + env(safe-area-inset-top));
+  pointer-events: none;
 }
 
-.appbar__row {
+.fhead__card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 16px 9px;
+  gap: var(--s-3);
+  background: rgba(13, 17, 23, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--r-lg);
+  padding: 10px var(--s-3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
 }
 
-.appbar__dot {
+.fhead__dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -241,133 +236,243 @@ button {
   flex: none;
 }
 
-.appbar__id {
+.fhead__id {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: var(--tap);
+  justify-content: center;
 }
 
-.appbar__name {
-  font-size: var(--t-md);
+.fhead__name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--t-sm);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-.appbar__meta {
-  font-size: var(--t-2xs);
-  color: var(--c-text-3);
-  margin-top: 1px;
-}
-
-.appbar__sync {
-  text-align: right;
+.fhead__caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--c-text-3);
   flex: none;
 }
-.appbar__sync:hover {
-  opacity: 0.75;
+
+.fhead__meta {
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.chip {
+.fhead__sync {
+  flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--ds-line);
-  background: var(--ds-wash);
-  border-radius: var(--r-pill);
-  padding: 5px 10px;
+  min-height: var(--tap);
 }
 
-.chip__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ds);
-  flex: none;
-}
+/* Banner kondisi data dan pita peringatan, menumpuk di bawah kepala. */
 
-.chip__label {
-  font-size: var(--t-3xs);
-  font-weight: 600;
-  color: var(--ds);
-}
-
-.appbar__syncsub {
-  display: block;
-  font-size: var(--t-3xs);
-  color: var(--c-text-3);
-  margin-top: 3px;
-}
-
-/* ---------- data-state banner ---------- */
-
-.banner {
-  background: var(--ds-wash);
-  border-bottom: 1px solid var(--ds-line);
-  padding: 11px 16px;
+.app__banners {
+  position: absolute;
+  top: calc(var(--s-3) + 56px + env(safe-area-inset-top));
+  left: var(--s-3);
+  right: var(--s-3);
+  z-index: 19;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: var(--s-2);
+  pointer-events: none;
+}
+
+.app__banners > * {
+  pointer-events: auto;
+  border-radius: var(--r-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Kendali peta, duduk tepat di atas lembar geser dan ikut bergerak. */
+
+.mapctl {
+  position: absolute;
+  left: var(--s-3);
+  right: var(--s-3);
+  bottom: calc(var(--sheet-h) + var(--s-3));
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  /* Tombol rata kiri sebagai satu kelompok; atribusi tetap di kanan bawah
+     mengikuti kebiasaan peta. */
   align-items: flex-start;
+  gap: 6px;
+  transition: bottom 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: none;
 }
 
-.banner__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ds);
-  margin-top: 6px;
+.mapctl > * {
+  pointer-events: auto;
+}
+
+/* Empat lapisan ditambah tombol fokus terlalu tinggi bila ditumpuk; satu baris
+   yang bisa digeser mendatar menyisakan peta tetap terlihat. */
+.mapctl__group {
+  align-self: stretch;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.mapctl__group::-webkit-scrollbar {
+  display: none;
+}
+
+.mapctl__btn {
   flex: none;
 }
 
-.banner__body {
-  flex: 1;
-}
-
-.banner__title {
-  font-size: var(--t-xs);
-  font-weight: 600;
-  color: var(--ds);
-}
-
-.banner__note {
+.mapctl__btn {
+  min-height: var(--tap);
+  display: inline-flex;
+  align-items: center;
   font-size: var(--t-2xs);
+  font-weight: 600;
+  padding: 8px 11px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(13, 17, 23, 0.9);
   color: var(--c-text-2);
-  line-height: 1.5;
-  margin-top: 2px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
 }
 
-.banner__retry {
+.mapctl__btn--on {
+  border-color: var(--lv);
+  color: var(--lv);
+  background: rgba(13, 17, 23, 0.96);
+}
+
+.mapctl__attr {
+  align-self: flex-end;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
+  background: rgba(13, 17, 23, 0.88);
+  border-radius: var(--r-xs);
+  padding: 3px 7px;
+  white-space: nowrap;
+}
+
+/* Lembar geser. */
+
+.sheetpanel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-shell);
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -14px 44px rgba(0, 0, 0, 0.55);
+  transition: height 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.sheetpanel__grip {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 9px 0 5px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.sheetpanel__gripbar {
+  width: 40px;
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.sheetpanel__head {
+  flex: none;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.sheetpanel__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Gulir di dalam lembar tidak boleh merembet menggeser peta di belakangnya. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--s-3) 28px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navigasi di dalam lembar. */
+
+.snav {
+  display: flex;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-3) 10px;
+}
+
+.snav__btn {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
   font-size: var(--t-2xs);
   font-weight: 600;
-  color: var(--ds);
-  border: 1px solid var(--ds-line);
-  border-radius: var(--r-sm);
-  padding: 6px 10px;
-  flex: none;
+  padding: 9px 4px;
+  min-height: var(--tap);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--c-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ---------- alert strip ---------- */
-
-.strip {
+.snav__btn--on {
   background: var(--lv);
   color: var(--c-on-accent);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
 }
 
-.strip__tag {
-  font-size: var(--t-3xs);
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: var(--r-xs);
-  padding: 2px 5px;
-  flex: none;
+.layercard {
+  margin-top: var(--s-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-card);
+  padding: var(--s-3);
 }
 
-.strip__text {
-  font-size: var(--t-xs);
-  font-weight: 600;
-  line-height: 1.35;
+.layercard__k {
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  color: var(--lv);
+}
+
+.layercard__n {
+  margin: 5px 0 0;
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
+  line-height: 1.55;
 }
 
 /* ---------- shared bits ---------- */
@@ -2174,30 +2279,24 @@ a.row__tel:hover {
 
 /* --- Tablet: kolom lebih lega, grid dalam kartu ikut melebar -------------- */
 
-@media (min-width: 700px) {
-  .shell {
-    max-width: 760px;
-  }
+/* --- Tablet: lembar tetap di bawah, isinya lebih lega ------------------- */
 
+@media (min-width: 700px) {
   .sumstrip {
     grid-template-columns: repeat(4, 1fr);
   }
 
-  .mapbox {
-    height: 480px;
+  .sheetpanel__scroll {
+    padding: 0 var(--s-5) 32px;
   }
 
-  .content {
-    padding: 0 24px 20px;
-  }
-
-  .grid2 {
-    grid-template-columns: repeat(4, 1fr);
+  .snav {
+    padding: var(--s-1) var(--s-5) 10px;
   }
 
   .sheet__panel {
     max-width: 620px;
-    border-radius: var(--r-lg);
+    border-radius: 18px;
     margin-bottom: 24px;
   }
 
@@ -2206,174 +2305,353 @@ a.row__tel:hover {
   }
 }
 
-/* --- Laptop: navigasi pindah ke sisi kiri, isi tetap satu kolom terbaca --- */
+/* --- Laptop: lembar jadi panel kiri, peta memakai sisa ruangnya ---------- */
 
 @media (min-width: 1000px) {
-  .page {
+  .sheetpanel--side {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    height: auto;
+    border-top: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 0;
+    box-shadow: 0 0 44px rgba(0, 0, 0, 0.5);
+    /* Ruang untuk kepala mengapung yang melayang di atasnya. */
+    padding-top: 66px;
+    transition: none;
+  }
+
+  .fhead {
+    left: 0;
+    width: var(--panel-w);
+    padding-right: var(--s-3);
+  }
+
+  .app__banners {
+    left: calc(var(--panel-w) + var(--s-3));
+    right: var(--s-3);
+    top: var(--s-3);
+  }
+
+  .mapctl {
+    right: auto;
+    left: calc(var(--panel-w) + var(--s-3));
+    top: 78px;
+    bottom: auto;
+    align-items: flex-start;
+    transition: none;
+  }
+
+  .mapctl__group {
+    flex-direction: row;
     align-items: flex-start;
   }
 
-  .shell {
-    max-width: 1180px;
-    display: grid;
-    /* Kolom navigasi tetap, sisanya untuk isi. */
-    grid-template-columns: 216px minmax(0, 1fr);
-    grid-template-rows: auto auto auto 1fr;
+  .sheetpanel__scroll {
+    padding: 0 var(--s-4) 32px;
   }
 
-  .appbar,
-  .banner,
-  .strip {
-    grid-column: 2;
-  }
-
-  .content {
-    grid-column: 2;
-    padding: 0 28px 24px;
-    max-width: 740px;
-    /* Kolom isi ditengahkan di ruang sisanya; rata kiri menyisakan ruang
-       kosong lebar di kanan dan membuat halamannya terlihat miring. */
-    justify-self: center;
-  }
-
-  .bottomnav {
-    grid-column: 1;
-    grid-row: 1 / -1;
-    position: sticky;
-    top: 0;
-    align-self: start;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    height: 100vh;
-    height: 100dvh;
-    padding: 20px 14px;
-    border-top: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .navbtn {
-    flex-direction: row;
-    gap: 12px;
-    justify-content: flex-start;
-    padding: 11px 12px;
-    border-radius: var(--r-md);
-    text-align: left;
-  }
-
-  .navbtn--on {
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  .navbtn__label {
-    font-size: var(--t-sm);
-  }
-
-  .mapbox {
-    height: 560px;
+  .snav {
+    padding: var(--s-1) var(--s-4) 10px;
   }
 
   .demo,
   .demo__collapsed {
-    left: 248px;
+    left: calc(var(--panel-w) + var(--s-3));
   }
 }
 
-/* --- Peringatan abu penerbangan (SIGMET) --------------------------------- */
+/* ---------- kotak izin notifikasi ---------- */
 
-.sigmet {
-  border: 1px solid rgba(251, 146, 60, 0.32);
-  border-radius: var(--r-lg);
-  background: rgba(251, 146, 60, 0.06);
-  overflow: hidden;
+.permbox {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r-md);
+  background: var(--c-sunken);
+  padding: 13px 14px;
+  margin-bottom: 14px;
 }
 
-.sigmet + .sigmet {
-  margin-top: 8px;
+.permbox--ok {
+  border-color: rgba(74, 222, 128, 0.35);
 }
 
-.sigmet__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px 0;
+.permbox--bad {
+  border-color: rgba(248, 113, 113, 0.35);
 }
 
-.sigmet__tag {
-  color: var(--c-alert);
-  font-size: var(--t-3xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
+.permbox__t {
+  font-size: var(--t-xs);
+  font-weight: 700;
 }
 
-.sigmet__named {
-  padding: 1px 6px;
-  border: 1px solid rgba(251, 146, 60, 0.5);
-  border-radius: var(--r-xs);
-  color: var(--c-alert);
-  font-size: var(--t-3xs);
-  font-weight: 600;
+.permbox--ok .permbox__t {
+  color: var(--c-safe);
 }
 
-.sigmet__rows {
-  display: flex;
-  padding: 10px 0 0;
+.permbox--bad .permbox__t {
+  color: var(--c-danger);
 }
 
-.sigmet__cell {
-  flex: 1;
-  padding: 0 14px 12px;
-}
-
-.sigmet__cell + .sigmet__cell {
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.sigmet__k {
-  color: var(--c-text-3);
+.permbox__n {
   font-size: var(--t-2xs);
+  color: var(--c-text-2);
+  line-height: 1.55;
+  margin-top: 4px;
 }
 
-.sigmet__v {
-  margin-top: 4px;
+.permbox__cta {
+  margin-top: 11px;
+  display: inline-block;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--lv);
+  color: var(--c-on-accent);
+  text-align: center;
+}
+
+.permbox--bad .permbox__cta {
+  display: none;
+}
+
+/* ---------- kaki halaman ---------- */
+
+.foot {
+  /* Didorong ke dasar, bukan position:fixed — navigasi bawah sudah menempel di
+     sana, dan kaki yang ikut dipatok akan menutupinya atau memakan tinggi layar
+     terus-menerus. Dengan margin otomatis, kakinya turun sendiri ke bawah saat
+     isinya pendek dan ikut mengalir biasa saat isinya panjang. */
+  margin-top: auto;
+  padding: 14px 0 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: center;
+}
+
+/* Jarak sebelum garis pemisah dipegang isi, bukan kaki halaman: margin atas
+   kaki sudah dipakai untuk mendorongnya turun, jadi tidak bisa dipakai lagi
+   untuk memberi jarak. */
+.tabview {
+  padding-bottom: 22px;
+}
+
+.foot__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--c-text-4);
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  transition: color 0.15s ease;
+}
+
+.foot__link:hover {
+  color: var(--c-text-2);
+}
+
+.foot__icon {
+  flex: none;
+  opacity: 0.9;
+}
+
+.foot__name {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+
+/* ---------- ringkasan empat angka ---------- */
+
+.sumstrip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sumtile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-md);
+  background: var(--c-card);
+  text-align: left;
+  min-width: 0;
+}
+
+.sumtile--tap {
+  cursor: pointer;
+}
+
+.sumtile--tap:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sumtile__k {
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
+  line-height: 1.3;
+}
+
+.sumtile__v {
   font-size: var(--t-lg);
   font-weight: 600;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
 }
 
-.sigmet__u {
-  margin-top: 2px;
+.sumtile__u {
+  font-size: var(--t-3xs);
   color: var(--c-text-4);
-  font-size: var(--t-3xs);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
-.sigmet__raw {
-  margin: 0;
-  padding: 11px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  overflow-x: auto;
-  color: var(--c-text-2);
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: var(--t-3xs);
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-word;
+/* ---------- catatan yang dilipat ---------- */
+
+.why {
+  margin-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
 }
 
-.sigmet__src {
-  padding: 0 14px 12px;
+.why__q {
+  min-height: var(--tap);
+  font-size: var(--t-2xs);
+  font-weight: 600;
   color: var(--c-text-3);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.why__q::-webkit-details-marker {
+  display: none;
+}
+
+/* Tanda buka-tutup digambar sendiri supaya sama di semua peramban. */
+.why__q::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 4.5px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform 0.15s ease;
+}
+
+.why[open] > .why__q::before {
+  transform: rotate(90deg);
+}
+
+.why__q:hover {
+  color: var(--c-text-2);
+}
+
+.why__a {
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
+  line-height: 1.6;
+  margin-top: 7px;
+}
+
+.why__a p {
+  margin: 0 0 7px;
+}
+
+.why__a p:last-child {
+  margin-bottom: 0;
+}
+
+/* Kaki kartu angin: lipatan dan sumber berbagi satu garis pemisah. */
+.waloft__foot {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 12px 14px;
+}
+
+.waloft__foot .why {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.waloft__foot .waloft__src {
+  padding: 9px 0 0;
+}
+
+
+/* Kata besar dan keterangannya turun ke bawah di layar sempit supaya tidak
+   berdesakan jadi tiga baris di sebelah angka. */
+.avcard__row {
+  flex-wrap: wrap;
+}
+
+.avcard__short {
+  max-width: none;
+  padding-bottom: 0;
+}
+
+/* Daftar apa yang belum tersambung: dua baris, bukan dua paragraf. */
+
+.unwired2 {
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: var(--r-md);
+  background: var(--c-sunken);
+  padding: 12px 14px;
+}
+
+.unwired2__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.unwired2__k {
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
+}
+
+.unwired2__v {
+  flex: none;
   font-size: var(--t-3xs);
+  color: var(--c-text-4);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--r-xs);
+  padding: 3px 6px;
+}
+
+.unwired2 .why {
+  border-top: 0;
+  padding-top: 8px;
+  margin-top: 3px;
+}
+
+.natash__src {
+  margin-top: 11px;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   line-height: 1.5;
 }
 
-/* Peringatan yang tidak menyebut gunung ini bisa saja milik tetangganya. */
-.sigmet__named--other {
-  border-color: rgba(148, 163, 184, 0.45);
-  color: var(--c-text-3);
-}
 
+/*
+ * Batang grafik kegempaan sengaja dibiarkan lebih sempit dari 24px: lebarnya
+ * ditentukan oleh 24 jam yang harus muat sebaris, jadi ukurannya hakiki bagi
+ * penyajiannya — pengecualian "Essential" pada WCAG 2.2 Target Size. Tingginya
+ * sendiri 130px, jauh di atas ambang.
+ */
 
 /* ---------- kartu v4 baru ---------- */
 
@@ -3069,3 +3347,202 @@ a.row__tel:hover {
  * penyajiannya — pengecualian "Essential" pada WCAG 2.2 Target Size. Tingginya
  * sendiri 130px, jauh di atas ambang.
  */
+
+
+/* ---------- gaya yang dipulihkan dari kerangka lama ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--ds-line);
+  background: var(--ds-wash);
+  border-radius: var(--r-pill);
+  padding: 5px 10px;
+}
+.chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ds);
+  flex: none;
+}
+.chip__label {
+  font-size: var(--t-3xs);
+  font-weight: 600;
+  color: var(--ds);
+}
+.banner {
+  background: var(--ds-wash);
+  border-bottom: 1px solid var(--ds-line);
+  padding: 11px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.banner__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ds);
+  margin-top: 6px;
+  flex: none;
+}
+.banner__body {
+  flex: 1;
+}
+.banner__title {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ds);
+}
+.banner__note {
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.banner__retry {
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  color: var(--ds);
+  border: 1px solid var(--ds-line);
+  border-radius: var(--r-sm);
+  padding: 6px 10px;
+  flex: none;
+}
+.strip {
+  background: var(--lv);
+  color: var(--c-on-accent);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.strip__tag {
+  font-size: var(--t-3xs);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--r-xs);
+  padding: 2px 5px;
+  flex: none;
+}
+.strip__text {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.sigmet {
+  border: 1px solid rgba(251, 146, 60, 0.32);
+  border-radius: var(--r-lg);
+  background: rgba(251, 146, 60, 0.06);
+  overflow: hidden;
+}
+.sigmet + .sigmet {
+  margin-top: 8px;
+}
+.sigmet__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+.sigmet__tag {
+  color: var(--c-alert);
+  font-size: var(--t-3xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.sigmet__named {
+  padding: 1px 6px;
+  border: 1px solid rgba(251, 146, 60, 0.5);
+  border-radius: var(--r-xs);
+  color: var(--c-alert);
+  font-size: var(--t-3xs);
+  font-weight: 600;
+}
+.sigmet__named--other {
+  border-color: rgba(148, 163, 184, 0.45);
+  color: var(--c-text-3);
+}
+.sigmet__rows {
+  display: flex;
+  padding: 10px 0 0;
+}
+.sigmet__cell {
+  flex: 1;
+  padding: 0 14px 12px;
+}
+.sigmet__cell + .sigmet__cell {
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+.sigmet__k {
+  color: var(--c-text-3);
+  font-size: var(--t-2xs);
+}
+.sigmet__v {
+  margin-top: 4px;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.sigmet__u {
+  margin-top: 2px;
+  color: var(--c-text-4);
+  font-size: var(--t-3xs);
+  line-height: 1.4;
+}
+.sigmet__raw {
+  margin: 0;
+  padding: 11px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  overflow-x: auto;
+  color: var(--c-text-2);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: var(--t-3xs);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.sigmet__src {
+  padding: 0 14px 12px;
+  color: var(--c-text-3);
+  font-size: var(--t-3xs);
+  line-height: 1.5;
+}
+
+/* Banner dan pita peringatan kini mengapung di atas peta, bukan mengalir di
+   dalam halaman: latarnya dirapatkan supaya tetap terbaca di atas petak peta. */
+
+.banner {
+  margin: 0;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid var(--ds-line);
+  padding: 10px var(--s-3);
+  backdrop-filter: blur(10px);
+}
+
+.strip {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px var(--s-3);
+  background: var(--lv);
+  color: var(--c-on-accent);
+}
+
+.strip__tag {
+  flex: none;
+  font-size: var(--t-3xs);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--r-xs);
+  padding: 2px 5px;
+}
+
+.strip__text {
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  line-height: 1.35;
+}

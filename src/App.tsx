@@ -1,17 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { AlertStrip } from './components/AlertStrip'
 import { AppFooter } from './components/AppFooter'
-import { AppHeader } from './components/AppHeader'
-import { BottomNav, type TabId } from './components/BottomNav'
+import { BottomSheet, type SheetMetrics } from './components/BottomSheet'
 import { DataStateBanner } from './components/DataStateBanner'
 import { DemoPanel } from './components/DemoPanel'
+import { FloatingHeader } from './components/FloatingHeader'
+import { MapControls } from './components/MapControls'
+import { SheetNav, type TabId } from './components/SheetNav'
+import { VolcanoMap } from './components/VolcanoMap'
 import { NotificationSheet } from './components/sheets/NotificationSheet'
 import { VolcanoSheet } from './components/sheets/VolcanoSheet'
 import { ReportSheet } from './components/sheets/ReportSheet'
+import { AreaTab } from './components/tabs/AreaTab'
 import { AviationTab } from './components/tabs/AviationTab'
 import { FeedTab } from './components/tabs/FeedTab'
 import { GuideTab } from './components/tabs/GuideTab'
-import { MapTab } from './components/tabs/MapTab'
 import { StatusTab } from './components/tabs/StatusTab'
 import { resolveAviationStatus } from './data/aviation'
 import { useAlertWatcher } from './hooks/useAlertWatcher'
@@ -23,6 +26,11 @@ import { useNotifications } from './hooks/useNotifications'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM } from './theme'
 import type { MapLayer } from './types'
+
+/** Tinggi kepala mengapung, dipakai peta untuk tidak menaruh bentuk di baliknya. */
+const HEADER_PX = 66
+/** Tambahan saat banner kondisi data ikut tampil. */
+const BANNER_PX = 72
 
 /** Ringkasan satu baris di layar Status, apa adanya sesuai keadaan izin. */
 function notifSummary(n: ReturnType<typeof useNotifications>): string {
@@ -51,20 +59,24 @@ export default function App() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [volcanoOpen, setVolcanoOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
+  const [snap, setSnap] = useState(0)
+  const [focus, setFocus] = useState<'gunung' | 'saya'>('gunung')
+  const [sheet, setSheet] = useState<SheetMetrics>({
+    height: 0,
+    wide: false,
+    panelWidth: 0,
+  })
   const notifications = useNotifications()
 
   /**
    * Aksen seluruh layar mengikuti keadaan peringatan abu — satu-satunya
    * penilaian bahaya di app ini yang benar-benar datang dari sumber resmi.
-   * Sebelumnya warnanya diambil dari level PVMBG yang masih data contoh.
    */
   const aviation = useMemo(
     () => resolveAviationStatus(snapshot.ashAdvisories, volcano.name),
     [snapshot.ashAdvisories, volcano.name],
   )
 
-  // Mode demo memaksakan keadaan buatan; itu tidak boleh dikabarkan sebagai
-  // kejadian sungguhan ke perangkat pengguna.
   useAlertWatcher({
     snapshot,
     aviation,
@@ -82,108 +94,159 @@ export default function App() {
     '--ds-line': dataColors.line,
     '--ds-wash': dataColors.wash,
     '--dim': DATA_STATE_DIM[dataState.id],
+    // Kendali peta duduk tepat di atas lembar geser, ikut bergerak bersamanya.
+    '--sheet-h': `${sheet.height}px`,
+    '--panel-w': `${sheet.panelWidth}px`,
   } as React.CSSProperties
 
-  const changeTab = (next: TabId) => {
+  // Berpindah tab ikut membuka lembar: memilih bagian lalu hanya melihat
+  // judulnya saja bukan yang dimaksud orang.
+  const changeTab = useCallback((next: TabId) => {
     setTab(next)
-    window.scrollTo({ top: 0 })
-  }
+    setSnap((s) => Math.max(s, 1))
+  }, [])
+
+  const openFull = useCallback((next: TabId) => {
+    setTab(next)
+    setSnap(2)
+  }, [])
+
+  const onMetrics = useCallback((m: SheetMetrics) => setSheet(m), [])
+
+  const chrome = useMemo(
+    () => ({
+      top: HEADER_PX + (dataState.banner ? BANNER_PX : 0),
+      left: sheet.panelWidth,
+      bottom: sheet.height,
+    }),
+    [dataState.banner, sheet.panelWidth, sheet.height],
+  )
 
   return (
-    <div className="page">
-      <div className="shell" style={shellStyle}>
-        <AppHeader
+    <div className="app" style={shellStyle}>
+      <div className="app__map">
+        <VolcanoMap
           volcano={snapshot.volcano}
-          dataState={dataState}
-          onRefresh={refresh}
-          onPickVolcano={() => setVolcanoOpen(true)}
+          radiusKm={level.radiusKm}
+          layer={layer}
+          accent={aviation.colors.color}
+          geo={geo}
+          ashHeadingDeg={snapshot.ashfall.ashHeadingDeg}
+          windSpeedKmh={snapshot.ashfall.windSpeedKmh}
+          advisories={snapshot.ashAdvisories}
+          population={snapshot.population}
+          bmkgEpicentres={snapshot.bmkgEpicentres}
+          usgsQuakes={liveQuakes.quakes}
+          chrome={chrome}
+          focus={focus}
         />
+      </div>
+
+      <FloatingHeader
+        volcano={snapshot.volcano}
+        dataState={dataState}
+        onRefresh={refresh}
+        onPickVolcano={() => setVolcanoOpen(true)}
+      />
+
+      <div className="app__banners">
         <DataStateBanner dataState={dataState} onRetry={refresh} />
         <AlertStrip status={aviation} />
-
-        <main className="content">
-          {tab === 'status' && (
-            <StatusTab
-              snapshot={snapshot}
-              level={level}
-              dataState={dataState}
-              aviation={aviation}
-              geo={geo}
-              liveQuakes={liveQuakes}
-              selectedHour={selectedHour}
-              notifSummary={notifSummary(notifications)}
-              onSelectHour={setSelectedHour}
-              onGoGuide={() => changeTab('panduan')}
-              onGoMap={() => changeTab('peta')}
-              onGoAviation={() => changeTab('udara')}
-              onOpenNotifications={() => setNotifOpen(true)}
-            />
-          )}
-
-          {tab === 'peta' && (
-            <MapTab
-              snapshot={snapshot}
-              level={level}
-              dataState={dataState}
-              layer={layer}
-              accent={aviation.colors.color}
-              geo={geo}
-              liveQuakes={liveQuakes}
-              onLayerChange={setLayer}
-            />
-          )}
-
-          {tab === 'udara' && (
-            <AviationTab
-              snapshot={snapshot}
-              status={aviation}
-              dataState={dataState}
-              showTransport={demo.showTransport}
-            />
-          )}
-
-          {tab === 'laporan' && (
-            <FeedTab
-              snapshot={snapshot}
-              onOpenReport={() => setReportOpen(true)}
-            />
-          )}
-
-          {tab === 'panduan' && (
-            <GuideTab snapshot={snapshot} aviation={aviation} />
-          )}
-
-          <AppFooter />
-        </main>
-
-        <BottomNav tab={tab} onChange={changeTab} />
-
-        {volcanoOpen && (
-          <VolcanoSheet
-            activeId={volcanoId}
-            onSelect={(id) => {
-              selectVolcano(id)
-              setVolcanoOpen(false)
-              setTab('status')
-              window.scrollTo({ top: 0 })
-            }}
-            onClose={() => setVolcanoOpen(false)}
-          />
-        )}
-
-        {notifOpen && (
-          <NotificationSheet
-            notifications={notifications}
-            onClose={() => setNotifOpen(false)}
-          />
-        )}
-
-        {reportOpen && (
-          <ReportSheet fix={geo.fix} onClose={() => setReportOpen(false)} />
-        )}
-
-        <DemoPanel demo={demo} onChange={updateDemo} />
       </div>
+
+      <MapControls
+        layers={snapshot.mapLayers}
+        layer={layer}
+        onLayerChange={setLayer}
+        focus={focus}
+        onToggleFocus={() =>
+          setFocus((f) => (f === 'gunung' ? 'saya' : 'gunung'))
+        }
+        canFocusUser={geo.fix !== null}
+      />
+
+      <BottomSheet
+        onMetrics={onMetrics}
+        snap={snap}
+        onSnapChange={setSnap}
+        header={<SheetNav tab={tab} onChange={changeTab} />}
+      >
+        {tab === 'status' && (
+          <StatusTab
+            snapshot={snapshot}
+            level={level}
+            dataState={dataState}
+            aviation={aviation}
+            geo={geo}
+            liveQuakes={liveQuakes}
+            selectedHour={selectedHour}
+            notifSummary={notifSummary(notifications)}
+            onSelectHour={setSelectedHour}
+            onGoGuide={() => openFull('panduan')}
+            onGoMap={() => setSnap(0)}
+            onGoAviation={() => openFull('udara')}
+            onOpenNotifications={() => setNotifOpen(true)}
+          />
+        )}
+
+        {tab === 'wilayah' && (
+          <AreaTab
+            snapshot={snapshot}
+            level={level}
+            dataState={dataState}
+            layer={layer}
+            showTransport={demo.showTransport}
+          />
+        )}
+
+        {tab === 'udara' && (
+          <AviationTab
+            snapshot={snapshot}
+            status={aviation}
+            dataState={dataState}
+            showTransport={false}
+          />
+        )}
+
+        {tab === 'laporan' && (
+          <FeedTab
+            snapshot={snapshot}
+            onOpenReport={() => setReportOpen(true)}
+          />
+        )}
+
+        {tab === 'panduan' && (
+          <GuideTab snapshot={snapshot} aviation={aviation} />
+        )}
+
+        <AppFooter />
+      </BottomSheet>
+
+      {volcanoOpen && (
+        <VolcanoSheet
+          activeId={volcanoId}
+          onSelect={(id) => {
+            selectVolcano(id)
+            setVolcanoOpen(false)
+            setTab('status')
+            setFocus('gunung')
+          }}
+          onClose={() => setVolcanoOpen(false)}
+        />
+      )}
+
+      {notifOpen && (
+        <NotificationSheet
+          notifications={notifications}
+          onClose={() => setNotifOpen(false)}
+        />
+      )}
+
+      {reportOpen && (
+        <ReportSheet fix={geo.fix} onClose={() => setReportOpen(false)} />
+      )}
+
+      <DemoPanel demo={demo} onChange={updateDemo} />
     </div>
   )
 }

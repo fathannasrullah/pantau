@@ -56,6 +56,14 @@ interface Props {
   /** Episentrum BMKG dan USGS; keduanya sudah tersaring ke sekitar gunung. */
   bmkgEpicentres: Epicentre[]
   usgsQuakes: LiveQuake[]
+  /**
+   * Ruang yang tertutup antarmuka mengapung. Peta kini jadi latar penuh layar,
+   * jadi tanpa ini bentuk-bentuknya akan dipas ke tengah layar dan separuhnya
+   * bersembunyi di balik lembar geser atau kepala halaman.
+   */
+  chrome: { top: number; left: number; bottom: number }
+  /** Ke mana peta dipusatkan: kawah, atau posisi pengguna. */
+  focus: 'gunung' | 'saya'
 }
 
 /** Warna PAGER USGS — satu-satunya penilaian dampak resmi yang kita punya. */
@@ -110,6 +118,8 @@ export function VolcanoMap({
   population,
   bmkgEpicentres,
   usgsQuakes,
+  chrome,
+  focus,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -188,7 +198,7 @@ export function VolcanoMap({
 
     const vent: L.LatLngExpression = [volcano.lat, volcano.lon]
     // Semua yang perlu terlihat pada lapisan ini, untuk menyetel pandangan.
-    const focus: L.LatLngExpression[] = [vent]
+    const focusPoints: L.LatLngExpression[] = [vent]
 
     add(
       L.circle(vent, {
@@ -213,7 +223,7 @@ export function VolcanoMap({
         return [p.lat, p.lon] as L.LatLngExpression
       })
 
-    focus.push(...ringEdges(radiusKm))
+    focusPoints.push(...ringEdges(radiusKm))
 
     if (layer === 'radius' && population) {
       // Cincin WorldPop: jaraknya nyata dan jumlah penduduknya nyata, jadi
@@ -236,7 +246,7 @@ export function VolcanoMap({
               `Sekitar ${formatNumber(ring.people)} jiwa tinggal dalam radius ${ring.radiusKm} km dari kawah. Model sebaran penduduk WorldPop ${population.year} beresolusi 100 m — bukan sensus terkini, bukan hitungan orang yang sedang berada di sana hari ini.`,
             ),
         )
-        focus.push(...ringEdges(ring.radiusKm))
+        focusPoints.push(...ringEdges(ring.radiusKm))
       }
     }
 
@@ -262,7 +272,7 @@ export function VolcanoMap({
             } Sumber: SIGMET via NOAA Aviation Weather Center.`,
           ),
         )
-        for (const point of a.polygon) focus.push(point)
+        for (const point of a.polygon) focusPoints.push(point)
       }
 
       // Arah angin terukur, digambar sebagai garis dari kawah. Panjangnya
@@ -287,7 +297,7 @@ export function VolcanoMap({
               `Angin membawa abu ke arah ini, ${windSpeedKmh} km/jam. Panjang garis = jarak tempuh satu jam, bukan batas jatuhnya abu. Sumber: Open-Meteo.`,
             ),
         )
-        focus.push([tip.lat, tip.lon])
+        focusPoints.push([tip.lat, tip.lon])
       }
     }
 
@@ -311,7 +321,7 @@ export function VolcanoMap({
               }<br><span class="lpop__src">Sumber: BMKG</span>`,
             ),
         )
-        focus.push([q.lat, q.lon])
+        focusPoints.push([q.lat, q.lon])
       }
 
       for (const q of usgsQuakes) {
@@ -333,7 +343,7 @@ export function VolcanoMap({
               }<br><a href="${q.url}" target="_blank" rel="noopener noreferrer">Halaman resmi kejadian →</a>`,
             ),
         )
-        focus.push([q.lat, q.lon])
+        focusPoints.push([q.lat, q.lon])
       }
     }
 
@@ -351,7 +361,7 @@ export function VolcanoMap({
             'Titik pengambilan tinggi gelombang (Open-Meteo Marine). Peringatan tsunami hanya dikeluarkan BMKG — app ini tidak mengeluarkannya.',
           ),
       )
-      focus.push([volcano.strait.lat, volcano.strait.lon])
+      focusPoints.push([volcano.strait.lat, volcano.strait.lon])
     }
 
     add(
@@ -410,14 +420,21 @@ export function VolcanoMap({
             } km dari kawah · akurasi ${Math.round(geo.fix.accuracyM)} m<br><span class="lpop__src">GPS perangkat Anda</span>`,
           ),
       )
-      focus.push(me)
+      focusPoints.push(me)
     }
 
     // Pandangan disetel agar seluruh bentuk lapisan ini muat, bukan zoom tetap
-    // yang bisa memotong episentrum atau poligon abu di luar layar.
-    const bounds = L.latLngBounds(focus)
+    // yang bisa memotong episentrum atau poligon abu di luar layar. Sisi yang
+    // tertutup antarmuka diberi bantalan lebih besar supaya bentuknya tidak
+    // berakhir di balik lembar geser.
+    const bounds = L.latLngBounds(focusPoints)
     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [28, 28], maxZoom: 12, animate: false })
+      map.fitBounds(bounds, {
+        paddingTopLeft: [28 + chrome.left, 28 + chrome.top],
+        paddingBottomRight: [28, 28 + chrome.bottom],
+        maxZoom: 12,
+        animate: false,
+      })
     }
   }, [
     volcano,
@@ -431,7 +448,19 @@ export function VolcanoMap({
     population,
     bmkgEpicentres,
     usgsQuakes,
+    chrome,
   ])
+
+  // Memusatkan ke posisi pengguna tidak boleh menggambar ulang lapisan, jadi
+  // dipisah dari efek di atas.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (focus !== 'saya' || !geo.fix) return
+    map.setView([geo.fix.lat, geo.fix.lon], Math.max(map.getZoom(), 11), {
+      animate: true,
+    })
+  }, [focus, geo.fix])
 
   const legend = buildLegend({
     layer,

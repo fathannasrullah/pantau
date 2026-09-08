@@ -1,10 +1,7 @@
 import type { DataStateView } from '../../data/dataState'
-import type { GeolocationState } from '../../hooks/useGeolocation'
-import type { LiveQuakesState } from '../../hooks/useLiveQuakes'
 import { formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { MapLayer, VolcanoLevel, VolcanoSnapshot } from '../../types'
-import { VolcanoMap } from '../VolcanoMap'
 import { Why } from '../Why'
 
 interface Props {
@@ -12,67 +9,32 @@ interface Props {
   level: VolcanoLevel
   dataState: DataStateView
   layer: MapLayer['id']
-  accent: string
-  geo: GeolocationState
-  liveQuakes: LiveQuakesState
-  onLayerChange: (id: MapLayer['id']) => void
+  showTransport: boolean
 }
 
-export function MapTab({
+/**
+ * Tab Wilayah: apa yang ada di sekitar gunung.
+ *
+ * Dulu ini separuh bawah tab Peta. Petanya sendiri naik jadi latar penuh layar,
+ * jadi yang tersisa di sini adalah keterangan lapisan yang sedang tergambar,
+ * lalu daftar wilayah, penduduk, penyeberangan, dan dampak.
+ */
+export function AreaTab({
   snapshot,
   level,
   dataState,
   layer,
-  accent,
-  geo,
-  liveQuakes,
-  onLayerChange,
+  showTransport,
 }: Props) {
   const active =
     snapshot.mapLayers.find((l) => l.id === layer) ?? snapshot.mapLayers[0]
 
   return (
     <div className="tabview">
-      <h2 className="section section--first">Peta wilayah gunung</h2>
-      <div className="mapbox">
-        <VolcanoMap
-          volcano={snapshot.volcano}
-          radiusKm={level.radiusKm}
-          layer={layer}
-          accent={accent}
-          geo={geo}
-          ashHeadingDeg={snapshot.ashfall.ashHeadingDeg}
-          windSpeedKmh={snapshot.ashfall.windSpeedKmh}
-          advisories={snapshot.ashAdvisories}
-          population={snapshot.population}
-          bmkgEpicentres={snapshot.bmkgEpicentres}
-          usgsQuakes={liveQuakes.quakes}
-        />
+      <div className="layercard">
+        <div className="layercard__k">Lapisan peta: {active.label}</div>
+        <p className="layercard__n">{active.note}</p>
       </div>
-
-      <div className="layers">
-        {snapshot.mapLayers.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`layer${item.id === layer ? ' layer--on' : ''}`}
-            aria-pressed={item.id === layer}
-            onClick={() => onLayerChange(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-      <p className="layernote">{active.note}</p>
-      <Why label="Bentuk-bentuk ini dari mana?">
-        Peta dasar OpenStreetMap, tampilan relief OpenTopoMap. Setiap bentuk di
-        atasnya punya sumber: kawah dari katalog Smithsonian GVP, cincin
-        penduduk dari WorldPop, area peringatan abu dari poligon SIGMET,
-        episentrum dari BMKG dan USGS, arah angin dari Open-Meteo, posisi Anda
-        dari GPS perangkat. Radius {level.radiusKm} km hanya pembanding — zona
-        terlarang resmi ditetapkan Badan Geologi dan belum tersambung. Ketuk
-        bentuk mana pun di peta untuk melihat sumbernya · {dataState.sourceTime}
-      </Why>
 
       <h2 className="section">Wilayah terdekat dari kawah</h2>
       <div className="rows">
@@ -129,6 +91,49 @@ export function MapTab({
         </p>
       )}
 
+      {showTransport && (
+        <>
+          <h2 className="section">Penyeberangan dan pelayaran</h2>
+          {snapshot.transport.length === 0 ? (
+            <p className="emptynote">
+              Status pelabuhan dan penyeberangan ditetapkan ASDP, KSOP, dan
+              Dinas Perhubungan setempat. Belum ada API terbuka yang menerbitkan
+              status itu, jadi tidak ada yang bisa ditampilkan di sini tanpa
+              mengarang.
+              {snapshot.volcano.coastalHazard &&
+                snapshot.observedWaveHeightM !== null && (
+                  <>
+                    {' '}
+                    Yang terukur hanya tinggi gelombang{' '}
+                    {snapshot.observedWaveHeightM.toLocaleString('id-ID', {
+                      maximumFractionDigits: 1,
+                    })}{' '}
+                    m dari Open-Meteo Marine — itu kondisi laut, bukan keputusan
+                    buka-tutup pelabuhan.
+                  </>
+                )}
+            </p>
+          ) : (
+            <div className="rows dim">
+              {snapshot.transport.map((item) => (
+                <div className="row" key={item.name}>
+                  <div className="row__body">
+                    <div className="row__title">{item.name}</div>
+                    <div className="row__note">{item.note}</div>
+                  </div>
+                  <div
+                    className="row__state mono"
+                    style={{ color: SEVERITY_COLOR[item.severity] }}
+                  >
+                    {item.state}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
       <h2 className="section">Dampak yang sudah terasa</h2>
       <p className="emptynote">
         Laporan dampak di lapangan — hujan abu per desa, warga yang mengungsi,
@@ -136,6 +141,16 @@ export function MapTab({
         API-nya. Yang bisa ditampilkan di sini baru perkiraan jumlah penduduk di
         atas.
       </p>
+
+      <Why label="Bentuk-bentuk di peta itu dari mana?">
+        Peta dasar OpenStreetMap, tampilan relief OpenTopoMap. Setiap bentuk di
+        atasnya punya sumber: kawah dari katalog Smithsonian GVP, cincin
+        penduduk dari WorldPop, area peringatan abu dari poligon SIGMET,
+        episentrum dari BMKG dan USGS, arah angin dari Open-Meteo, posisi Anda
+        dari GPS perangkat. Radius {level.radiusKm} km hanya pembanding — zona
+        terlarang resmi ditetapkan Badan Geologi dan belum tersambung. Ketuk
+        bentuk mana pun di peta untuk melihat sumbernya · {dataState.sourceTime}
+      </Why>
     </div>
   )
 }

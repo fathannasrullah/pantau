@@ -298,9 +298,20 @@ Urutan layar Status mengikuti prototipe v4:
 6. Gempa terkini dan grafik kegempaan per jam
 7. Tiga tindakan praktis
 
-Lima tab: **Status**, **Peta** (radius, wilayah, penduduk), **Udara**
-(penerbangan dan penyeberangan), **Laporan** (feed resmi), **Panduan**
-(tindakan, nomor penting, dan daftar sumber).
+Petanya bukan salah satu tab, melainkan **latar seluruh app**. Isi lain duduk
+di lembar geser yang bisa ditarik ke tiga posisi — rendah untuk melihat peta,
+setengah untuk membaca sambil melihat, penuh untuk membaca saja. Di layar
+laptop lembar itu berubah jadi panel kiri dan peta memakai sisa ruangnya.
+
+Lima bagian di dalam lembar: **Status**, **Wilayah** (wilayah terdekat,
+penduduk, penyeberangan, dampak), **Udara** (peringatan abu, angin per
+ketinggian, bandara), **Laporan** (feed resmi), **Panduan** (tindakan, nomor
+penting, dan daftar sumber). Prototipe hanya memuat empat — tab Udara tidak ada
+di sana — tapi bagian itu membawa integrasi yang sudah bekerja, jadi
+dipertahankan.
+
+Peta menerima ukuran antarmuka yang mengapung di atasnya (kepala halaman,
+banner, lembar geser) supaya `fitBounds` tidak menaruh bentuk di balik apa pun.
 
 Peta memakai Leaflet dengan dua petak dasar terbuka — OpenStreetMap (jalan) dan
 OpenTopoMap (relief; bentuk lereng menentukan ke mana aliran turun) — dan
