@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { destinationPoint, distanceKm } from '../lib/geo'
@@ -125,10 +125,60 @@ export function VolcanoMap({
   const mapRef = useRef<L.Map | null>(null)
   const baseRef = useRef<L.TileLayer | null>(null)
   const drawnRef = useRef<L.Layer[]>([])
+  const geoDrawnRef = useRef<L.Layer[]>([])
   const [baseId, setBaseId] = useState<BaseMapId>('jalan')
   const [tilesFailed, setTilesFailed] = useState(false)
 
-  // Peta dibuat sekali; berpindah gunung hanya memindahkan pandangannya.
+  /**
+   * Ruang tertutup dibaca lewat ref, bukan lewat daftar kebergantungan efek.
+   * Angkanya berubah setiap kali lembar geser bergerak, dan dulu itu ikut
+   * memicu peta memasang ulang pandangannya — zoom yang baru saja disetel
+   * pengguna langsung hilang begitu lembar disentuh.
+   */
+  const chromeRef = useRef(chrome)
+  chromeRef.current = chrome
+
+  /** Titik-titik yang harus muat di layar, dipisah supaya bisa digabung. */
+  const dataFocusRef = useRef<L.LatLngExpression[]>([])
+  const userFocusRef = useRef<L.LatLngExpression[]>([])
+  /** Sudah pernah digeser atau di-zoom sendiri oleh pengguna. */
+  const userMovedRef = useRef(false)
+  /** Menandai gerakan yang kita sendiri lakukan, agar tidak terhitung. */
+  const programmaticRef = useRef(false)
+  /** Pandangan hanya dipaksa ulang saat gunung, lapisan, atau radius berganti. */
+  const viewKeyRef = useRef<string | null>(null)
+  const hadFixRef = useRef(false)
+
+  /**
+   * Memasukkan seluruh bentuk ke dalam bagian peta yang tidak tertutup
+   * antarmuka. Kecuali dipaksa, pandangan yang sudah diatur pengguna tidak
+   * pernah diambil alih — data yang masuk di latar belakang tidak boleh
+   * menyentak peta yang sedang dibaca.
+   */
+  const fitToFocus = useCallback((force: boolean) => {
+    const map = mapRef.current
+    if (!map) return
+    if (!force && userMovedRef.current) return
+    const bounds = L.latLngBounds([
+      ...dataFocusRef.current,
+      ...userFocusRef.current,
+    ])
+    if (!bounds.isValid()) return
+    const c = chromeRef.current
+    programmaticRef.current = true
+    map.fitBounds(bounds, {
+      paddingTopLeft: [28 + c.left, 28 + c.top],
+      paddingBottomRight: [28, 28 + c.bottom],
+      maxZoom: 12,
+      animate: false,
+    })
+    programmaticRef.current = false
+    if (force) userMovedRef.current = false
+  }, [])
+
+  // Peta dibuat sekali seumur hidup komponen. Berpindah gunung hanya
+  // memindahkan pandangannya — membangun ulang seluruh peta membuat petaknya
+  // berkedip putih dan memuat ulang semuanya dari awal.
   useEffect(() => {
     const host = hostRef.current
     if (!host || mapRef.current) return
@@ -137,13 +187,21 @@ export function VolcanoMap({
       center: [volcano.lat, volcano.lon],
       zoom: 9,
       zoomControl: false,
-      // Gulir halaman tidak boleh tersangkut di peta saat membaca di ponsel.
-      scrollWheelZoom: false,
+      // Zoom lewat roda tetikus dulu dimatikan agar gulir halaman tidak
+      // tersangkut di peta. Halaman ini tidak bergulir lagi — yang bergulir
+      // isi lembar geser — jadi rodanya dikembalikan ke fungsinya.
+      scrollWheelZoom: true,
       attributionControl: true,
     })
     L.control.zoom({ position: 'bottomright' }).addTo(map)
     // Skala metrik: satu-satunya cara pembaca menilai jarak sebenarnya.
     L.control.scale({ position: 'topleft', imperial: false }).addTo(map)
+
+    const remember = () => {
+      if (!programmaticRef.current) userMovedRef.current = true
+    }
+    map.on('dragstart', remember)
+    map.on('zoomstart', remember)
 
     mapRef.current = map
     // Kartu peta sering baru mendapat ukuran akhirnya setelah tata letak
@@ -160,11 +218,16 @@ export function VolcanoMap({
     return () => {
       nudge.forEach(window.clearTimeout)
       observer?.disconnect()
+      map.off('dragstart', remember)
+      map.off('zoomstart', remember)
       map.remove()
       mapRef.current = null
       baseRef.current = null
+      drawnRef.current = []
+      geoDrawnRef.current = []
     }
-  }, [volcano.lat, volcano.lon])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Petak dasar dipasang terpisah supaya bisa ditukar tanpa membangun ulang.
   useEffect(() => {
@@ -184,6 +247,19 @@ export function VolcanoMap({
     tiles.addTo(map)
     baseRef.current = tiles
   }, [baseId])
+
+  /**
+   * Isi peta dibandingkan lewat isinya, bukan lewat identitas objeknya.
+   * Snapshot dibangun ulang setiap beberapa detik walau datanya sama persis;
+   * tanpa ini seluruh bentuk di peta dihapus lalu dipasang ulang terus-menerus,
+   * yang menutup popup yang sedang dibaca dan membuat peta terasa berat.
+   */
+  const dataKey = JSON.stringify([
+    advisories,
+    population,
+    bmkgEpicentres,
+    usgsQuakes,
+  ])
 
   useEffect(() => {
     const map = mapRef.current
@@ -378,89 +454,114 @@ export function VolcanoMap({
         ),
     )
 
-    // Posisi pengguna hanya digambar bila GPS-nya benar-benar memberi titik.
-    if (geo.fix) {
-      const me: L.LatLngExpression = [geo.fix.lat, geo.fix.lon]
-      const km = distanceKm({ lat: geo.fix.lat, lon: geo.fix.lon }, volcano)
-      add(
-        L.circle(me, {
-          radius: geo.fix.accuracyM,
-          color: '#4ade80',
-          weight: 1,
-          opacity: 0.5,
-          fillColor: '#4ade80',
-          fillOpacity: 0.1,
-        }),
-      )
-      // Garis ke kawah membuat jarak di kartu Posisi bisa dilihat, bukan hanya
-      // dibaca sebagai angka.
-      add(
-        L.polyline([me, vent], {
-          color: '#4ade80',
-          weight: 1.5,
-          opacity: 0.55,
-          dashArray: '4 6',
-        }).bindTooltip(`${km < 10 ? km.toFixed(1) : Math.round(km)} km ke kawah`, {
-          direction: 'center',
-          sticky: true,
-        }),
-      )
-      add(
-        L.circleMarker(me, {
-          radius: 6,
-          color: '#0d1117',
-          weight: 2,
-          fillColor: '#4ade80',
-          fillOpacity: 1,
-        })
-          .bindTooltip('posisi Anda', { direction: 'top' })
-          .bindPopup(
-            `<strong>Posisi Anda</strong><br>${formatCoords(geo.fix.lat, geo.fix.lon)}<br>${
-              km < 10 ? km.toFixed(1) : Math.round(km)
-            } km dari kawah · akurasi ${Math.round(geo.fix.accuracyM)} m<br><span class="lpop__src">GPS perangkat Anda</span>`,
-          ),
-      )
-      focusPoints.push(me)
-    }
+    dataFocusRef.current = focusPoints
 
-    // Pandangan disetel agar seluruh bentuk lapisan ini muat, bukan zoom tetap
-    // yang bisa memotong episentrum atau poligon abu di luar layar. Sisi yang
-    // tertutup antarmuka diberi bantalan lebih besar supaya bentuknya tidak
-    // berakhir di balik lembar geser.
-    const bounds = L.latLngBounds(focusPoints)
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, {
-        paddingTopLeft: [28 + chrome.left, 28 + chrome.top],
-        paddingBottomRight: [28, 28 + chrome.bottom],
-        maxZoom: 12,
-        animate: false,
-      })
-    }
+    // Pandangan hanya dipas ulang saat yang digambar memang berganti isi:
+    // gunung lain, lapisan lain, radius lain. Data yang menetes masuk setelah
+    // itu tidak boleh menggeser peta yang sudah diatur pengguna.
+    const key = `${volcano.gvpNumber}|${layer}|${radiusKm}`
+    const forced = viewKeyRef.current !== key
+    viewKeyRef.current = key
+    fitToFocus(forced)
+    // Sengaja dibandingkan lewat isi, bukan identitas objek — lihat dataKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     volcano,
     radiusKm,
     layer,
     accent,
-    geo.fix,
     ashHeadingDeg,
     windSpeedKmh,
-    advisories,
-    population,
-    bmkgEpicentres,
-    usgsQuakes,
-    chrome,
+    dataKey,
+    fitToFocus,
   ])
 
+  // Posisi pengguna digambar terpisah. GPS mengirim titik baru terus-menerus;
+  // bila ikut di efek atas, setiap kedipan GPS menghapus dan memasang ulang
+  // seluruh bentuk peta.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    geoDrawnRef.current.forEach((item) => map.removeLayer(item))
+    geoDrawnRef.current = []
+    const add = (item: L.Layer) => {
+      item.addTo(map)
+      geoDrawnRef.current.push(item)
+    }
+
+    if (!geo.fix) {
+      userFocusRef.current = []
+      hadFixRef.current = false
+      return
+    }
+
+    const vent: L.LatLngExpression = [volcano.lat, volcano.lon]
+    const me: L.LatLngExpression = [geo.fix.lat, geo.fix.lon]
+    const km = distanceKm({ lat: geo.fix.lat, lon: geo.fix.lon }, volcano)
+    add(
+      L.circle(me, {
+        radius: geo.fix.accuracyM,
+        color: '#4ade80',
+        weight: 1,
+        opacity: 0.5,
+        fillColor: '#4ade80',
+        fillOpacity: 0.1,
+      }),
+    )
+    // Garis ke kawah membuat jarak di kartu Posisi bisa dilihat, bukan hanya
+    // dibaca sebagai angka.
+    add(
+      L.polyline([me, vent], {
+        color: '#4ade80',
+        weight: 1.5,
+        opacity: 0.55,
+        dashArray: '4 6',
+      }).bindTooltip(`${km < 10 ? km.toFixed(1) : Math.round(km)} km ke kawah`, {
+        direction: 'center',
+        sticky: true,
+      }),
+    )
+    add(
+      L.circleMarker(me, {
+        radius: 6,
+        color: '#0d1117',
+        weight: 2,
+        fillColor: '#4ade80',
+        fillOpacity: 1,
+      })
+        .bindTooltip('posisi Anda', { direction: 'top' })
+        .bindPopup(
+          `<strong>Posisi Anda</strong><br>${formatCoords(geo.fix.lat, geo.fix.lon)}<br>${
+            km < 10 ? km.toFixed(1) : Math.round(km)
+          } km dari kawah · akurasi ${Math.round(geo.fix.accuracyM)} m<br><span class="lpop__src">GPS perangkat Anda</span>`,
+        ),
+    )
+    userFocusRef.current = [me]
+
+    // Hanya titik GPS pertama yang boleh melebarkan pandangan. Sesudah itu
+    // pembaruan GPS datang tiap beberapa detik, dan memasang ulang pandangan
+    // setiap kali membuat peta bergoyang sendiri.
+    if (!hadFixRef.current) {
+      hadFixRef.current = true
+      fitToFocus(false)
+    }
+  }, [geo.fix, volcano.lat, volcano.lon, fitToFocus])
+
   // Memusatkan ke posisi pengguna tidak boleh menggambar ulang lapisan, jadi
-  // dipisah dari efek di atas.
+  // dipisah dari efek di atas. Ini pilihan pengguna sendiri, jadi ikut dicatat
+  // supaya data yang masuk kemudian tidak menariknya kembali ke kawah.
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     if (focus !== 'saya' || !geo.fix) return
+    userMovedRef.current = true
     map.setView([geo.fix.lat, geo.fix.lon], Math.max(map.getZoom(), 11), {
       animate: true,
     })
-  }, [focus, geo.fix])
+    // Hanya saat tombolnya ditekan, bukan tiap kedipan GPS.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus])
 
   const legend = buildLegend({
     layer,

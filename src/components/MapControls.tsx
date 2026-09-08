@@ -14,8 +14,9 @@ interface Props {
  * Kendali peta yang mengapung di atasnya.
  *
  * Pemilih lapisan dulu ada di bawah peta; sekarang petanya penuh layar, jadi
- * kendalinya ikut naik ke atas peta. Atribusi OpenStreetMap ikut di sini karena
- * kontrol bawaan Leaflet tertutup lembar geser.
+ * kendalinya ikut naik ke atas peta. Atribusi tidak ditulis ulang di sini —
+ * kontrol bawaan Leaflet sudah digeser naik agar tidak tertutup lembar geser,
+ * dan dua atribusi di satu layar hanya menambah ramai.
  */
 export function MapControls({
   layers,
@@ -46,18 +47,6 @@ export function MapControls({
           {focus === 'gunung' ? 'Lihat posisi saya' : 'Pusatkan ke gunung'}
         </button>
       )}
-
-      <div className="mapctl__attr">
-        ©{' '}
-        <a
-          href="https://www.openstreetmap.org/copyright"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          OpenStreetMap
-        </a>{' '}
-        · OpenTopoMap
-      </div>
     </div>
   )
 }

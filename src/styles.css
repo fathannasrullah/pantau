@@ -67,6 +67,13 @@
 
   /* Sasaran ketuk terkecil yang masih lolos WCAG 2.2 AA. */
   --tap: 24px;
+
+  /* Ukuran antarmuka mengapung. App menimpanya tiap kali lembar geser bergerak;
+     nilai di sini hanya penjaga agar aturan calc() tetap sah sebelum React
+     memasang gayanya. */
+  --sheet-h: 0px;
+  --panel-w: 0px;
+  --chrome-top: 66px;
 }
 
 *,
@@ -197,6 +204,48 @@ button {
   border-radius: 0;
 }
 
+/* Peta memenuhi layar, jadi keempat sudutnya ada yang tertutup: kepala dan
+   banner di atas, lembar geser di bawah, panel kiri di laptop. Semua kendali
+   milik peta digeser ke dalam sisa ruang yang benar-benar terlihat — sebelum
+   ini tombol zoom, skala, atribusi, dan pemilih peta dasar tersembunyi di
+   baliknya sehingga tidak bisa disentuh sama sekali. */
+
+.app__map .leaflet-top {
+  top: var(--chrome-top);
+}
+
+.app__map .leaflet-bottom {
+  bottom: var(--sheet-h);
+}
+
+.app__map .leaflet-left {
+  left: var(--panel-w);
+}
+
+/* Kiri atas: skala, lalu keterangan warna di bawahnya.
+   Kanan atas: pemilih peta dasar. Kiri bawah: kendali lapisan.
+   Kanan bawah: zoom dan atribusi bawaan Leaflet. */
+
+.app__map .lmapbase {
+  top: calc(var(--chrome-top) + 10px);
+  right: var(--s-3);
+}
+
+.app__map .lmaplegend {
+  top: calc(var(--chrome-top) + 36px);
+  bottom: auto;
+  left: calc(var(--panel-w) + var(--s-3));
+}
+
+/* Peringatan petak gagal turun di bawah pemilih peta dasar, bukan melintang
+   penuh — kalau melintang ia menimpa keterangan warna di kiri. */
+.app__map .lmapoff {
+  top: calc(var(--chrome-top) + 46px);
+  left: auto;
+  right: var(--s-3);
+  max-width: min(320px, 62%);
+}
+
 /* Kepala mengapung: pembungkusnya tembus ketukan supaya peta di sekitarnya
    tetap bisa digeser, hanya kartunya yang menerima. */
 
@@ -223,7 +272,6 @@ button {
   border-radius: var(--r-lg);
   padding: 10px var(--s-3);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(10px);
   pointer-events: auto;
 }
 
@@ -353,23 +401,12 @@ button {
   color: var(--c-text-2);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   white-space: nowrap;
-  backdrop-filter: blur(6px);
 }
 
 .mapctl__btn--on {
   border-color: var(--lv);
   color: var(--lv);
   background: rgba(13, 17, 23, 0.96);
-}
-
-.mapctl__attr {
-  align-self: flex-end;
-  font-size: var(--t-3xs);
-  color: var(--c-text-4);
-  background: rgba(13, 17, 23, 0.88);
-  border-radius: var(--r-xs);
-  padding: 3px 7px;
-  white-space: nowrap;
 }
 
 /* Lembar geser. */
@@ -387,6 +424,17 @@ button {
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -14px 44px rgba(0, 0, 0, 0.55);
   transition: height 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Selama jari masih menempel, lembar dan kendali peta harus mengikuti persis —
+   transisi apa pun di sini terasa seperti tarikan yang tertinggal. */
+.app[data-dragging] .sheetpanel {
+  transition: none;
+  will-change: height;
+}
+
+.app[data-dragging] .mapctl {
+  transition: none;
 }
 
 .sheetpanel__grip {
@@ -419,6 +467,9 @@ button {
   /* Gulir di dalam lembar tidak boleh merembet menggeser peta di belakangnya. */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  /* Tinggi lembar berubah tiap frame saat ditarik; ini menahan perhitungan
+     tata letak dan cat ulang tetap di dalam kotak gulir. */
+  contain: layout paint;
   padding: 0 var(--s-3) 28px;
   padding-bottom: calc(28px + env(safe-area-inset-bottom));
   display: flex;
@@ -1124,9 +1175,8 @@ button {
   gap: 2px;
   padding: 2px;
   border-radius: var(--r-md);
-  background: rgba(13, 17, 23, 0.88);
+  background: rgba(13, 17, 23, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
 }
 
 .lmapbase__btn {
@@ -1152,9 +1202,8 @@ button {
   padding: 7px 9px;
   list-style: none;
   border-radius: var(--r-md);
-  background: rgba(13, 17, 23, 0.85);
+  background: rgba(13, 17, 23, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -2334,11 +2383,12 @@ a.row__tel:hover {
     top: var(--s-3);
   }
 
+  /* Lembar tidak lagi menutup bagian bawah (--sheet-h nol), jadi kendali
+     lapisan tetap di kiri bawah seperti di ponsel — di atas ia berebut tempat
+     dengan skala dan keterangan warna peta. */
   .mapctl {
     right: auto;
     left: calc(var(--panel-w) + var(--s-3));
-    top: 78px;
-    bottom: auto;
     align-items: flex-start;
     transition: none;
   }

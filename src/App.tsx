@@ -97,6 +97,9 @@ export default function App() {
     // Kendali peta duduk tepat di atas lembar geser, ikut bergerak bersamanya.
     '--sheet-h': `${sheet.height}px`,
     '--panel-w': `${sheet.panelWidth}px`,
+    // Ruang yang dipakai kepala dan banner, supaya kendali bawaan peta —
+    // skala, pemilih peta dasar, keterangan warna — tidak duduk di baliknya.
+    '--chrome-top': `${HEADER_PX + (dataState.banner ? BANNER_PX : 0)}px`,
   } as React.CSSProperties
 
   // Berpindah tab ikut membuka lembar: memilih bagian lalu hanya melihat
@@ -169,6 +172,7 @@ export default function App() {
         onMetrics={onMetrics}
         snap={snap}
         onSnapChange={setSnap}
+        scrollKey={tab}
         header={<SheetNav tab={tab} onChange={changeTab} />}
       >
         {tab === 'status' && (

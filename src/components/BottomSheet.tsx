@@ -25,6 +25,11 @@ interface Props {
   onSnapChange: (snap: number) => void
   /** Isi tetap di atas area gulir — navigasi tab. */
   header: ReactNode
+  /**
+   * Penanda isi yang sedang tampil. Gulir hanya dikembalikan ke atas saat
+   * penanda ini berubah — bukan setiap kali induknya menggambar ulang.
+   */
+  scrollKey: string
   children: ReactNode
 }
 
@@ -55,15 +60,16 @@ export function BottomSheet({
   snap,
   onSnapChange,
   header,
+  scrollKey,
   children,
 }: Props) {
   const [viewport, setViewport] = useState(() => ({
     w: typeof window === 'undefined' ? 420 : window.innerWidth,
     h: typeof window === 'undefined' ? 880 : window.innerHeight,
   }))
-  /** Tinggi saat sedang ditarik; null berarti sedang diam di titik jepret. */
-  const [drag, setDrag] = useState<number | null>(null)
+  const elRef = useRef<HTMLElement | null>(null)
   const movedRef = useRef(false)
+  const rafRef = useRef(0)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -73,51 +79,89 @@ export function BottomSheet({
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  useEffect(
+    () => () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    },
+    [],
+  )
+
   const wide = viewport.w >= WIDE_PX
   const snaps = snapPointsFor(viewport.h)
-  const height = drag ?? snaps[snap]
+  const height = snaps[snap]
   const panelWidth = wide ? panelWidthFor(viewport.w) : 0
 
   useEffect(() => {
     onMetrics({ height: wide ? 0 : height, wide, panelWidth })
   }, [onMetrics, height, wide, panelWidth])
 
+  /**
+   * Tinggi selama ditarik dipasang langsung ke DOM, tidak lewat state React.
+   * Lewat state, satu gerakan jari menggambar ulang seluruh pohon komponen
+   * puluhan kali per detik — di ponsel itu terasa tersendat. Kendali peta ikut
+   * bergerak lewat `--sheet-h` di kerangka app.
+   */
+  const applyHeight = useCallback((h: number) => {
+    const el = elRef.current
+    if (!el) return
+    el.style.height = `${h}px`
+    el.parentElement?.style.setProperty('--sheet-h', `${h}px`)
+  }, [])
+
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (wide) return
+      const shell = elRef.current?.parentElement ?? null
       const startY = e.clientY
       const startH = height
+      let latest = startH
       movedRef.current = false
+      // Selama ditarik lembar harus mengikuti jari persis, bukan mengejarnya
+      // lewat transisi.
+      shell?.setAttribute('data-dragging', 'true')
 
       const move = (ev: PointerEvent) => {
         const dy = startY - ev.clientY
         if (Math.abs(dy) > 4) movedRef.current = true
         // Sedikit lebih rendah dari jepret terendah supaya terasa lentur,
         // tapi tidak sampai hilang dari layar.
-        setDrag(Math.max(snaps[0] - 40, Math.min(snaps[2], startH + dy)))
+        latest = Math.max(snaps[0] - 40, Math.min(snaps[2], startH + dy))
+        if (rafRef.current) return
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = 0
+          applyHeight(latest)
+        })
       }
       const up = () => {
         window.removeEventListener('pointermove', move)
         window.removeEventListener('pointerup', up)
-        setDrag((current) => {
-          if (current === null) return null
-          let best = 0
-          let bestGap = Infinity
-          snaps.forEach((v, i) => {
-            const gap = Math.abs(v - current)
-            if (gap < bestGap) {
-              bestGap = gap
-              best = i
-            }
-          })
-          onSnapChange(best)
-          return null
+        window.removeEventListener('pointercancel', up)
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current)
+          rafRef.current = 0
+        }
+        shell?.removeAttribute('data-dragging')
+
+        let best = 0
+        let bestGap = Infinity
+        snaps.forEach((v, i) => {
+          const gap = Math.abs(v - latest)
+          if (gap < bestGap) {
+            bestGap = gap
+            best = i
+          }
         })
+        // React tidak menyentuh tinggi bila nilai gayanya tidak berubah, jadi
+        // saat tarikan berakhir di jepret yang sama, posisi akhirnya harus
+        // dipasang sendiri.
+        applyHeight(snaps[best])
+        onSnapChange(best)
       }
       window.addEventListener('pointermove', move)
       window.addEventListener('pointerup', up)
+      window.addEventListener('pointercancel', up)
     },
-    [wide, height, snaps],
+    [wide, height, snaps, applyHeight, onSnapChange],
   )
 
   // Ketuk gagang memutar antar tiga posisi — jalan pintas untuk yang tidak
@@ -132,20 +176,20 @@ export function BottomSheet({
   }, [wide, snap, onSnapChange])
 
   // Berpindah tab selalu mulai dari awal isinya, bukan dari posisi gulir tab
-  // sebelumnya.
+  // sebelumnya. Bergantung pada penanda tab, bukan pada elemen isinya: elemen
+  // itu selalu baru tiap gambar ulang, sehingga dulu gulir orang tersentak ke
+  // atas setiap kali data masuk.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 })
-  }, [children])
+  }, [scrollKey])
 
   const style = wide
     ? ({ width: `${panelWidth}px` } as React.CSSProperties)
-    : ({
-        height: `${height}px`,
-        transition: drag === null ? undefined : 'none',
-      } as React.CSSProperties)
+    : ({ height: `${height}px` } as React.CSSProperties)
 
   return (
     <section
+      ref={elRef}
       className={`sheetpanel${wide ? ' sheetpanel--side' : ''}`}
       style={style}
       aria-label="Panel informasi"
