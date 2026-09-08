@@ -1,5 +1,72 @@
 :root {
   color-scheme: dark;
+
+  /*
+   * Skala huruf. Sebelumnya ada 21 ukuran berbeda — sebelas di antaranya
+   * berdesakan antara 9,5 dan 14,5 piksel, selisih setengah piksel yang tidak
+   * terbaca sebagai hierarki, hanya sebagai ketidakrapian. Delapan tingkat ini
+   * cukup untuk seluruh app, dan lantainya dinaikkan dari 9,5 ke 11 karena app
+   * ini dibaca di luar ruangan, sambil terburu-buru.
+   */
+  --t-3xs: 11px;
+  --t-2xs: 12px;
+  --t-xs: 13px;
+  --t-sm: 14px;
+  --t-md: 16px;
+  --t-lg: 20px;
+  --t-xl: 30px;
+  --t-2xl: 44px;
+
+  /* Radius: dari 15 nilai jadi lima tingkat dan satu bentuk pil. */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 20px;
+
+  /* Jarak, kelipatan empat. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 22px;
+  --s-6: 30px;
+
+  /*
+   * Empat tingkat teks, tidak lebih. Sebelumnya ada enam abu-abu yang nyaris
+   * tak terbedakan — variasi yang tidak membawa makna apa pun.
+   */
+  --c-text: #e9edf2;
+  --c-text-2: #c3cbd5;
+  --c-text-3: #9aa5b3;
+  --c-text-4: #8b96a5;
+
+  /* Permukaan, dari paling dalam ke paling luar. */
+  --c-page: #080a0e;
+  --c-shell: #0d1117;
+  --c-card: #141a22;
+  --c-sunken: #0f151c;
+
+  /* Garis dan latar tipis, dipakai berulang di seluruh kartu. */
+  --c-line: rgba(255, 255, 255, 0.08);
+  --c-line-2: rgba(255, 255, 255, 0.14);
+  --c-hairline: rgba(255, 255, 255, 0.055);
+  --c-veil: rgba(255, 255, 255, 0.06);
+
+  /* Warna keparahan; harus sama dengan SEVERITY_COLOR di src/theme.ts. */
+  --c-safe: #4ade80;
+  --c-watch: #facc15;
+  --c-alert: #fb923c;
+  --c-danger: #f87171;
+  --c-neutral: #94a3b8;
+  --c-model: #c084fc;
+  --c-sea: #38bdf8;
+  --c-link: #7dd3fc;
+  --c-link-hover: #bae6fd;
+  --c-on-accent: #0b0b0b;
+
+  /* Sasaran ketuk terkecil yang masih lolos WCAG 2.2 AA. */
+  --tap: 24px;
 }
 
 *,
@@ -10,18 +77,18 @@
 
 body {
   margin: 0;
-  background: #080a0e;
-  color: #e9edf2;
+  background: var(--c-page);
+  color: var(--c-text);
   font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: #7dd3fc;
+  color: var(--c-link);
   text-decoration: none;
 }
 a:hover {
-  color: #bae6fd;
+  color: var(--c-link-hover);
 }
 
 button {
@@ -111,7 +178,7 @@ button {
 .page {
   min-height: 100vh;
   min-height: 100dvh;
-  background: #080a0e;
+  background: var(--c-page);
   display: flex;
   justify-content: center;
 }
@@ -119,8 +186,8 @@ button {
 .shell {
   width: 100%;
   max-width: 460px;
-  background: #0d1117;
-  color: #e9edf2;
+  background: var(--c-shell);
+  color: var(--c-text);
   position: relative;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
   display: flex;
@@ -180,14 +247,14 @@ button {
 }
 
 .appbar__name {
-  font-size: 16px;
+  font-size: var(--t-md);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .appbar__meta {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   margin-top: 1px;
 }
 
@@ -205,7 +272,7 @@ button {
   gap: 6px;
   border: 1px solid var(--ds-line);
   background: var(--ds-wash);
-  border-radius: 20px;
+  border-radius: var(--r-pill);
   padding: 5px 10px;
 }
 
@@ -218,15 +285,15 @@ button {
 }
 
 .chip__label {
-  font-size: 10.5px;
+  font-size: var(--t-3xs);
   font-weight: 600;
   color: var(--ds);
 }
 
 .appbar__syncsub {
   display: block;
-  font-size: 10.5px;
-  color: #9aa5b3;
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
   margin-top: 3px;
 }
 
@@ -255,24 +322,24 @@ button {
 }
 
 .banner__title {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
   color: var(--ds);
 }
 
 .banner__note {
-  font-size: 11.5px;
-  color: #c3cbd5;
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
   line-height: 1.5;
   margin-top: 2px;
 }
 
 .banner__retry {
-  font-size: 11.5px;
+  font-size: var(--t-2xs);
   font-weight: 600;
   color: var(--ds);
   border: 1px solid var(--ds-line);
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   padding: 6px 10px;
   flex: none;
 }
@@ -281,7 +348,7 @@ button {
 
 .strip {
   background: var(--lv);
-  color: #0b0b0b;
+  color: var(--c-on-accent);
   padding: 10px 16px;
   display: flex;
   align-items: center;
@@ -289,16 +356,16 @@ button {
 }
 
 .strip__tag {
-  font-size: 10px;
+  font-size: var(--t-3xs);
   font-weight: 600;
   background: rgba(0, 0, 0, 0.22);
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   padding: 2px 5px;
   flex: none;
 }
 
 .strip__text {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
   line-height: 1.35;
 }
@@ -308,10 +375,10 @@ button {
 .section {
   /* Garis rambut di kiri membuat judul bagian jadi tengara yang bisa dipindai
      dengan sekali lihat, tanpa menambah berat tipografinya. */
-  font-size: 13px;
+  font-size: var(--t-sm);
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: #cbd5e1;
+  color: var(--c-text);
   margin: 26px 0 10px;
   padding-left: 10px;
   border-left: 2px solid rgba(255, 255, 255, 0.16);
@@ -323,8 +390,8 @@ button {
 }
 
 .source {
-  font-size: 11px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   margin-top: 11px;
 }
 
@@ -341,15 +408,18 @@ button {
 }
 
 .linkrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
   margin-top: 12px;
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
   color: var(--lv);
 }
 
 .footer {
-  font-size: 11px;
-  color: #7f8a99;
+  font-size: var(--t-2xs);
+  color: var(--c-text-4);
   line-height: 1.6;
   margin-top: 26px;
   text-align: center;
@@ -361,7 +431,7 @@ button {
   margin: 18px 0 0;
   border: 1px solid var(--lv-line);
   background: var(--lv-wash);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   padding: 18px;
   position: relative;
   overflow: hidden;
@@ -379,9 +449,9 @@ button {
 }
 
 .avcard__label {
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   font-weight: 600;
-  color: #aeb8c4;
+  color: var(--c-text-2);
 }
 
 .avcard__row {
@@ -392,7 +462,7 @@ button {
 }
 
 .avcard__name {
-  font-size: 44px;
+  font-size: var(--t-2xl);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 0.95;
@@ -400,7 +470,7 @@ button {
 }
 
 .avcard__short {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
   color: var(--lv);
   padding-bottom: 8px;
@@ -409,9 +479,9 @@ button {
 }
 
 .avcard__headline {
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   line-height: 1.5;
-  color: #c3cbd5;
+  color: var(--c-text-2);
   margin-top: 10px;
 }
 
@@ -422,15 +492,15 @@ button {
 }
 
 .avcard__plainlabel {
-  font-size: 12px;
+  font-size: var(--t-xs);
   font-weight: 600;
-  color: #aeb8c4;
+  color: var(--c-text-2);
 }
 
 .avcard__plain {
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   line-height: 1.55;
-  color: #e9edf2;
+  color: var(--c-text);
   margin-top: 5px;
 }
 
@@ -442,9 +512,9 @@ button {
 }
 
 .pill {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   padding: 6px 9px;
 }
 
@@ -453,8 +523,8 @@ button {
 .poscard {
   margin-top: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   padding: 15px;
 }
 
@@ -473,14 +543,17 @@ button {
 }
 
 .poscard__label {
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   font-weight: 600;
-  color: #aeb8c4;
+  color: var(--c-text-2);
 }
 
 .poscard__toggle {
-  font-size: 11px;
-  color: #9aa5b3;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   flex: none;
 }
 
@@ -492,25 +565,25 @@ button {
 }
 
 .poscard__km {
-  font-size: 30px;
+  font-size: var(--t-xl);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .poscard__from {
-  font-size: 13px;
-  color: #c3cbd5;
+  font-size: var(--t-sm);
+  color: var(--c-text-2);
 }
 
 .poscard__verdict {
-  font-size: 14px;
+  font-size: var(--t-sm);
   font-weight: 700;
   margin-top: 7px;
 }
 
 .poscard__note {
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.5;
   margin-top: 4px;
 }
@@ -522,21 +595,21 @@ button {
 }
 
 .poscard__gps {
-  font-size: 10.5px;
-  color: #9aa5b3;
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
   margin-top: 9px;
 }
 
 .poscard__ontitle {
   display: block;
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
 .poscard__onnote {
   display: block;
-  font-size: 12.5px;
-  color: #9aa5b3;
+  font-size: var(--t-xs);
+  color: var(--c-text-3);
   line-height: 1.5;
   margin-top: 4px;
 }
@@ -544,48 +617,48 @@ button {
 .btn-primary {
   flex: 1;
   text-align: center;
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 700;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
 }
 
 .btn-ghost {
   flex: none;
   text-align: center;
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #e9edf2;
+  color: var(--c-text);
 }
 
 /* ---------- ashfall ---------- */
 
 .failnote {
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   padding: 16px;
 }
 
 .failnote__t {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
 }
 
 .failnote__n {
-  font-size: 12px;
-  color: #9aa5b3;
+  font-size: var(--t-xs);
+  color: var(--c-text-3);
   line-height: 1.5;
   margin-top: 4px;
 }
 
 .ash {
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   margin-top: 8px;
   overflow: hidden;
 }
@@ -604,12 +677,12 @@ button {
 }
 
 .ash__k {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
 }
 
 .ash__v {
-  font-size: 17px;
+  font-size: var(--t-md);
   font-weight: 700;
   margin-top: 5px;
 }
@@ -619,27 +692,27 @@ button {
 }
 
 .ash__d {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   margin-top: 3px;
 }
 
 .ash__d--up {
-  color: #fb923c;
+  color: var(--c-alert);
 }
 
 .ash__advice {
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   padding: 12px 14px;
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.5;
 }
 
 .ash__src {
   padding: 0 14px 12px;
-  font-size: 10.5px;
-  color: #9aa5b3;
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
 }
 
 /* ---------- numbered steps ---------- */
@@ -658,17 +731,17 @@ button {
 }
 
 .step__n {
-  font-size: 11px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   width: 16px;
   flex: none;
   padding-top: 2px;
 }
 
 .step__t {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   line-height: 1.55;
-  color: #d6dce4;
+  color: var(--c-text-2);
 }
 
 .steps--guide .step {
@@ -676,7 +749,7 @@ button {
 }
 
 .steps--guide .step__n {
-  font-size: 11.5px;
+  font-size: var(--t-2xs);
   width: 18px;
 }
 
@@ -684,26 +757,26 @@ button {
 
 .metric {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 12px 13px;
-  background: #141a22;
+  background: var(--c-card);
 }
 
 .metric__k {
-  font-size: 11px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.3;
 }
 
 .metric__v {
-  font-size: 21px;
+  font-size: var(--t-lg);
   font-weight: 600;
   margin-top: 6px;
   letter-spacing: -0.02em;
 }
 
 .metric__d {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   margin-top: 3px;
 }
 
@@ -711,8 +784,8 @@ button {
 
 .impacts {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   overflow: hidden;
 }
 
@@ -739,30 +812,30 @@ button {
 }
 
 .impact__area {
-  color: #e9edf2;
-  font-size: 13px;
+  color: var(--c-text);
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
 .impact__note {
-  font-size: 12px;
-  color: #a8b3c1;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.45;
   margin-top: 2px;
 }
 
 .impact__tag {
-  font-size: 10px;
+  font-size: var(--t-3xs);
   border: 1px solid currentColor;
-  border-radius: 5px;
+  border-radius: var(--r-xs);
   padding: 3px 6px;
   flex: none;
 }
 
 .impacts__src {
   padding: 11px 14px;
-  font-size: 11px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
 }
 
 /* ---------- generic row card ---------- */
@@ -772,9 +845,9 @@ button {
   align-items: center;
   gap: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 12px 14px;
-  background: #141a22;
+  background: var(--c-card);
 }
 
 .row--tall {
@@ -787,30 +860,37 @@ button {
 }
 
 .row__title {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
 }
 
 .row__note {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   margin-top: 2px;
 }
 
 .row__state {
-  font-size: 10px;
+  font-size: var(--t-3xs);
   flex: none;
 }
 
 .row__km {
-  font-size: 14px;
+  font-size: var(--t-sm);
   font-weight: 600;
   width: 52px;
   flex: none;
 }
 
 .row__tel {
-  font-size: 11.5px;
+  /* Nomor pendek seperti "112" hanya selebar 21px; sasaran ketuknya dijaga
+     lewat lebar minimum, bukan dengan membesarkan angkanya. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  font-size: var(--t-2xs);
   font-weight: 600;
   color: var(--lv);
   flex: none;
@@ -824,7 +904,7 @@ button {
   align-items: center;
   gap: 12px;
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 13px 14px;
   width: 100%;
   transition: border-color 0.2s;
@@ -841,20 +921,20 @@ button {
 
 .notifrow__title {
   display: block;
-  font-size: 13px;
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
 .notifrow__note {
   display: block;
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   margin-top: 2px;
 }
 
 .notifrow__action {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   flex: none;
 }
 
@@ -867,7 +947,7 @@ button {
   gap: 12px;
   border: 1px solid var(--lv-line);
   background: var(--lv-wash);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 13px 14px;
 }
 
@@ -876,31 +956,31 @@ button {
 }
 
 .install__title {
-  font-size: 13px;
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
 .install__note {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.45;
   margin-top: 2px;
 }
 
 .install__btn {
   flex: none;
-  font-size: 12px;
+  font-size: var(--t-xs);
   font-weight: 700;
-  color: #0b0b0b;
+  color: var(--c-on-accent);
   background: var(--lv);
-  border-radius: 9px;
+  border-radius: var(--r-md);
   padding: 9px 12px;
 }
 
 .install__dismiss {
   flex: none;
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   padding: 4px 2px;
 }
 
@@ -911,7 +991,7 @@ button {
 .mapbox {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   overflow: hidden;
   height: 400px;
 }
@@ -925,7 +1005,7 @@ button {
 .lmap {
   width: 100%;
   height: 100%;
-  background: #0a0f16;
+  background: var(--c-sunken);
 }
 
 /* Pemilih peta dasar mengambang di atas peta, bukan menambah tinggi kartunya. */
@@ -938,24 +1018,24 @@ button {
   display: flex;
   gap: 2px;
   padding: 2px;
-  border-radius: 9px;
+  border-radius: var(--r-md);
   background: rgba(13, 17, 23, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(8px);
 }
 
 .lmapbase__btn {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: 600;
-  color: #9aa5b3;
+  color: var(--c-text-3);
   padding: 6px 10px;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   text-align: center;
 }
 
 .lmapbase__btn--on {
   background: rgba(255, 255, 255, 0.1);
-  color: #e9edf2;
+  color: var(--c-text);
 }
 
 .lmaplegend {
@@ -966,7 +1046,7 @@ button {
   margin: 0;
   padding: 7px 9px;
   list-style: none;
-  border-radius: 9px;
+  border-radius: var(--r-md);
   background: rgba(13, 17, 23, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
@@ -980,8 +1060,8 @@ button {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
-  color: #c3cbd5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-2);
   line-height: 1.25;
 }
 
@@ -1002,7 +1082,7 @@ button {
 }
 
 .lmaplegend__key--area {
-  border-radius: 2px;
+  border-radius: var(--r-xs);
   border: 1px solid currentColor;
   background: color-mix(in srgb, currentColor 30%, transparent);
 }
@@ -1019,11 +1099,11 @@ button {
   top: 52px;
   z-index: 500;
   padding: 9px 11px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   background: rgba(13, 17, 23, 0.92);
   border: 1px solid rgba(250, 204, 21, 0.35);
-  color: #facc15;
-  font-size: 11px;
+  color: var(--c-watch);
+  font-size: var(--t-2xs);
   line-height: 1.5;
 }
 
@@ -1034,23 +1114,23 @@ button {
 }
 
 .lmap .leaflet-container {
-  background: #0a0f16;
+  background: var(--c-sunken);
   font-family: inherit;
 }
 
 .lmap .leaflet-control-attribution {
   background: rgba(13, 17, 23, 0.82);
-  color: #9aa5b3;
-  font-size: 10px;
+  color: var(--c-text-3);
+  font-size: var(--t-3xs);
 }
 
 .lmap .leaflet-control-attribution a {
-  color: #7dd3fc;
+  color: var(--c-link);
 }
 
 .lmap .leaflet-control-zoom a {
   background: rgba(13, 17, 23, 0.9);
-  color: #e9edf2;
+  color: var(--c-text);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
@@ -1061,31 +1141,31 @@ button {
 
 .lmap .leaflet-popup-content-wrapper,
 .lmap .leaflet-popup-tip {
-  background: #141a22;
-  color: #e9edf2;
+  background: var(--c-card);
+  color: var(--c-text);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
 }
 
 .lmap .leaflet-popup-content {
-  font-size: 12px;
+  font-size: var(--t-xs);
   line-height: 1.55;
   margin: 11px 13px;
 }
 
 .lmap .leaflet-popup-content a {
-  color: #7dd3fc;
+  color: var(--c-link);
 }
 
 .lpop__src {
-  color: #8b96a5;
-  font-size: 10.5px;
+  color: var(--c-text-4);
+  font-size: var(--t-3xs);
 }
 
 .lmap .leaflet-tooltip {
   background: rgba(13, 17, 23, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #e9edf2;
-  font-size: 11px;
+  color: var(--c-text);
+  font-size: var(--t-2xs);
   box-shadow: none;
 }
 
@@ -1096,18 +1176,18 @@ button {
 .lmap .leaflet-control-scale-line {
   background: rgba(13, 17, 23, 0.82);
   border-color: rgba(255, 255, 255, 0.35);
-  color: #c3cbd5;
-  font-size: 10px;
+  color: var(--c-text-2);
+  font-size: var(--t-3xs);
 }
 
 .lmap .leaflet-popup-close-button {
-  color: #9aa5b3;
+  color: var(--c-text-3);
 }
 
 .mapsrc {
   margin: 8px 0 0;
-  font-size: 10.5px;
-  color: #9aa5b3;
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
   line-height: 1.6;
 }
 
@@ -1122,13 +1202,13 @@ button {
 
 .layer {
   text-align: center;
-  font-size: 11.5px;
+  font-size: var(--t-2xs);
   font-weight: 600;
   padding: 11px 4px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   border: 1px solid rgba(255, 255, 255, 0.11);
   background: transparent;
-  color: #a8b3c1;
+  color: var(--c-text-2);
 }
 
 .layer--on {
@@ -1138,8 +1218,8 @@ button {
 }
 
 .layernote {
-  font-size: 12.5px;
-  color: #a8b3c1;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.55;
   margin-top: 12px;
 }
@@ -1148,8 +1228,8 @@ button {
 
 .seis {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   padding: 16px 14px 12px;
 }
 
@@ -1170,15 +1250,15 @@ button {
 
 .seis__fill {
   width: 100%;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   transition: height 0.3s, background 0.2s;
 }
 
 .seis__axis {
   display: flex;
   justify-content: space-between;
-  font-size: 10.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   margin-top: 7px;
 }
 
@@ -1186,45 +1266,45 @@ button {
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   margin-top: 11px;
   padding-top: 11px;
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.5;
 }
 
 .seis__src {
-  font-size: 10.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   margin-top: 8px;
 }
 
 .seis__foot {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.5;
   margin-top: 12px;
 }
 
 .quake {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 12px 13px;
-  background: #141a22;
+  background: var(--c-card);
 }
 
 .quake__k {
-  font-size: 11px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
 }
 
 .quake__v {
-  font-size: 20px;
+  font-size: var(--t-lg);
   font-weight: 600;
   margin-top: 5px;
 }
 
 .quake__track {
   height: 4px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   background: rgba(255, 255, 255, 0.08);
   margin-top: 8px;
   overflow: hidden;
@@ -1232,7 +1312,7 @@ button {
 
 .quake__fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
 }
 
 /* ---------- feed ---------- */
@@ -1246,13 +1326,16 @@ button {
 }
 
 .feedhead__title {
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   font-weight: 600;
-  color: #aeb8c4;
+  color: var(--c-text-2);
 }
 
 .feedhead__action {
-  font-size: 11.5px;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  font-size: var(--t-2xs);
   font-weight: 600;
   color: var(--lv);
   flex: none;
@@ -1260,8 +1343,8 @@ button {
 
 .feeditem {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   padding: 14px;
 }
 
@@ -1272,41 +1355,41 @@ button {
 }
 
 .feeditem__kind {
-  font-size: 10px;
+  font-size: var(--t-3xs);
   font-weight: 600;
   border: 1px solid currentColor;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   padding: 2px 5px;
 }
 
 .feeditem__time {
-  font-size: 10.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
 }
 
 .feeditem__title {
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   font-weight: 600;
   line-height: 1.4;
   margin-top: 8px;
 }
 
 .feeditem__body {
-  font-size: 12.5px;
-  color: #a8b3c1;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.55;
   margin-top: 5px;
 }
 
 .feeditem__src {
-  font-size: 11px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   margin-top: 8px;
 }
 
 .feednote {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.55;
   margin-top: 14px;
 }
@@ -1317,19 +1400,19 @@ button {
   margin: 20px 0 0;
   border: 1px solid var(--lv-line);
   background: var(--lv-wash);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
   padding: 15px;
 }
 
 .actioncard__title {
-  font-size: 14px;
+  font-size: var(--t-sm);
   font-weight: 700;
   color: var(--lv);
 }
 
 .actioncard__note {
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.5;
   margin-top: 6px;
 }
@@ -1355,7 +1438,7 @@ button {
   align-items: center;
   gap: 5px;
   padding: 6px 2px;
-  color: #9aa5b3;
+  color: var(--c-text-3);
 }
 
 .navbtn--on {
@@ -1375,7 +1458,7 @@ button {
 }
 
 .navbtn__label {
-  font-size: 10.5px;
+  font-size: var(--t-3xs);
   font-weight: 600;
 }
 
@@ -1401,8 +1484,8 @@ button {
 .sheet__panel {
   width: 100%;
   max-width: 460px;
-  background: #141a22;
-  color: #e9edf2;
+  background: var(--c-card);
+  color: var(--c-text);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px 18px 0 0;
   padding: 18px 16px 22px;
@@ -1419,47 +1502,50 @@ button {
 }
 
 .sheet__title {
-  font-size: 15px;
+  font-size: var(--t-md);
   font-weight: 700;
 }
 
 .sheet__close {
-  font-size: 12px;
-  color: #9aa5b3;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  font-size: var(--t-xs);
+  color: var(--c-text-3);
   padding: 4px 6px;
   flex: none;
 }
 
 .sheet__note {
-  font-size: 12px;
-  color: #9aa5b3;
+  font-size: var(--t-xs);
+  color: var(--c-text-3);
   line-height: 1.5;
   margin-top: 5px;
 }
 
 .sheet__sublabel {
-  font-size: 13px;
+  font-size: var(--t-sm);
   font-weight: 600;
-  color: #aeb8c4;
+  color: var(--c-text-2);
   margin: 16px 0 8px;
 }
 
 .sheet__fallback {
   margin-top: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 11px;
+  border-radius: var(--r-md);
   padding: 13px;
-  background: #0f151c;
+  background: var(--c-sunken);
 }
 
 .sheet__fallback-title {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
 }
 
 .sheet__fallback-note {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.5;
   margin-top: 3px;
 }
@@ -1491,18 +1577,18 @@ button {
 
 .rule__label {
   display: block;
-  font-size: 13px;
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
 .rule--locked .rule__label {
-  color: #9aa5b3;
+  color: var(--c-text-3);
 }
 
 .rule__note {
   display: block;
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.45;
   margin-top: 2px;
 }
@@ -1510,7 +1596,7 @@ button {
 .switch {
   width: 40px;
   height: 23px;
-  border-radius: 14px;
+  border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.14);
   position: relative;
   flex: none;
@@ -1547,13 +1633,13 @@ button {
 }
 
 .tag {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
   padding: 9px 13px;
-  border-radius: 20px;
+  border-radius: var(--r-pill);
   border: 1px solid rgba(255, 255, 255, 0.13);
   background: transparent;
-  color: #c3cbd5;
+  color: var(--c-text-2);
 }
 
 .tag--on {
@@ -1568,11 +1654,11 @@ button {
   gap: 10px;
   margin-top: 16px;
   border: 1px dashed rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 14px;
-  background: #0f151c;
-  font-size: 11.5px;
-  color: #9aa5b3;
+  background: var(--c-sunken);
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.5;
 }
 
@@ -1581,17 +1667,17 @@ button {
   width: 100%;
   margin-top: 14px;
   text-align: center;
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   font-weight: 700;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: var(--r-md);
   background: var(--lv);
-  color: #0b0b0b;
+  color: var(--c-on-accent);
 }
 
 .submit--sent {
   background: rgba(255, 255, 255, 0.09);
-  color: #9aa5b3;
+  color: var(--c-text-3);
 }
 
 /* ---------- demo panel ---------- */
@@ -1608,7 +1694,7 @@ button {
   background: rgba(15, 21, 28, 0.96);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
   padding: 12px 13px;
 }
 
@@ -1620,16 +1706,16 @@ button {
 }
 
 .demo__title {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: 600;
-  color: #aeb8c4;
+  color: var(--c-text-2);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .demo__close {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   padding: 2px 4px;
   flex: none;
 }
@@ -1639,8 +1725,8 @@ button {
 }
 
 .demo__label {
-  font-size: 10.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   margin-bottom: 5px;
 }
 
@@ -1651,12 +1737,12 @@ button {
 }
 
 .demo__opt {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: 600;
   padding: 6px 9px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #a8b3c1;
+  color: var(--c-text-2);
 }
 
 .demo__opt--on {
@@ -1671,12 +1757,12 @@ button {
   bottom: 78px;
   bottom: calc(78px + env(safe-area-inset-bottom));
   z-index: 50;
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: 600;
-  color: #a8b3c1;
+  color: var(--c-text-2);
   background: rgba(15, 21, 28, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 20px;
+  border-radius: var(--r-pill);
   padding: 8px 12px;
 }
 
@@ -1691,9 +1777,9 @@ a.row__tel:hover {
   margin-left: 6px;
   padding: 1px 6px;
   border: 1px solid rgba(148, 163, 184, 0.45);
-  border-radius: 5px;
-  color: #9aa5b3;
-  font-size: 9.5px;
+  border-radius: var(--r-xs);
+  color: var(--c-text-3);
+  font-size: var(--t-3xs);
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -1708,19 +1794,19 @@ a.row__tel:hover {
   margin-top: 12px;
   padding: 11px 12px;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 10px;
+  border-radius: var(--r-md);
   background: rgba(0, 0, 0, 0.3);
 }
 
 .unwired__t {
-  color: #cbd5e1;
-  font-size: 12px;
+  color: var(--c-text);
+  font-size: var(--t-xs);
   font-weight: 700;
 }
 
 .unwired__n {
-  color: #a8b3c1;
-  font-size: 11.5px;
+  color: var(--c-text-2);
+  font-size: var(--t-2xs);
   line-height: 1.5;
 }
 
@@ -1735,8 +1821,8 @@ a.row__tel:hover {
   padding: 0;
   list-style: none;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   overflow: hidden;
 }
 
@@ -1761,40 +1847,40 @@ a.row__tel:hover {
 }
 
 .srcitem__label {
-  color: #e9edf2;
-  font-size: 12.5px;
+  color: var(--c-text);
+  font-size: var(--t-xs);
   font-weight: 600;
   line-height: 1.4;
 }
 
 .srcitem__what {
-  color: #9aa5b3;
-  font-size: 11.5px;
+  color: var(--c-text-3);
+  font-size: var(--t-2xs);
   line-height: 1.45;
 }
 
 .srcitem__meta {
-  color: #8b96a5;
-  font-size: 10px;
+  color: var(--c-text-4);
+  font-size: var(--t-3xs);
 }
 
 .srcitem__rate {
-  font-size: 10px;
+  font-size: var(--t-3xs);
   border: 1px solid currentColor;
-  border-radius: 5px;
+  border-radius: var(--r-xs);
   padding: 3px 6px;
   flex: none;
-  color: #94a3b8;
+  color: var(--c-neutral);
 }
 
 .srcitem__rate--bad {
-  color: #f87171;
+  color: var(--c-danger);
 }
 
 .srclist__note {
   margin: 12px 0 0;
-  color: #8b96a5;
-  font-size: 11px;
+  color: var(--c-text-4);
+  font-size: var(--t-2xs);
   line-height: 1.6;
 }
 
@@ -1811,16 +1897,16 @@ a.row__tel:hover {
   margin-top: 11px;
   align-self: flex-start;
   padding: 9px 14px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   background: rgba(255, 255, 255, 0.1);
-  color: #e9edf2;
-  font-size: 12.5px;
+  color: var(--c-text);
+  font-size: var(--t-xs);
   font-weight: 700;
 }
 
 .poscard__note--shelter {
   margin-top: 6px;
-  color: #a8b3c1;
+  color: var(--c-text-2);
 }
 
 /* --- Kualitas udara ------------------------------------------------------ */
@@ -1890,34 +1976,34 @@ a.row__tel:hover {
 }
 
 .vitem__name {
-  font-size: 13.5px;
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
 .vitem__region {
-  color: #9aa5b3;
-  font-size: 11.5px;
+  color: var(--c-text-3);
+  font-size: var(--t-2xs);
 }
 
 .vitem__elev {
   flex: none;
-  color: #8b96a5;
-  font-size: 11.5px;
+  color: var(--c-text-4);
+  font-size: var(--t-2xs);
 }
 
 .emptynote {
   margin: 0;
   padding: 14px;
   border: 1px dashed rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  color: #9aa5b3;
-  font-size: 12px;
+  border-radius: var(--r-md);
+  color: var(--c-text-3);
+  font-size: var(--t-xs);
   line-height: 1.55;
 }
 
 .ash__v--none {
-  color: #8b96a5;
-  font-size: 13px;
+  color: var(--c-text-4);
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
@@ -1925,8 +2011,8 @@ a.row__tel:hover {
 
 .popcard {
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   overflow: hidden;
 }
 
@@ -1945,36 +2031,36 @@ a.row__tel:hover {
 }
 
 .popring__r {
-  color: #9aa5b3;
-  font-size: 11px;
+  color: var(--c-text-3);
+  font-size: var(--t-2xs);
 }
 
 .popring__n {
   margin-top: 5px;
-  font-size: 19px;
+  font-size: var(--t-lg);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .popring__u {
   margin-top: 2px;
-  color: #8b96a5;
-  font-size: 10.5px;
+  color: var(--c-text-4);
+  font-size: var(--t-3xs);
 }
 
 .popcard__note {
   margin: 0;
   padding: 12px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
-  color: #c3cbd5;
-  font-size: 12px;
+  color: var(--c-text-2);
+  font-size: var(--t-xs);
   line-height: 1.5;
 }
 
 .popcard__src {
   padding: 0 14px 12px;
-  color: #9aa5b3;
-  font-size: 10.5px;
+  color: var(--c-text-3);
+  font-size: var(--t-3xs);
 }
 
 /* --- Gempa terkini langsung dari USGS ------------------------------------ */
@@ -1994,17 +2080,17 @@ a.row__tel:hover {
   flex: none;
   padding: 2px 7px;
   border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 5px;
-  color: #9aa5b3;
+  border-radius: var(--r-xs);
+  color: var(--c-text-3);
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 9.5px;
+  font-size: var(--t-3xs);
   font-weight: 600;
   letter-spacing: 0.03em;
 }
 
 .livedot--on {
   border-color: rgba(74, 222, 128, 0.45);
-  color: #4ade80;
+  color: var(--c-safe);
 }
 
 .lqlist {
@@ -2034,7 +2120,7 @@ a.row__tel:hover {
   flex: none;
   width: 54px;
   padding-top: 1px;
-  font-size: 14.5px;
+  font-size: var(--t-md);
   font-weight: 600;
 }
 
@@ -2046,13 +2132,13 @@ a.row__tel:hover {
 }
 
 .lqitem__place {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   line-height: 1.4;
 }
 
 .lqitem__meta {
-  color: #8b96a5;
-  font-size: 11px;
+  color: var(--c-text-4);
+  font-size: var(--t-2xs);
   line-height: 1.45;
 }
 
@@ -2064,26 +2150,26 @@ a.row__tel:hover {
 }
 
 .lqflag {
-  color: #9aa5b3;
-  font-size: 10.5px;
+  color: var(--c-text-3);
+  font-size: var(--t-3xs);
   line-height: 1.4;
 }
 
 .lqflag--tsunami {
-  color: #f87171;
+  color: var(--c-danger);
   font-weight: 600;
 }
 
 .lqsrc {
   margin: 12px 0 0;
-  color: #8b96a5;
-  font-size: 10.5px;
+  color: var(--c-text-4);
+  font-size: var(--t-3xs);
   line-height: 1.6;
 }
 
 .lqsrc code {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 10px;
+  font-size: var(--t-3xs);
 }
 
 /* --- Tablet: kolom lebih lega, grid dalam kartu ikut melebar -------------- */
@@ -2111,7 +2197,7 @@ a.row__tel:hover {
 
   .sheet__panel {
     max-width: 620px;
-    border-radius: 18px;
+    border-radius: var(--r-lg);
     margin-bottom: 24px;
   }
 
@@ -2171,7 +2257,7 @@ a.row__tel:hover {
     gap: 12px;
     justify-content: flex-start;
     padding: 11px 12px;
-    border-radius: 10px;
+    border-radius: var(--r-md);
     text-align: left;
   }
 
@@ -2180,7 +2266,7 @@ a.row__tel:hover {
   }
 
   .navbtn__label {
-    font-size: 13px;
+    font-size: var(--t-sm);
   }
 
   .mapbox {
@@ -2197,7 +2283,7 @@ a.row__tel:hover {
 
 .sigmet {
   border: 1px solid rgba(251, 146, 60, 0.32);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
   background: rgba(251, 146, 60, 0.06);
   overflow: hidden;
 }
@@ -2214,8 +2300,8 @@ a.row__tel:hover {
 }
 
 .sigmet__tag {
-  color: #fb923c;
-  font-size: 10px;
+  color: var(--c-alert);
+  font-size: var(--t-3xs);
   font-weight: 600;
   letter-spacing: 0.03em;
 }
@@ -2223,9 +2309,9 @@ a.row__tel:hover {
 .sigmet__named {
   padding: 1px 6px;
   border: 1px solid rgba(251, 146, 60, 0.5);
-  border-radius: 5px;
-  color: #fb923c;
-  font-size: 9.5px;
+  border-radius: var(--r-xs);
+  color: var(--c-alert);
+  font-size: var(--t-3xs);
   font-weight: 600;
 }
 
@@ -2244,21 +2330,21 @@ a.row__tel:hover {
 }
 
 .sigmet__k {
-  color: #9aa5b3;
-  font-size: 11.5px;
+  color: var(--c-text-3);
+  font-size: var(--t-2xs);
 }
 
 .sigmet__v {
   margin-top: 4px;
-  font-size: 19px;
+  font-size: var(--t-lg);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .sigmet__u {
   margin-top: 2px;
-  color: #8b96a5;
-  font-size: 10.5px;
+  color: var(--c-text-4);
+  font-size: var(--t-3xs);
   line-height: 1.4;
 }
 
@@ -2267,9 +2353,9 @@ a.row__tel:hover {
   padding: 11px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   overflow-x: auto;
-  color: #c3cbd5;
+  color: var(--c-text-2);
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 10.5px;
+  font-size: var(--t-3xs);
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
@@ -2277,15 +2363,15 @@ a.row__tel:hover {
 
 .sigmet__src {
   padding: 0 14px 12px;
-  color: #9aa5b3;
-  font-size: 10.5px;
+  color: var(--c-text-3);
+  font-size: var(--t-3xs);
   line-height: 1.5;
 }
 
 /* Peringatan yang tidak menyebut gunung ini bisa saja milik tetangganya. */
 .sigmet__named--other {
   border-color: rgba(148, 163, 184, 0.45);
-  color: #9aa5b3;
+  color: var(--c-text-3);
 }
 
 
@@ -2295,9 +2381,9 @@ a.row__tel:hover {
   margin: 12px 0 0;
   padding-top: 11px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 11.5px;
+  font-size: var(--t-2xs);
   line-height: 1.55;
-  color: #9aa5b3;
+  color: var(--c-text-3);
 }
 
 /* Kartu kewenangan level resmi: nadanya netral, bukan aksen bahaya, supaya
@@ -2306,8 +2392,8 @@ a.row__tel:hover {
 .offlevel {
   margin-top: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   padding: 15px;
 }
 
@@ -2320,38 +2406,38 @@ a.row__tel:hover {
 
 .offlevel__title {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--t-sm);
   font-weight: 700;
 }
 
 .offlevel__tag {
-  font-size: 9.5px;
+  font-size: var(--t-3xs);
   font-weight: 600;
-  color: #9aa5b3;
+  color: var(--c-text-3);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   padding: 3px 6px;
 }
 
 .offlevel__note {
   margin: 5px 0 0;
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.55;
 }
 
 .offlevel__radius {
   margin: 12px 0 0;
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
   line-height: 1.55;
 }
 
 .pill--muted {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #9aa5b3;
-  font-size: 10.5px;
+  color: var(--c-text-3);
+  font-size: var(--t-3xs);
   padding: 5px 8px;
 }
 
@@ -2359,8 +2445,8 @@ a.row__tel:hover {
 
 .aqcard {
   border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   padding: 15px;
 }
 
@@ -2371,7 +2457,7 @@ a.row__tel:hover {
 }
 
 .aqcard__aqi {
-  font-size: 34px;
+  font-size: var(--t-xl);
   font-weight: 600;
   line-height: 0.9;
 }
@@ -2381,27 +2467,27 @@ a.row__tel:hover {
 }
 
 .aqcard__band {
-  font-size: 14px;
+  font-size: var(--t-sm);
   font-weight: 700;
   line-height: 1.3;
 }
 
 .aqcard__unit {
-  font-size: 11.5px;
-  color: #c3cbd5;
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
   margin-top: 2px;
 }
 
 .aqcard__advice {
   margin: 11px 0 0;
-  font-size: 12.5px;
-  color: #e9edf2;
+  font-size: var(--t-xs);
+  color: var(--c-text);
   line-height: 1.55;
 }
 
 .aqcard__track {
   height: 5px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   background: rgba(255, 255, 255, 0.09);
   margin-top: 13px;
   overflow: hidden;
@@ -2409,7 +2495,7 @@ a.row__tel:hover {
 
 .aqcard__fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
 }
 
 .aqcard__raw {
@@ -2429,39 +2515,39 @@ a.row__tel:hover {
 }
 
 .aqcard__k {
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
 }
 
 .aqcard__v {
-  font-size: 17px;
+  font-size: var(--t-md);
   font-weight: 600;
   margin-top: 4px;
 }
 
 .aqcard__u {
-  font-size: 10.5px;
-  color: #9aa5b3;
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
   margin-top: 2px;
 }
 
 .aqcard__caveat {
   margin: 13px 0 0;
-  font-size: 11px;
-  color: #8b96a5;
+  font-size: var(--t-2xs);
+  color: var(--c-text-4);
   line-height: 1.6;
 }
 
 .aqcard__src {
-  font-size: 10.5px;
-  color: #9aa5b3;
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
   margin-top: 9px;
 }
 
 .tabfoot {
   margin: 22px 0 0;
-  font-size: 11px;
-  color: #7f8a99;
+  font-size: var(--t-2xs);
+  color: var(--c-text-4);
   line-height: 1.6;
 }
 
@@ -2477,10 +2563,10 @@ a.row__tel:hover {
 }
 
 .sigmet__validity {
-  font-size: 10px;
+  font-size: var(--t-3xs);
   font-weight: 600;
   border: 1px solid currentColor;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   padding: 2px 5px;
   flex: none;
 }
@@ -2494,16 +2580,16 @@ a.row__tel:hover {
 }
 
 .sigmet__qual {
-  font-size: 10px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
 }
 
 /* Rekap nasional: satu angka besar, lalu nama gunung apa adanya dari sumber. */
 
 .natash {
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   padding: 15px;
 }
 
@@ -2514,15 +2600,15 @@ a.row__tel:hover {
 }
 
 .natash__n {
-  font-size: 30px;
+  font-size: var(--t-xl);
   font-weight: 600;
   line-height: 0.9;
   color: var(--lv);
 }
 
 .natash__t {
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
   line-height: 1.4;
 }
 
@@ -2534,11 +2620,11 @@ a.row__tel:hover {
 }
 
 .natash__chip {
-  font-size: 10.5px;
+  font-size: var(--t-3xs);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 5px;
+  border-radius: var(--r-xs);
   padding: 4px 7px;
-  color: #a8b3c1;
+  color: var(--c-text-2);
 }
 
 .natash__chip--here {
@@ -2549,8 +2635,8 @@ a.row__tel:hover {
 
 .natash__note {
   margin: 11px 0 0;
-  font-size: 11px;
-  color: #8b96a5;
+  font-size: var(--t-2xs);
+  color: var(--c-text-4);
   line-height: 1.55;
 }
 
@@ -2558,8 +2644,8 @@ a.row__tel:hover {
 
 .waloft {
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
-  background: #141a22;
+  border-radius: var(--r-lg);
+  background: var(--c-card);
   overflow: hidden;
 }
 
@@ -2598,14 +2684,14 @@ a.row__tel:hover {
 }
 
 .waloft__fl {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 600;
-  color: #e9edf2;
+  color: var(--c-text);
 }
 
 .waloft__m {
-  font-size: 10px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
 }
 
 .waloft__dir {
@@ -2628,22 +2714,22 @@ a.row__tel:hover {
 }
 
 .waloft__to {
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
 }
 
 .waloft__spd {
   flex: none;
-  font-size: 11.5px;
-  color: #9aa5b3;
+  font-size: var(--t-2xs);
+  color: var(--c-text-3);
 }
 
 .waloft__hit {
   flex: none;
-  font-size: 9.5px;
+  font-size: var(--t-3xs);
   color: var(--lv);
   border: 1px solid var(--lv-line);
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   padding: 2px 5px;
 }
 
@@ -2651,15 +2737,15 @@ a.row__tel:hover {
   margin: 0;
   padding: 12px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
-  font-size: 11.5px;
-  color: #a8b3c1;
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
   line-height: 1.55;
 }
 
 .waloft__src {
   padding: 0 14px 12px;
-  font-size: 10.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   line-height: 1.5;
 }
 
@@ -2671,19 +2757,19 @@ a.row__tel:hover {
   gap: 4px;
   border: 1px solid var(--lv-line);
   background: var(--lv-wash);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 13px 14px;
   margin-bottom: 10px;
 }
 
 .airhit__t {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   color: var(--lv);
 }
 
 .airhit__n {
-  font-size: 11.5px;
-  color: #c3cbd5;
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
   line-height: 1.55;
 }
 
@@ -2697,8 +2783,8 @@ a.row__tel:hover {
 
 .permbox {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: #0f151c;
+  border-radius: var(--r-md);
+  background: var(--c-sunken);
   padding: 13px 14px;
   margin-bottom: 14px;
 }
@@ -2712,21 +2798,21 @@ a.row__tel:hover {
 }
 
 .permbox__t {
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 700;
 }
 
 .permbox--ok .permbox__t {
-  color: #4ade80;
+  color: var(--c-safe);
 }
 
 .permbox--bad .permbox__t {
-  color: #f87171;
+  color: var(--c-danger);
 }
 
 .permbox__n {
-  font-size: 11.5px;
-  color: #a8b3c1;
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
   line-height: 1.55;
   margin-top: 4px;
 }
@@ -2734,12 +2820,12 @@ a.row__tel:hover {
 .permbox__cta {
   margin-top: 11px;
   display: inline-block;
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   font-weight: 700;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   background: var(--lv);
-  color: #0b0b0b;
+  color: var(--c-on-accent);
   text-align: center;
 }
 
@@ -2772,14 +2858,14 @@ a.row__tel:hover {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #7f8a99;
+  color: var(--c-text-4);
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   transition: color 0.15s ease;
 }
 
 .foot__link:hover {
-  color: #c3cbd5;
+  color: var(--c-text-2);
 }
 
 .foot__icon {
@@ -2788,7 +2874,7 @@ a.row__tel:hover {
 }
 
 .foot__name {
-  font-size: 12px;
+  font-size: var(--t-xs);
   font-weight: 600;
   letter-spacing: 0.01em;
 }
@@ -2809,8 +2895,8 @@ a.row__tel:hover {
   gap: 2px;
   padding: 11px 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: #141a22;
+  border-radius: var(--r-md);
+  background: var(--c-card);
   text-align: left;
   min-width: 0;
 }
@@ -2824,22 +2910,22 @@ a.row__tel:hover {
 }
 
 .sumtile__k {
-  font-size: 10.5px;
-  color: #9aa5b3;
+  font-size: var(--t-3xs);
+  color: var(--c-text-3);
   line-height: 1.3;
 }
 
 .sumtile__v {
-  font-size: 22px;
+  font-size: var(--t-lg);
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.01em;
-  color: #e9edf2;
+  color: var(--c-text);
 }
 
 .sumtile__u {
-  font-size: 10.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   line-height: 1.35;
 }
 
@@ -2852,9 +2938,10 @@ a.row__tel:hover {
 }
 
 .why__q {
-  font-size: 11.5px;
+  min-height: var(--tap);
+  font-size: var(--t-2xs);
   font-weight: 600;
-  color: #9aa5b3;
+  color: var(--c-text-3);
   cursor: pointer;
   list-style: none;
   display: flex;
@@ -2884,12 +2971,12 @@ a.row__tel:hover {
 }
 
 .why__q:hover {
-  color: #c3cbd5;
+  color: var(--c-text-2);
 }
 
 .why__a {
-  font-size: 11.5px;
-  color: #a8b3c1;
+  font-size: var(--t-2xs);
+  color: var(--c-text-2);
   line-height: 1.6;
   margin-top: 7px;
 }
@@ -2934,8 +3021,8 @@ a.row__tel:hover {
 
 .unwired2 {
   border: 1px dashed rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  background: #0f151c;
+  border-radius: var(--r-md);
+  background: var(--c-sunken);
   padding: 12px 14px;
 }
 
@@ -2949,16 +3036,16 @@ a.row__tel:hover {
 }
 
 .unwired2__k {
-  font-size: 12.5px;
-  color: #c3cbd5;
+  font-size: var(--t-xs);
+  color: var(--c-text-2);
 }
 
 .unwired2__v {
   flex: none;
-  font-size: 9.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   padding: 3px 6px;
 }
 
@@ -2970,7 +3057,15 @@ a.row__tel:hover {
 
 .natash__src {
   margin-top: 11px;
-  font-size: 10.5px;
-  color: #8b96a5;
+  font-size: var(--t-3xs);
+  color: var(--c-text-4);
   line-height: 1.5;
 }
+
+
+/*
+ * Batang grafik kegempaan sengaja dibiarkan lebih sempit dari 24px: lebarnya
+ * ditentukan oleh 24 jam yang harus muat sebaris, jadi ukurannya hakiki bagi
+ * penyajiannya — pengecualian "Essential" pada WCAG 2.2 Target Size. Tingginya
+ * sendiri 130px, jauh di atas ambang.
+ */
