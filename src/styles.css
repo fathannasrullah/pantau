@@ -131,7 +131,15 @@ button {
 
 .content {
   flex: 1;
-  padding: 0 16px 96px;
+  /* Navigasi bawah memakai position:sticky, jadi ia tetap menempati ruangnya
+     sendiri di ujung aliran; jarak aman besar di sini hanya jadi ruang mati di
+     bawah kaki halaman. Sisakan seperlunya saja. */
+  padding: 0 16px 18px;
+  /* Kolom lentur supaya kaki halaman bisa didorong ke dasar layar saat isinya
+     pendek — tab Laporan bisa hanya setinggi 390 px, dan tanpa ini kakinya
+     berhenti menggantung di tengah. */
+  display: flex;
+  flex-direction: column;
 }
 
 .tabview {
@@ -2094,7 +2102,7 @@ a.row__tel:hover {
   }
 
   .content {
-    padding: 0 24px 104px;
+    padding: 0 24px 20px;
   }
 
   .grid2 {
@@ -2135,7 +2143,7 @@ a.row__tel:hover {
 
   .content {
     grid-column: 2;
-    padding: 0 28px 64px;
+    padding: 0 28px 24px;
     max-width: 740px;
     /* Kolom isi ditengahkan di ruang sisanya; rata kiri menyisakan ruang
        kosong lebar di kanan dan membuat halamannya terlihat miring. */
@@ -2742,15 +2750,24 @@ a.row__tel:hover {
 /* ---------- kaki halaman ---------- */
 
 .foot {
-  margin-top: 30px;
+  /* Didorong ke dasar, bukan position:fixed — navigasi bawah sudah menempel di
+     sana, dan kaki yang ikut dipatok akan menutupinya atau memakan tinggi layar
+     terus-menerus. Dengan margin otomatis, kakinya turun sendiri ke bawah saat
+     isinya pendek dan ikut mengalir biasa saat isinya panjang. */
+  margin-top: auto;
   padding: 14px 0 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   justify-content: center;
 }
 
-/* Tanpa kotak dan tanpa garis: satu baris tenang yang tidak bersaing dengan
-   isi halaman, tapi tetap punya sasaran ketuk yang cukup besar. */
+/* Jarak sebelum garis pemisah dipegang isi, bukan kaki halaman: margin atas
+   kaki sudah dipakai untuk mendorongnya turun, jadi tidak bisa dipakai lagi
+   untuk memberi jarak. */
+.tabview {
+  padding-bottom: 22px;
+}
+
 .foot__link {
   display: inline-flex;
   align-items: center;
