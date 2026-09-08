@@ -12,6 +12,7 @@ import { LiveQuakeList } from '../LiveQuakeList'
 import { OfficialLevelCard } from '../OfficialLevelCard'
 import { PositionCard } from '../PositionCard'
 import { SeismicPanel } from '../SeismicPanel'
+import { SummaryStrip } from '../SummaryStrip'
 
 interface Props {
   snapshot: VolcanoSnapshot
@@ -48,6 +49,14 @@ export function StatusTab({
 
   return (
     <div className="tabview">
+      <SummaryStrip
+        snapshot={snapshot}
+        aviation={aviation}
+        geo={geo}
+        onGoMap={onGoMap}
+        onGoAviation={onGoAviation}
+      />
+
       <AviationCard
         status={aviation}
         dataState={dataState}

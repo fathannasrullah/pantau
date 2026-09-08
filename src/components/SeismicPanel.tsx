@@ -1,5 +1,6 @@
 import type { DataStateView } from '../data/dataState'
 import type { VolcanoSnapshot } from '../types'
+import { Why } from './Why'
 
 interface Props {
   snapshot: VolcanoSnapshot
@@ -65,18 +66,18 @@ export function SeismicPanel({
         <span>sekarang</span>
       </div>
       <p className="seis__note">
-        Jam −{hoursAgo}: {bars[selected]} kejadian gempa. Ketuk batang lain untuk
+        Jam −{hoursAgo}: {bars[selected]} kejadian. Ketuk batang lain untuk
         melihat jam yang berbeda.
       </p>
-      <p className="seis__note">{snapshot.seismicNote}</p>
-      {snapshot.lastEruptionNote && (
-        <p className="seis__note">{snapshot.lastEruptionNote}</p>
-      )}
-      <p className="seis__note">
-        Ini gempa tektonik di sekitar gunung, bukan kegempaan vulkanik. Letusan,
-        embusan, dan tremor hanya terekam seismograf pos pengamatan PVMBG dan
-        belum tersambung.
-      </p>
+      <Why label="Gempa apa yang dihitung di sini?">
+        <p>{snapshot.seismicNote}</p>
+        <p>
+          Ini gempa tektonik di sekitar gunung, bukan kegempaan vulkanik.
+          Letusan, embusan, dan tremor hanya terekam seismograf pos pengamatan
+          PVMBG dan belum tersambung.
+        </p>
+        {snapshot.lastEruptionNote && <p>{snapshot.lastEruptionNote}</p>}
+      </Why>
       <div className="seis__src">
         {snapshot.seismicSource} · {dataState.sourceTime}
       </div>

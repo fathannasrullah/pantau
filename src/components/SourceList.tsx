@@ -1,5 +1,6 @@
 import { formatDateTime } from '../lib/format'
 import type { VolcanoSnapshot } from '../types'
+import { Why } from './Why'
 
 interface CatalogEntry {
   /** Apa yang sebenarnya diambil dari sumber ini. */
@@ -125,12 +126,12 @@ export function SourceList({ snapshot }: { snapshot: VolcanoSnapshot }) {
         </ul>
       )}
 
-      <p className="srclist__note">
+      <Why label="Kenapa ada yang kosong?">
         Level status resmi, radius bahaya, dampak wilayah, dan titik kumpul
         hanya dimiliki Badan Geologi dan BPBD, dan belum ada API terbukanya —
         jadi tidak ditampilkan di sini sama sekali, bukan diisi angka contoh.
         Rujuk pengumuman Badan Geologi sebelum bertindak.
-      </p>
+      </Why>
     </section>
   )
 }

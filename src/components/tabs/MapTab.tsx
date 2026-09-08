@@ -5,6 +5,7 @@ import { formatNumber } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { MapLayer, VolcanoLevel, VolcanoSnapshot } from '../../types'
 import { VolcanoMap } from '../VolcanoMap'
+import { Why } from '../Why'
 
 interface Props {
   snapshot: VolcanoSnapshot
@@ -63,15 +64,15 @@ export function MapTab({
         ))}
       </div>
       <p className="layernote">{active.note}</p>
-      <p className="mapsrc">
+      <Why label="Bentuk-bentuk ini dari mana?">
         Peta dasar OpenStreetMap, tampilan relief OpenTopoMap. Setiap bentuk di
         atasnya punya sumber: kawah dari katalog Smithsonian GVP, cincin
         penduduk dari WorldPop, area peringatan abu dari poligon SIGMET,
         episentrum dari BMKG dan USGS, arah angin dari Open-Meteo, posisi Anda
         dari GPS perangkat. Radius {level.radiusKm} km hanya pembanding — zona
         terlarang resmi ditetapkan Badan Geologi dan belum tersambung. Ketuk
-        bentuk mana pun untuk melihat sumbernya · {dataState.sourceTime}
-      </p>
+        bentuk mana pun di peta untuk melihat sumbernya · {dataState.sourceTime}
+      </Why>
 
       <h2 className="section">Wilayah terdekat dari kawah</h2>
       <div className="rows">
@@ -111,12 +112,12 @@ export function MapTab({
               </div>
             ))}
           </div>
-          <p className="popcard__note">
+          <Why>
             Perkiraan jumlah penduduk yang tinggal dalam radius tersebut dari
             kawah. Ini keluaran model sebaran penduduk beresolusi 100 m untuk
             tahun {snapshot.population.year}, bukan sensus terkini dan bukan
             hitungan orang yang sedang berada di sana hari ini.
-          </p>
+          </Why>
           <div className="popcard__src">
             Sumber: WorldPop · dataset wpgppop {snapshot.population.year}
           </div>

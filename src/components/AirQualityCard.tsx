@@ -2,6 +2,7 @@ import { aqiBand } from '../data/aqi'
 import type { DataStateView } from '../data/dataState'
 import { formatDecimal } from '../lib/format'
 import { SEVERITY_COLOR } from '../theme'
+import { Why } from './Why'
 import type { AirQuality } from '../types'
 
 interface Props {
@@ -78,12 +79,12 @@ export function AirQualityCard({ air, dataState }: Props) {
         </div>
       </div>
 
-      <p className="aqcard__caveat">
+      <Why>
         Angka ini keluaran model CAMS (Copernicus) di atas kawah, bukan
-        pembacaan stasiun di darat. Indeks AQI dihitung dari PM2.5 memakai
-        rumus US EPA, yang aslinya memakai rata-rata 24 jam — di sini
-        pembacaan per jam, jadi anggap perkiraan cepat, bukan indeks resmi.
-      </p>
+        pembacaan stasiun di darat. Indeks AQI dihitung dari PM2.5 memakai rumus
+        US EPA, yang aslinya memakai rata-rata 24 jam — di sini pembacaan per
+        jam, jadi anggap perkiraan cepat, bukan indeks resmi.
+      </Why>
       <div className="aqcard__src">
         Sumber: Copernicus CAMS via Open-Meteo · {dataState.sourceTime}
       </div>

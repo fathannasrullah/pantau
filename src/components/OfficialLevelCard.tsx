@@ -1,4 +1,5 @@
 import type { VolcanoLevel } from '../types'
+import { Why } from './Why'
 
 /**
  * Kartu "Level resmi Indonesia: belum tersambung" dari prototipe v4.
@@ -11,26 +12,26 @@ import type { VolcanoLevel } from '../types'
 export function OfficialLevelCard({ level }: { level: VolcanoLevel }) {
   return (
     <section className="offlevel">
-      <h2 className="offlevel__title">Level resmi Indonesia: belum tersambung</h2>
-      <p className="offlevel__note">
-        Penetapan Normal, Waspada, Siaga, dan Awas adalah kewenangan Badan
-        Geologi. App ini menyusun gambaran dari sumber terbuka dan tidak
-        menetapkan level. Untuk keputusan resmi, rujuk pengumuman Badan Geologi
-        di magma.esdm.go.id atau hubungi 112.
-      </p>
-      <div className="pills">
-        <span className="pill pill--muted mono">
-          MAGMA Indonesia — perlu izin akses
-        </span>
-        <span className="pill pill--muted mono">
-          Radius bahaya resmi hanya dari Badan Geologi
-        </span>
+      <div className="offlevel__row">
+        <h2 className="offlevel__title">Level resmi Indonesia</h2>
+        <span className="offlevel__tag mono">BELUM TERSAMBUNG</span>
       </div>
-      <p className="offlevel__radius">
-        Jarak Anda ke kawah tetap dihitung dari koordinat katalog Smithsonian.
-        Radius {level.radiusKm} km yang dipakai kartu Posisi adalah pembanding
-        sementara, bukan zona resmi.
+      <p className="offlevel__note">
+        Normal, Waspada, Siaga, dan Awas adalah kewenangan Badan Geologi. App
+        ini tidak menetapkan level — rujuk magma.esdm.go.id atau hubungi 112.
       </p>
+      <Why label="Apa saja yang belum tersambung?">
+        <p>
+          Sambungan ke MAGMA Indonesia butuh izin akses Badan Geologi, jadi
+          level status resmi, radius bahaya resmi, dan laporan pos pengamatan
+          belum bisa dibaca app ini.
+        </p>
+        <p>
+          Jarak Anda ke kawah tetap dihitung dari koordinat katalog Smithsonian.
+          Radius {level.radiusKm} km yang dipakai kartu Posisi dan peta adalah
+          pembanding sementara, bukan zona resmi.
+        </p>
+      </Why>
     </section>
   )
 }

@@ -1,5 +1,6 @@
 import type { AviationStatus } from '../data/aviation'
 import type { DataStateView } from '../data/dataState'
+import { Why } from './Why'
 
 interface Props {
   status: AviationStatus
@@ -49,11 +50,13 @@ export function AviationCard({
         {dataState.sourceTime}
       </div>
 
-      <p className="avcard__caveat">
-        Aviation colour code resmi — GREEN, YELLOW, ORANGE, RED — dikeluarkan
-        Badan Geologi lewat VONA dan belum tersambung ke app ini. Yang dibaca di
-        atas hanya ada tidaknya peringatan abu di jalur terbang.
-      </p>
+      <Why label="Kenapa bukan GREEN / ORANGE / RED?">
+        Aviation colour code resmi dikeluarkan observatorium gunung api — di
+        Indonesia lewat VONA Badan Geologi — dan belum tersambung ke app ini.
+        Menuliskannya dari hasil turunan sendiri akan membuat tebakan terlihat
+        resmi. Yang dibaca di atas hanya ada tidaknya peringatan abu di jalur
+        terbang.
+      </Why>
 
       <button type="button" className="linkrow" onClick={onOpenAviation}>
         Baca teks peringatannya →

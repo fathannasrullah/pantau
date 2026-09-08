@@ -298,14 +298,20 @@ button {
 /* ---------- shared bits ---------- */
 
 .section {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #aeb8c4;
-  margin: 22px 0 10px;
+  /* Garis rambut di kiri membuat judul bagian jadi tengara yang bisa dipindai
+     dengan sekali lihat, tanpa menambah berat tipografinya. */
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #cbd5e1;
+  margin: 26px 0 10px;
+  padding-left: 10px;
+  border-left: 2px solid rgba(255, 255, 255, 0.16);
+  line-height: 1.35;
 }
 
 .section--first {
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .source {
@@ -2079,6 +2085,10 @@ a.row__tel:hover {
     max-width: 760px;
   }
 
+  .sumstrip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
   .mapbox {
     height: 480px;
   }
@@ -2127,6 +2137,9 @@ a.row__tel:hover {
     grid-column: 2;
     padding: 0 28px 64px;
     max-width: 740px;
+    /* Kolom isi ditengahkan di ruang sisanya; rata kiri menyisakan ruang
+       kosong lebar di kanan dan membuat halamannya terlihat miring. */
+    justify-self: center;
   }
 
   .bottomnav {
@@ -2290,10 +2303,26 @@ a.row__tel:hover {
   padding: 15px;
 }
 
+.offlevel__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
 .offlevel__title {
   margin: 0;
   font-size: 13px;
   font-weight: 700;
+}
+
+.offlevel__tag {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #9aa5b3;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  padding: 3px 6px;
 }
 
 .offlevel__note {
@@ -2753,4 +2782,186 @@ a.row__tel:hover {
   color: #7f8a99;
   line-height: 1.6;
   max-width: 40ch;
+}
+
+
+/* ---------- ringkasan empat angka ---------- */
+
+.sumstrip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sumtile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: #141a22;
+  text-align: left;
+  min-width: 0;
+}
+
+.sumtile--tap {
+  cursor: pointer;
+}
+
+.sumtile--tap:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sumtile__k {
+  font-size: 10.5px;
+  color: #9aa5b3;
+  line-height: 1.3;
+}
+
+.sumtile__v {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: #e9edf2;
+}
+
+.sumtile__u {
+  font-size: 10.5px;
+  color: #8b96a5;
+  line-height: 1.35;
+}
+
+/* ---------- catatan yang dilipat ---------- */
+
+.why {
+  margin-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+}
+
+.why__q {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9aa5b3;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.why__q::-webkit-details-marker {
+  display: none;
+}
+
+/* Tanda buka-tutup digambar sendiri supaya sama di semua peramban. */
+.why__q::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 4.5px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform 0.15s ease;
+}
+
+.why[open] > .why__q::before {
+  transform: rotate(90deg);
+}
+
+.why__q:hover {
+  color: #c3cbd5;
+}
+
+.why__a {
+  font-size: 11.5px;
+  color: #a8b3c1;
+  line-height: 1.6;
+  margin-top: 7px;
+}
+
+.why__a p {
+  margin: 0 0 7px;
+}
+
+.why__a p:last-child {
+  margin-bottom: 0;
+}
+
+/* Kaki kartu angin: lipatan dan sumber berbagi satu garis pemisah. */
+.waloft__foot {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 12px 14px;
+}
+
+.waloft__foot .why {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.waloft__foot .waloft__src {
+  padding: 9px 0 0;
+}
+
+
+/* Kata besar dan keterangannya turun ke bawah di layar sempit supaya tidak
+   berdesakan jadi tiga baris di sebelah angka. */
+.avcard__row {
+  flex-wrap: wrap;
+}
+
+.avcard__short {
+  max-width: none;
+  padding-bottom: 0;
+}
+
+/* Daftar apa yang belum tersambung: dua baris, bukan dua paragraf. */
+
+.unwired2 {
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: #0f151c;
+  padding: 12px 14px;
+}
+
+.unwired2__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.unwired2__k {
+  font-size: 12.5px;
+  color: #c3cbd5;
+}
+
+.unwired2__v {
+  flex: none;
+  font-size: 9.5px;
+  color: #8b96a5;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+
+.unwired2 .why {
+  border-top: 0;
+  padding-top: 8px;
+  margin-top: 3px;
+}
+
+.natash__src {
+  margin-top: 11px;
+  font-size: 10.5px;
+  color: #8b96a5;
+  line-height: 1.5;
 }

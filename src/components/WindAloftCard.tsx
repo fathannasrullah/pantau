@@ -1,6 +1,7 @@
 import type { DataStateView } from '../data/dataState'
 import { formatNumber } from '../lib/format'
 import type { WindLayer } from '../types'
+import { Why } from './Why'
 
 interface Props {
   layers: WindLayer[]
@@ -72,15 +73,17 @@ export function WindAloftCard({
         </li>
       </ul>
 
-      <p className="waloft__note">
-        Panah menunjuk ke mana abu di lapisan itu terbawa — kebalikan arah asal
-        angin. Baris yang disorot adalah lapisan terdekat dengan puncak awan abu
-        menurut peringatan yang sedang berlaku, jadi itu yang paling menentukan
-        arah sebarannya.
-      </p>
-      <div className="waloft__src">
-        Sumber: Open-Meteo, angin per lapisan tekanan · tinggi tiap lapisan dari
-        medan geopotential height, bukan tabel perkiraan · {dataState.sourceTime}
+      <div className="waloft__foot">
+        <Why label="Cara membaca panahnya">
+          Panah menunjuk ke mana abu di lapisan itu terbawa — kebalikan arah
+          asal angin. Baris yang disorot adalah lapisan terdekat dengan puncak
+          awan abu menurut peringatan yang sedang berlaku, jadi itu yang paling
+          menentukan arah sebarannya. Tinggi tiap lapisan diambil dari medan
+          geopotential height, bukan tabel perkiraan.
+        </Why>
+        <div className="waloft__src">
+          Sumber: Open-Meteo, angin per lapisan tekanan · {dataState.sourceTime}
+        </div>
       </div>
     </section>
   )

@@ -4,6 +4,7 @@ import { formatNumber, formatTime } from '../../lib/format'
 import { SEVERITY_COLOR } from '../../theme'
 import type { AdvisoryValidity, VolcanoSnapshot } from '../../types'
 import { WindAloftCard } from '../WindAloftCard'
+import { Why } from '../Why'
 
 interface Props {
   snapshot: VolcanoSnapshot
@@ -189,10 +190,9 @@ export function AviationTab({
               ))}
             </div>
           )}
-          <p className="natash__note">
-            Nama gunung diambil dari medan resmi tiap peringatan, bukan dibaca
-            dari teksnya. {national.firs.join(' · ')}
-          </p>
+          <div className="natash__src">
+            Nama gunung dari medan resmi tiap peringatan · {national.firs.join(' · ')}
+          </div>
         </section>
       )}
 
@@ -262,29 +262,39 @@ export function AviationTab({
               </div>
             ))}
           </div>
-          <p className="tabfoot">
+          <Why label="Kenapa tidak ada status buka-tutupnya?">
             Daftar acuan dari katalog terbuka OurAirports: nama, kode, dan
             koordinat bandara berjadwal. Katalog ini tidak memuat status
             operasional, dan app ini tidak mengarangnya.
-          </p>
+          </Why>
         </>
       )}
 
-      <h2 className="section">Lalu lintas pesawat</h2>
-      <p className="emptynote">
-        Posisi pesawat dari OpenSky Network memang terbuka, tetapi hanya bisa
-        dibaca dari servernya sendiri — peramban ditolak karena aturan CORS.
-        Menghitung sendiri pesawat mana yang "memutar karena abu" juga bukan
-        pernyataan resmi siapa pun, jadi angka itu sengaja tidak ditampilkan.
-      </p>
-
-      <h2 className="section">NOTAM dan status bandara</h2>
-      <p className="emptynote">
-        Penutupan ruang udara dan prosedur bandara diumumkan lewat NOTAM. Sumber
-        resminya (FAA/ICAO) menuntut kredensial dan tidak boleh diambil ulang
-        oleh pihak ketiga, jadi belum tersambung. Untuk status penerbangan,
-        tanyakan langsung ke maskapai atau otoritas bandara.
-      </p>
+      <h2 className="section">Yang belum bisa ditampilkan</h2>
+      <div className="unwired2">
+        <div className="unwired2__row">
+          <span className="unwired2__k">Lalu lintas pesawat</span>
+          <span className="unwired2__v mono">CORS TERKUNCI</span>
+        </div>
+        <div className="unwired2__row">
+          <span className="unwired2__k">NOTAM dan status bandara</span>
+          <span className="unwired2__v mono">PERLU KREDENSIAL</span>
+        </div>
+        <Why label="Kenapa keduanya tidak ada?">
+          <p>
+            Posisi pesawat OpenSky Network memang terbuka, tetapi hanya bisa
+            dibaca dari servernya sendiri — peramban ditolak aturan CORS.
+            Menghitung sendiri pesawat mana yang "memutar karena abu" juga bukan
+            pernyataan resmi siapa pun, jadi angka itu sengaja tidak dibuat.
+          </p>
+          <p>
+            Penutupan ruang udara diumumkan lewat NOTAM. Sumber resminya
+            (FAA/ICAO) menuntut kredensial dan tidak boleh diambil ulang pihak
+            ketiga. Untuk status penerbangan, tanyakan ke maskapai atau otoritas
+            bandara.
+          </p>
+        </Why>
+      </div>
 
       {showTransport && (
         <>
