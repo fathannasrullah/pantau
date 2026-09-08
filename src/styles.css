@@ -3733,3 +3733,20 @@ a.row__tel:hover {
   font-weight: 600;
   line-height: 1.35;
 }
+
+/* Kabar versi baru app bukan kabar bahaya. Banner kondisi data memakai warna
+   keadaan (--ds) dan pita di atasnya memakai warna peringatan abu; kalau kabar
+   ini ikut berwarna, layar jadi punya tiga hal mendesak padahal cuma satu yang
+   sungguhan. Jadi netral saja. */
+.banner--app {
+  border-color: var(--c-line-2);
+}
+
+.banner--app .banner__title {
+  color: var(--c-text);
+}
+
+.banner--app .banner__retry {
+  color: var(--c-text);
+  border-color: var(--c-line-2);
+}

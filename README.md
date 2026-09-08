@@ -43,7 +43,7 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # typecheck + build ke dist/
 npm run preview    # jalankan hasil build — service worker hanya aktif di sini
-npm test           # 75 tes
+npm test           # 79 tes
 npm run fetch:data # ambil sumber resmi sekali secara lokal
 ```
 
@@ -132,6 +132,35 @@ keputusannya di `src/data/alerts.ts` supaya bisa diuji tanpa peramban.
 Kunjungan pertama tidak menerbitkan apa pun, keadaan yang sama tidak
 diberitahukan dua kali, dan "sumber gagal dibaca" bukan kabar. Aturan evakuasi
 sengaja terkunci mati: app ini tidak menerima perintah evakuasi dari BPBD.
+
+### Mengikuti deploy terbaru
+
+Deploy berjalan tiap 30 menit, dan app ini dibuat untuk dibiarkan terbuka —
+dua sifat yang bertabrakan. Service worker dulu hanya didaftarkan sekali saat
+halaman dibuka, jadi tab yang sudah terbuka tidak pernah tahu ada versi baru
+dan tetap memegang JS serta CSS lama sampai seseorang memuat ulang sendiri.
+
+Sekarang halaman menanyakan versi baru tiap lima menit, setiap kali kembali
+dilihat, dan setiap kali jaringan tersambung lagi — tapi tidak saat tab
+terkubur di latar, karena tak ada gunanya membangunkan radio ponsel untuk layar
+yang tidak dilihat. Kapan versinya dipasang diputuskan `src/data/appUpdate.ts`:
+
+| Keadaan halaman | Yang terjadi |
+| --- | --- |
+| Sedang dibaca | banner netral menawarkan, isinya tidak ditarik paksa |
+| Ditinggalkan | dipasang saat itu juga, orangnya kembali ke versi terbaru |
+
+Pemuatan ulangnya dikerjakan sendiri, bukan diserahkan ke plugin: bawaannya
+menunggu `event.isUpdate` dari workbox, dan tanda itu bernilai salah pada
+halaman yang baru memasang service worker di kunjungan yang sama — terukur di
+peramban, versi barunya aktif sementara layar masih memakai berkas lama.
+
+Karena itu `registerType` di `vite.config.ts` adalah `prompt`, bukan
+`autoUpdate`, dengan `clientsClaim` dinyalakan kembali secara eksplisit supaya
+kemampuan offline tetap menyala sejak kunjungan pertama.
+
+Angka di layar tidak menunggu semua itu: snapshot diambil ulang tiap lima menit
+dan langsung disegarkan begitu layar kembali dilihat.
 
 ---
 

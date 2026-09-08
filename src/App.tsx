@@ -7,6 +7,7 @@ import { DemoPanel } from './components/DemoPanel'
 import { FloatingHeader } from './components/FloatingHeader'
 import { MapControls } from './components/MapControls'
 import { SheetNav, type TabId } from './components/SheetNav'
+import { UpdateBanner } from './components/UpdateBanner'
 import { VolcanoMap } from './components/VolcanoMap'
 import { NotificationSheet } from './components/sheets/NotificationSheet'
 import { VolcanoSheet } from './components/sheets/VolcanoSheet'
@@ -18,6 +19,7 @@ import { GuideTab } from './components/tabs/GuideTab'
 import { StatusTab } from './components/tabs/StatusTab'
 import { resolveAviationStatus } from './data/aviation'
 import { useAlertWatcher } from './hooks/useAlertWatcher'
+import { useAppUpdate } from './hooks/useAppUpdate'
 import { useDemo } from './hooks/useDemo'
 import { useGeolocation } from './hooks/useGeolocation'
 import { useLiveQuakes } from './hooks/useLiveQuakes'
@@ -72,6 +74,7 @@ export default function App() {
   })
   const notifications = useNotifications()
   const theme = useTheme()
+  const appUpdate = useAppUpdate()
   const bannersRef = useRef<HTMLDivElement | null>(null)
   const [chromeTop, setChromeTop] = useState(HEADER_PX)
 
@@ -190,6 +193,7 @@ export default function App() {
       <div className="app__banners" ref={bannersRef}>
         <DataStateBanner dataState={dataState} onRetry={refresh} />
         <AlertStrip status={aviation} />
+        {appUpdate.ready && <UpdateBanner onApply={appUpdate.apply} />}
       </div>
 
       <MapControls

@@ -11,7 +11,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt', bukan 'autoUpdate': service worker baru menunggu sampai app
+      // yang memutuskan kapan dipakai. Dengan 'autoUpdate' ia mengambil alih
+      // diam-diam, tapi halaman yang sudah terbuka tetap memegang JS dan CSS
+      // lama sampai seseorang memuat ulang sendiri — persis yang mau dihindari.
+      // Kapan dipasangnya diatur src/hooks/useAppUpdate.ts.
+      registerType: 'prompt',
+      // Pendaftarannya dilakukan app lewat virtual:pwa-register/react, jadi
+      // skrip pendaftar bawaan tidak perlu ikut disuntikkan.
+      injectRegister: null,
       includeAssets: ['icons/apple-touch-icon.png'],
       manifest: {
         name: 'Pantau Gunung Berapi',
@@ -39,6 +47,13 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Mengambil alih halaman sejak kunjungan pertama, supaya orang yang
+        // baru membuka app lalu kehilangan sinyal tetap punya salinan — tanpa
+        // ini kemampuan offline baru menyala di muat kedua.
+        clientsClaim: true,
+        // Tapi versi baru tidak boleh menyerobot halaman yang sedang dibaca:
+        // pergantiannya menunggu pesan dari app (lihat useAppUpdate.ts).
+        skipWaiting: false,
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
         navigateFallback: `${base}index.html`,
         runtimeCaching: [

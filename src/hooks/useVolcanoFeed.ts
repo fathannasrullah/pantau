@@ -121,7 +121,17 @@ export function useVolcanoFeed(
 
   useEffect(() => {
     const id = setInterval(sync, POLL_MS)
-    return () => clearInterval(id)
+    // Tik berkala diredam peramban saat tab terkubur di latar, jadi halaman
+    // yang ditinggal lalu dibuka lagi bisa memajang angka setengah jam lalu
+    // sampai tik berikutnya tiba. Kembali melihat layar berarti menyegarkan.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') sync()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [sync])
 
   const liveStatus: FeedStatus = !online
