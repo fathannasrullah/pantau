@@ -3750,3 +3750,32 @@ a.row__tel:hover {
   color: var(--c-text);
   border-color: var(--c-line-2);
 }
+
+/* Kaki halaman dirapatkan: hurufnya turun ke lantai 11 px dan jaraknya
+   dipangkas. Tidak lebih kecil dari itu — 11 px adalah lantai yang sengaja
+   dipasang untuk seluruh app, dan kaki halaman bukan alasan menembusnya.
+   Sasaran ketuk tautannya tetap 25 px (ikon 13 + padding 6 atas-bawah), jadi
+   masih di atas ambang 24 px WCAG 2.2. */
+.foot {
+  padding: 8px 0 2px;
+  gap: 10px;
+  align-items: center;
+}
+
+.foot__link {
+  gap: 5px;
+  padding: 6px 8px;
+}
+
+.foot__name {
+  font-size: var(--t-3xs);
+}
+
+/* Angka kunjungan: hanya tampil di mode tersembunyi, jadi sengaja paling
+   redup di layar — ia bukan informasi untuk pengunjung. */
+.foot__visits {
+  font-size: var(--t-3xs);
+  font-weight: 500;
+  color: var(--c-text-4);
+  font-variant-numeric: tabular-nums;
+}
