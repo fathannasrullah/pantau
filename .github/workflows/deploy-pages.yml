@@ -59,6 +59,14 @@ jobs:
           esac
           echo "VITE_BASE=$BASE"
           VITE_BASE="$BASE" npm run build
+        env:
+          # Kode situs GoatCounter, diisi lewat repository variable bernama
+          # GOATCOUNTER (Settings → Secrets and variables → Actions →
+          # Variables). Bukan rahasia — kode itu memang terlihat di permintaan
+          # yang dikirim peramban — tapi ditaruh di sana supaya bisa diganti
+          # atau dimatikan tanpa menyentuh kode. Kosong berarti penghitungnya
+          # mati total: app tidak mengirim permintaan apa pun ke luar.
+          VITE_GOATCOUNTER: ${{ vars.GOATCOUNTER }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -25,6 +25,8 @@ import { useGeolocation } from './hooks/useGeolocation'
 import { useLiveQuakes } from './hooks/useLiveQuakes'
 import { useVolcanoSelection } from './hooks/useVolcanoSelection'
 import { useNotifications } from './hooks/useNotifications'
+import { useStatsMode } from './hooks/useStatsMode'
+import { useVisitCount } from './hooks/useVisitCount'
 import { useTheme } from './hooks/useTheme'
 import { useVolcanoFeed } from './hooks/useVolcanoFeed'
 import { DATA_STATE_COLORS, DATA_STATE_DIM } from './theme'
@@ -75,6 +77,8 @@ export default function App() {
   const notifications = useNotifications()
   const theme = useTheme()
   const appUpdate = useAppUpdate()
+  const statsMode = useStatsMode()
+  const visits = useVisitCount(statsMode)
   const bannersRef = useRef<HTMLDivElement | null>(null)
   const [chromeTop, setChromeTop] = useState(HEADER_PX)
 
@@ -262,7 +266,7 @@ export default function App() {
           <GuideTab snapshot={snapshot} aviation={aviation} />
         )}
 
-        <AppFooter />
+        <AppFooter visits={visits} showVisits={statsMode} />
       </BottomSheet>
 
       {volcanoOpen && (

@@ -1,3 +1,11 @@
+import { formatNumber } from '../lib/format'
+import type { VisitCount } from '../hooks/useVisitCount'
+
+interface Props {
+  visits: VisitCount
+  showVisits: boolean
+}
+
 /**
  * Kaki halaman: satu tautan pembuat, tidak lebih.
  *
@@ -6,8 +14,11 @@
  * daftar sumber di Panduan, dan catatan di tiap kartu yang angkanya turunan.
  * Di kaki halaman ia hanya jadi pengulangan yang terbaca sebagai penyangkalan
  * umum, jenis kalimat yang justru dilewati orang.
+ *
+ * Angka kunjungan hanya muncul dalam mode tersembunyi (`?stats=1`), dan tidak
+ * pernah untuk pengunjung biasa.
  */
-export function AppFooter() {
+export function AppFooter({ visits, showVisits }: Props) {
   return (
     <footer className="foot">
       <a
@@ -35,6 +46,16 @@ export function AppFooter() {
         </svg>
         <span className="foot__name">nfathan</span>
       </a>
+
+      {showVisits && visits.state !== 'off' && (
+        <span className="foot__visits" title="Total kunjungan, tertunda sampai 4 jam">
+          {visits.state === 'ok' && visits.total !== null
+            ? `${formatNumber(visits.total)} kunjungan`
+            : visits.state === 'loading'
+              ? '…'
+              : 'kunjungan tak terbaca'}
+        </span>
+      )}
     </footer>
   )
 }

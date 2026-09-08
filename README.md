@@ -43,7 +43,7 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # typecheck + build ke dist/
 npm run preview    # jalankan hasil build — service worker hanya aktif di sini
-npm test           # 79 tes
+npm test           # 85 tes
 npm run fetch:data # ambil sumber resmi sekali secara lokal
 ```
 
@@ -293,6 +293,57 @@ Semua level status dan kondisi data bisa ditampilkan tanpa menunggu kejadian:
 
 Pilihan ikut tertulis ke URL, jadi satu tautan bisa dibagikan. Mode demo tidak
 pernah mengirim notifikasi.
+
+---
+
+## Penghitung kunjungan
+
+Situs statis tidak bisa menghitung apa pun sendiri — tidak ada server yang
+mencatat. Hitungannya dititipkan ke [GoatCounter][gc]: tanpa cookie, tanpa
+data pribadi, tanpa sidik jari peramban.
+
+Yang dipakai endpoint mentahnya (`/count`), bukan `count.js` bawaannya. Satu
+berkas skrip pihak ketiga lagi berarti satu lagi yang harus diunduh sebelum app
+terbaca, dan app ini dibuka orang yang sedang terburu-buru. Kunjungan dikirim
+sebagai gambar 1×1 — tanpa CORS, dan kegagalannya tidak meninggalkan galat di
+konsol siapa pun. Jalur yang dikirim hanya `pathname`: pilihan gunung dan mode
+demo ada di query string, dan itu akan memecah satu halaman jadi puluhan baris
+berbeda di laporan.
+
+Angka totalnya hanya ditampilkan dalam mode tersembunyi, di kaki halaman,
+dengan huruf paling redup di layar:
+
+```
+/?stats=1    tampilkan, lalu diingat perangkat
+/?stats=0    matikan
+```
+
+Parameternya dibuang dari alamat setelah dibaca. Ini **persembunyian, bukan
+kerahasiaan**: repo ini publik, jadi siapa pun yang membaca kodenya bisa
+menemukannya. Yang benar-benar terkunci adalah dasbor GoatCounter — dan di sana
+pula satu-satunya keterangan tentang pengunjung berada: negara, peramban, dan
+asal rujukan. Nama orang tidak ada di mana pun, dan tanpa halaman login memang
+tidak bisa ada.
+
+Menyalakannya, sekali saja:
+
+1. Daftar di GoatCounter, catat kode situsnya.
+2. Di setelan situs GoatCounter, nyalakan **"Allow adding visitor counts on
+   your website"** — bawaannya mati, dan tanpa itu angkanya tidak bisa dibaca
+   app.
+3. Di repo: **Settings → Secrets and variables → Actions → Variables**, buat
+   variable `GOATCOUNTER` berisi kode situs tadi.
+
+Tanpa variable itu penghitungnya mati total — bukan sekadar tidak tampil, tapi
+tidak ada satu pun permintaan keluar dari peramban pengunjung. Itu dikunci lewat
+tes.
+
+Dua batas yang perlu diingat saat membaca angkanya: responsnya di-cache
+GoatCounter sampai **empat jam**, jadi kunjungan baru tidak langsung terlihat;
+dan angka yang gagal dibaca ditandai "kunjungan tak terbaca", tidak pernah
+dipajang sebagai `0` — nol adalah angka, "tidak tahu" bukan.
+
+[gc]: https://www.goatcounter.com/
 
 ---
 
