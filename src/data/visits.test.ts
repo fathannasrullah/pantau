@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { parseVisitCount, visitBeaconUrl, visitTotalUrl } from './visits.ts'
+import {
+  normalizeSiteCode,
+  parseVisitCount,
+  visitBeaconUrl,
+  visitTotalUrl,
+} from './visits.ts'
 
 test('tanpa kode situs, tidak ada permintaan yang dibuat', () => {
   // Ini yang menjaga app tetap bersih selama penghitungnya belum disetel:
@@ -61,4 +66,47 @@ test('bentuk yang tidak dikenali menjawab kosong, bukan nol', () => {
   assert.equal(parseVisitCount({ count: '' }), null)
   assert.equal(parseVisitCount({ count: 'entah' }), null)
   assert.equal(parseVisitCount('1234'), null)
+})
+
+test('kode situs disaring dari bentuk apa pun yang diisikan', () => {
+  assert.equal(normalizeSiteCode('fathan'), 'fathan')
+  assert.equal(normalizeSiteCode('  fathan  '), 'fathan')
+  assert.equal(normalizeSiteCode('fathan.goatcounter.com'), 'fathan')
+  assert.equal(normalizeSiteCode('https://fathan.goatcounter.com/count'), 'fathan')
+})
+
+test('potongan script yang disalin dari GoatCounter tetap terbaca', () => {
+  // Ini yang benar-benar terjadi: seluruh potongan <script> terisi apa adanya
+  // ke repository variable, dan app menyusun URL omong kosong tanpa satu pun
+  // tanda kesalahan di mana pun.
+  const disalin =
+    '<script data-goatcounter="https://fathan.goatcounter.com/count"\n' +
+    '        async src="//gc.zgo.at/count.js"></script>'
+  assert.equal(normalizeSiteCode(disalin), 'fathan')
+  const url = visitBeaconUrl(normalizeSiteCode(disalin), {
+    path: '/',
+    title: 'x',
+    referrer: '',
+    rnd: '1',
+  })
+  assert.ok(url)
+  assert.equal(new URL(url).origin, 'https://fathan.goatcounter.com')
+})
+
+test('nilai yang bukan kode sah mematikan penghitung, bukan bikin URL ngawur', () => {
+  assert.equal(normalizeSiteCode(''), '')
+  assert.equal(normalizeSiteCode('   '), '')
+  assert.equal(normalizeSiteCode('kode situs saya'), '')
+  assert.equal(normalizeSiteCode('https://contoh.lain/count'), '')
+  assert.equal(normalizeSiteCode('a'.repeat(64)), '')
+  // Dan yang kosong itu memang berarti tidak ada permintaan sama sekali.
+  assert.equal(
+    visitBeaconUrl(normalizeSiteCode('kode situs saya'), {
+      path: '/',
+      title: 'x',
+      referrer: '',
+      rnd: '1',
+    }),
+    null,
+  )
 })

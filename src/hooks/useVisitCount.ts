@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
-import { parseVisitCount, visitBeaconUrl, visitTotalUrl } from '../data/visits'
+import {
+  normalizeSiteCode,
+  parseVisitCount,
+  visitBeaconUrl,
+  visitTotalUrl,
+} from '../data/visits'
 
 /**
  * Kode situs GoatCounter, diisi saat build lewat VITE_GOATCOUNTER.
  * Kosong berarti fitur ini mati total: tidak ada permintaan keluar sama sekali.
  */
-const SITE_CODE = String(import.meta.env.VITE_GOATCOUNTER ?? '').trim()
+const SITE_CODE = normalizeSiteCode(String(import.meta.env.VITE_GOATCOUNTER ?? ''))
 
 export interface VisitCount {
   /** null selama belum terjawab, atau saat angkanya memang tidak bisa dibaca. */

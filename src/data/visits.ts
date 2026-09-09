@@ -15,6 +15,34 @@
 const origin = (code: string) => `https://${code}.goatcounter.com`
 
 /**
+ * Menyaring kode situs dari apa pun yang telanjur diisikan.
+ *
+ * Yang dibutuhkan cuma kodenya — bagian "fathan" dari fathan.goatcounter.com —
+ * tapi yang tersedia untuk disalin di halaman GoatCounter adalah seluruh
+ * potongan <script>. Sekali itu terisi apa adanya, app menyusun URL omong
+ * kosong dan kunjungannya hilang tanpa satu pun tanda: build hijau, deploy
+ * terbit, angkanya nol selamanya. Sudah terjadi sekali.
+ *
+ * Jadi semua bentuk ini diterima:
+ *   fathan
+ *   fathan.goatcounter.com
+ *   https://fathan.goatcounter.com/count
+ *   <script data-goatcounter="https://fathan.goatcounter.com/count" ...></script>
+ *
+ * Yang tidak berbentuk kode sah dikembalikan sebagai kosong — lebih baik
+ * penghitungnya mati dan diam daripada app mengirim permintaan ke alamat yang
+ * tidak ada.
+ */
+export function normalizeSiteCode(raw: string): string {
+  const teks = raw.trim()
+  if (!teks) return ''
+  const cocok = /([A-Za-z0-9-]+)\.goatcounter\.com/.exec(teks)
+  const calon = cocok ? cocok[1] : teks
+  // Satu label nama host: huruf, angka, tanda hubung, maksimal 63 karakter.
+  return /^[A-Za-z0-9-]{1,63}$/.test(calon) ? calon.toLowerCase() : ''
+}
+
+/**
  * URL pencatat satu kunjungan. Jalur yang dikirim sengaja hanya pathname:
  * app ini menulis pilihan gunung dan mode demo ke query string, dan itu akan
  * memecah satu halaman jadi puluhan baris berbeda di laporan.
