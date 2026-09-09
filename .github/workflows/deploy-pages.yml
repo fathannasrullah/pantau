@@ -58,6 +58,16 @@ jobs:
             *)      BASE="$BASE/" ;;
           esac
           echo "VITE_BASE=$BASE"
+          # Variable yang salah jenis atau salah cakupan sampai ke sini sebagai
+          # nilai kosong, dan build-nya tetap hijau — penghitungnya diam-diam
+          # mati tanpa ada yang menandai. Jadi keadaannya dicetak. Nilainya
+          # sendiri tidak ikut dicetak; panjangnya sudah cukup untuk tahu
+          # variabelnya sampai atau tidak.
+          if [ -n "$VITE_GOATCOUNTER" ]; then
+            echo "VITE_GOATCOUNTER terisi (${#VITE_GOATCOUNTER} huruf) — penghitung kunjungan AKTIF"
+          else
+            echo "VITE_GOATCOUNTER kosong — penghitung kunjungan MATI, tidak ada permintaan keluar"
+          fi
           VITE_BASE="$BASE" npm run build
         env:
           # Kode situs GoatCounter, diisi lewat repository variable bernama
